@@ -6,20 +6,21 @@
 \usage{
 replace_in_files(
   path = getwd(),
-  word,
+  pattern,
   replacement,
   recursive = TRUE,
   ignore_case = TRUE,
   fixed = FALSE,
   skip_extensions = NULL,
-  dry_run = TRUE
+  dry_run = TRUE,
+  preview = FALSE
 )
 }
 \arguments{
 \item{path}{Character scalar. Path to a folder, file, or glob pattern.
 Default is \code{getwd()}.}
 
-\item{word}{Character scalar. Pattern to search for.}
+\item{pattern}{Character scalar. Pattern to search for.}
 
 \item{replacement}{Character scalar. Replacement text.}
 
@@ -27,13 +28,16 @@ Default is \code{getwd()}.}
 
 \item{ignore_case}{Logical. Ignore case in matching? Default TRUE.}
 
-\item{fixed}{Logical. If TRUE, treat \code{word} as fixed string (not regex).}
+\item{fixed}{Logical. If TRUE, treat \code{pattern} as fixed string (not regex).}
 
 \item{skip_extensions}{Character vector of file extensions to skip.
 Same default as \code{\link[=find_in_files]{find_in_files()}}.}
 
 \item{dry_run}{Logical. If TRUE, only show what would be replaced
 without modifying files. Default TRUE.}
+
+\item{preview}{Logical. If TRUE (and \code{dry_run = TRUE}), also print a preview
+of line-by-line changes (old vs. new text). Default FALSE.}
 }
 \value{
 Invisibly, a list with file names and number of replacements.
@@ -41,4 +45,19 @@ Invisibly, a list with file names and number of replacements.
 \description{
 Search files for lines containing a given pattern and replace them
 with another string. Works on multiple files, supports regex or fixed search.
+}
+\examples{
+\dontrun{
+# Dry-run search/replace across R files
+replace_in_files("./R", pattern = "integer", replacement = "numeric")
+
+# With preview: show old vs. new lines before applying
+replace_in_files("./R", pattern = "integer", replacement = "numeric",
+                 dry_run = TRUE, preview = TRUE)
+
+# Actually modify files (no preview)
+replace_in_files("./R", pattern = "integer", replacement = "numeric",
+                 dry_run = FALSE)
+}
+
 }

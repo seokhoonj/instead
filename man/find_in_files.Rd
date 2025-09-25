@@ -6,7 +6,7 @@
 \usage{
 find_in_files(
   path = getwd(),
-  word,
+  pattern,
   recursive = TRUE,
   ignore_case = TRUE,
   show_lines = TRUE,
@@ -18,7 +18,7 @@ find_in_files(
 \item{path}{Character scalar. Path to a folder, file, or glob pattern.
 Default is \code{getwd()}.}
 
-\item{word}{Character scalar. Pattern to search for. If \code{fixed = TRUE}, the
+\item{pattern}{Character scalar. Pattern to search for. If \code{fixed = TRUE}, the
 pattern is matched literally, not as a regular expression.}
 
 \item{recursive}{Logical. Whether to search subdirectories when \code{path} is a folder.
@@ -29,7 +29,7 @@ Default is \code{TRUE}.}
 \item{show_lines}{Logical. Whether to return and print matching line numbers
 and text. Default is \code{TRUE}.}
 
-\item{fixed}{Logical. Whether to treat \code{word} as a fixed string rather than
+\item{fixed}{Logical. Whether to treat \code{pattern} as a fixed string rather than
 a regular expression. Default is \code{FALSE}.}
 
 \item{skip_extensions}{Character vector. File extensions to skip during search
@@ -50,8 +50,7 @@ with columns:
 Search within a folder, a single file, or a glob pattern (e.g. \verb{./R/*.R})
 for lines that contain a given pattern. Results are returned as a named list,
 where each element is a data frame with \code{line} and \code{text} columns.
-In the console, matches are always highlighted in \strong{red + bold} using the
-\code{\link{cli}} package.
+In the console, matches are always highlighted in \strong{red + bold}.
 }
 \details{
 \itemize{

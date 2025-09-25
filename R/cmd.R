@@ -45,8 +45,7 @@ mkdir <- function(folder = c("dev", "data", "info", "inst", "output", "R",
 #' Search within a folder, a single file, or a glob pattern (e.g. `./R/*.R`)
 #' for lines that contain a given pattern. Results are returned as a named list,
 #' where each element is a data frame with `line` and `text` columns.
-#' In the console, matches are always highlighted in **red + bold** using the
-#' [`cli`] package.
+#' In the console, matches are always highlighted in **red + bold**.
 #'
 #' @details
 #' - If `path` is a file, only that file is searched.
@@ -58,14 +57,14 @@ mkdir <- function(folder = c("dev", "data", "info", "inst", "output", "R",
 #'
 #' @param path Character scalar. Path to a folder, file, or glob pattern.
 #'   Default is `getwd()`.
-#' @param word Character scalar. Pattern to search for. If `fixed = TRUE`, the
+#' @param pattern Character scalar. Pattern to search for. If `fixed = TRUE`, the
 #'   pattern is matched literally, not as a regular expression.
 #' @param recursive Logical. Whether to search subdirectories when `path` is a folder.
 #'   Default is `TRUE`.
 #' @param ignore_case Logical. Whether to ignore case during matching. Default is `TRUE`.
 #' @param show_lines Logical. Whether to return and print matching line numbers
 #'   and text. Default is `TRUE`.
-#' @param fixed Logical. Whether to treat `word` as a fixed string rather than
+#' @param fixed Logical. Whether to treat `pattern` as a fixed string rather than
 #'   a regular expression. Default is `FALSE`.
 #' @param skip_extensions Character vector. File extensions to skip during search
 #'   (e.g., binary files, images, compressed archives, PDFs). Default includes
@@ -89,7 +88,7 @@ mkdir <- function(folder = c("dev", "data", "info", "inst", "output", "R",
 #'
 #' @export
 find_in_files <- function(path = getwd(),
-                          word,
+                          pattern,
                           recursive = TRUE,
                           ignore_case = TRUE,
                           show_lines = TRUE,
@@ -112,28 +111,6 @@ find_in_files <- function(path = getwd(),
       )
     skip_extensions <- unlist(skip_extensions, use.names = FALSE)
   }
-
-  highlight_line <- function(text, pattern) {
-    m <- gregexpr(pattern, text,
-                  ignore.case = ignore_case,
-                  perl = !fixed,
-                  fixed = fixed)[[1L]]
-    if (m[1L] == -1L)
-      return(text)
-    len <- attr(m, "match.length")
-    parts <- character(0); last_end <- 0L
-    for (i in seq_along(m)) {
-      s <- m[i]; e <- s + len[i] - 1L
-      if (s > last_end + 1L)
-        parts <- c(parts, substr(text, last_end + 1L, s - 1L))
-      parts <- c(parts, cli::col_red(cli::style_bold(substr(text, s, e))))
-      last_end <- e
-    }
-    if (last_end < nchar(text))
-      parts <- c(parts, substr(text, last_end + 1L, nchar(text)))
-    paste0(parts, collapse = "")
-  }
-
   # expand path: glob, file, or folder
   files <- unlist(lapply(path, function(p) {
     if (length(p) == 1L && grepl("[*?]", p)) {
@@ -155,7 +132,7 @@ find_in_files <- function(path = getwd(),
     lines <- tryCatch(readLines(f, warn = FALSE), error = function(e) NULL)
     if (is.null(lines)) next
     lines <- .sanitize_utf8(lines)
-    idx <- grep(word, lines, ignore.case = ignore_case, perl = !fixed,
+    idx <- grep(pattern, lines, ignore.case = ignore_case, perl = !fixed,
                 fixed = fixed)
     if (length(idx) == 0) next
 
@@ -180,10 +157,14 @@ find_in_files <- function(path = getwd(),
           tx <- results[[fp]]$text[k]
           line_link <- cli::style_hyperlink(
             paste0(sprintf("%6d", ln)),
-            paste0(.make_file_url(fp), "#", ln) # 일부 콘솔은 #line 미지원일 수 있음
+            paste0(.make_file_url(fp), "#", ln) # may not be supported in some consoles
           )
           cli::cat_line(
-            paste0("  ", line_link, " | ", highlight_line(tx, word))
+            paste0(
+              "  ", line_link, " | ",
+              .highlight_line(tx, pattern, ignore_case = ignore_case,
+                              fixed = fixed)
+            )
           )
         }
       }
@@ -200,49 +181,86 @@ find_in_files <- function(path = getwd(),
 #'
 #' @param path Character scalar. Path to a folder, file, or glob pattern.
 #'   Default is `getwd()`.
-#' @param word Character scalar. Pattern to search for.
+#' @param pattern Character scalar. Pattern to search for.
 #' @param replacement Character scalar. Replacement text.
 #' @param recursive Logical. Search subdirectories? Default TRUE.
 #' @param ignore_case Logical. Ignore case in matching? Default TRUE.
-#' @param fixed Logical. If TRUE, treat `word` as fixed string (not regex).
+#' @param fixed Logical. If TRUE, treat `pattern` as fixed string (not regex).
 #' @param skip_extensions Character vector of file extensions to skip.
 #'   Same default as [find_in_files()].
 #' @param dry_run Logical. If TRUE, only show what would be replaced
 #'   without modifying files. Default TRUE.
+#' @param preview Logical. If TRUE (and `dry_run = TRUE`), also print a preview
+#'   of line-by-line changes (old vs. new text). Default FALSE.
+#'
+#' @examples
+#' \dontrun{
+#' # Dry-run search/replace across R files
+#' replace_in_files("./R", pattern = "integer", replacement = "numeric")
+#'
+#' # With preview: show old vs. new lines before applying
+#' replace_in_files("./R", pattern = "integer", replacement = "numeric",
+#'                  dry_run = TRUE, preview = TRUE)
+#'
+#' # Actually modify files (no preview)
+#' replace_in_files("./R", pattern = "integer", replacement = "numeric",
+#'                  dry_run = FALSE)
+#' }
 #'
 #' @return Invisibly, a list with file names and number of replacements.
 #' @export
 replace_in_files <- function(path = getwd(),
-                             word,
+                             pattern,
                              replacement,
                              recursive = TRUE,
                              ignore_case = TRUE,
                              fixed = FALSE,
                              skip_extensions = NULL,
-                             dry_run = TRUE) {
-  results <- find_in_files(path, word,
+                             dry_run = TRUE,
+                             preview = FALSE) {
+  results <- find_in_files(path, pattern,
                            recursive = recursive,
                            ignore_case = ignore_case,
                            fixed = fixed,
                            skip_extensions = skip_extensions)
 
   if (!length(results)) {
-    cli::cat_line(cli::col_yellow("No matches found."))
     return(invisible(list()))
   }
 
   summary <- list()
   for (fp in names(results)) {
     lines <- readLines(fp, warn = FALSE)
-    new_lines <- gsub(word, replacement, lines,
+    new_lines <- gsub(pattern, replacement, lines,
                       ignore.case = ignore_case,
                       fixed = fixed)
 
     if (!identical(lines, new_lines)) {
       n_repl <- sum(lines != new_lines)
       summary[[fp]] <- n_repl
-      cli::cat_bullet(paste0(fp, " (", n_repl, " replacements)"))
+      cli::cat_bullet(paste0(
+        cli::col_blue(fp), " ", cli::col_green(paste0("(", n_repl, " replacements)"))
+      ))
 
+      if (dry_run && preview) {
+        diff_idx <- which(lines != new_lines)
+        for (i in diff_idx) {
+          old <- lines[i]
+          new <- new_lines[i]
+
+          line_link <- cli::style_hyperlink(
+            sprintf("%6d", i),
+            paste0(.make_file_url(fp), "#", i)
+          )
+
+          cli::cat_line(paste0("  ", line_link, " | "))
+
+          prefix <- "     "
+          cli::cat_line(paste0(prefix, "old | ", old))
+          cli::cat_line(paste0(prefix, "new | ", cli::col_green(new)))
+          cli::cat_line("")
+        }
+      }
       if (!dry_run) {
         writeLines(new_lines, fp, useBytes = TRUE)
       }
@@ -257,6 +275,29 @@ replace_in_files <- function(path = getwd(),
 }
 
 # Internal helper function ------------------------------------------------
+
+#' @keywords internal
+#' @noRd
+.highlight_line <- function(text, pattern, ignore_case, fixed) {
+  m <- gregexpr(pattern, text,
+                ignore.case = ignore_case,
+                perl = !fixed,
+                fixed = fixed)[[1L]]
+  if (m[1L] == -1L)
+    return(text)
+  len <- attr(m, "match.length")
+  parts <- character(0); last_end <- 0L
+  for (i in seq_along(m)) {
+    s <- m[i]; e <- s + len[i] - 1L
+    if (s > last_end + 1L)
+      parts <- c(parts, substr(text, last_end + 1L, s - 1L))
+    parts <- c(parts, cli::col_red(cli::style_bold(substr(text, s, e))))
+    last_end <- e
+  }
+  if (last_end < nchar(text))
+    parts <- c(parts, substr(text, last_end + 1L, nchar(text)))
+  paste0(parts, collapse = "")
+}
 
 #' @keywords internal
 #' @noRd
