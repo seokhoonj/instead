@@ -1,0 +1,44 @@
+Package: instead
+Title: High-Performance Utilities for Data Analysis and Programming
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Seokhoon", family = "Joo", role = c("aut", "cre"),
+           email = "seokhoonj@gmail.com")
+Description: 'instead' is a functional toolkit designed for efficient 
+    and reproducible programming. It provides high-performance utilities including 
+    vector and matrix helpers, in-place transformations for 'data.table', and 
+    advanced meta-programming tools such as argument capture and call tracing 
+    (e.g., 'capture_names', 'trace_arg_expr'). Core helpers for insurance stay 
+    data handling and preprocessing are also included, serving as a foundation 
+    for more specialized analytical packages. Additional features include string 
+    utilities for Japanese text (e.g., Zenkaku to Hankaku) and convenient I/O 
+    wrappers. Selected routines are implemented in C for speed. The package name 
+    also reflects its role as the 'INSurance Toolkit for Efficient Analytics & Development'.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+ByteCompile: true
+Imports:
+    cli (>= 3.6.2),
+    data.table (>= 1.13.0),
+    grDevices,
+    grid,
+    kableExtra (>= 1.4.0),
+    lifecycle (>= 1.0.3),
+    openssl (>= 1.4.1),
+    openxlsx (>= 4.2.3),
+    readxl (>= 1.4.2),
+    rlang (>= 1.1.1),
+    scales (>= 1.3.0),
+    stringi (>= 1.7.6),
+    stringr (>= 1.4.0),
+    tibble (>= 3.2.1),
+    usethis (>= 2.1.6),
+    utils
+Suggests: 
+    magick (>= 2.8.7),
+    reticulate (>= 1.40.0),
+    shiny (>= 1.9.1),
+    webshot2 (>= 0.1.2)
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
