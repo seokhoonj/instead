@@ -8,7 +8,7 @@ The package also includes core helpers specialized for **insurance (inpatient st
 
 The name **`instead`** reflects both its practical role as the *INSurance Toolkit for Efficient Analytics & Development* and its use as an alternative, streamlined set of programming aids.
 
-[![CRAN status](https://www.r-pkg.org/badges/version/instead)](https://CRAN.R-project.org/package=instead) [![R-CMD-check](https://github.com/seokhoonj/instead/actions/workflows/R-CMD-check.yaml/badge.svg)]
+[![CRAN status](https://www.r-pkg.org/badges/version/instead)](https://CRAN.R-project.org/package=instead) [![R-CMD-check](https://github.com/seokhoonj/instead/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/seokhoonj/instead/actions/workflows/R-CMD-check.yaml)
 
 ## Installation
 
