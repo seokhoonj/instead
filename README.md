@@ -223,7 +223,7 @@ set_one_before_first_one(x) # edit x directly
 -   Dates are **inclusive** (i.e., `stay = to - from + 1`).
 -   `interval` controls what “continuous” means:
     -   `-1`: **require actual overlap** (touching ranges are *not* merged).
-    -   `0`: merge **touching** ranges (e.g., `… to = 2022-03-10` and next `from = 2022-03-11`).
+    -   `0`: merge **touching** ranges (e.g., `to = 2022-03-10` and next `from = 2022-03-11`).
     -   `> 0`: allow up to `interval` days of **gap** and still merge.
 -   Optional `merge_var` columns are **collapsed per merged span** (unique non-missing values, joined by `collapse`).
 
@@ -409,8 +409,8 @@ Provides a lightweight execution environment for safely using `data.table` opera
 
 **Key Features:**
 
--   If the input is a `data.table`, it is returned as-is and can be modified **in place**.\
--   If the input is a `data.frame` or tibble, a **copy** is made, converted to `data.table`, and safely restored back to the original type after modification.\
+-   If the input is a `data.table`, it is returned as-is and can be modified **in place**.
+-   If the input is a `data.frame` or tibble, a **copy** is made, converted to `data.table`, and safely restored back to the original type after modification.
 -   Returns a small "environment object" with three components:
     -   `dt`: the working `data.table` (safe to modify)
     -   `restore()`: a function that restores results to the original input class
