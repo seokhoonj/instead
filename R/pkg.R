@@ -91,3 +91,17 @@
   license
 }
 
+.fields_package_license <- function(package = "instead",
+                                    fields = c("Imports", "Suggests")) {
+  fields <- match.arg(fields)
+  dep_pkgs <- read.dcf(
+    system.file("DESCRIPTION", package = package),
+    fields = fields
+  )
+  dep_pkgs <- dep_pkgs[, 1L]
+  dep_pkgs <- gsub("\n", " ", dep_pkgs)
+  dep_pkgs <- gsub("\\s*\\(>= [^)]+\\)", "", dep_pkgs)
+  dep_pkgs <- trimws(strsplit(dep_pkgs, split = ",\\s*")[[1L]])
+  licenses <- .package_license(dep_pkgs)
+  data.frame(package = names(licenses), license = unlist(licenses), row.names = NULL)
+}
