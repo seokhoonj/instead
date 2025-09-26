@@ -4,7 +4,7 @@
 \alias{seq_date_list}
 \title{Generate sequences of Dates for each (from, to) range}
 \usage{
-seq_date_list(from, to, label = NULL)
+seq_date_list(from, to, labels = NULL)
 }
 \arguments{
 \item{from}{A Date vector of start dates.}
@@ -12,7 +12,7 @@ seq_date_list(from, to, label = NULL)
 \item{to}{A Date vector of end dates. Must be the same
 length as \code{from}.}
 
-\item{label}{Optional vector of labels (same length as \code{from}).}
+\item{labels}{Optional vector of labels (same length as \code{from}).}
 }
 \value{
 A list of \code{Date} vectors, each element representing
@@ -25,12 +25,12 @@ one row of input, and contains a sequence of \code{Date} values
 from \code{from[i]} to \code{to[i]} (inclusive).
 }
 \details{
-Optionally, a \code{label} vector can be provided to tag each
+Optionally, a \code{labels} vector can be provided to tag each
 sequence in the output.
 \itemize{
 \item Both \code{from} and \code{to} must be of class \code{Date}.
 \item Sequences are inclusive of both endpoints.
-\item If \code{label} is supplied, it is attached to the resulting list
+\item If \code{labels} is supplied, it is attached to the resulting list
 as element names.
 }
 }
@@ -42,6 +42,6 @@ to   <- as.Date(c("2024-01-03", "2024-02-02"))
 seq_date_list(from, to)
 
 # With labels
-seq_date_list(from, to, label = c("A", "B"))
+seq_date_list(from, to, labels = c("A", "B"))
 
 }

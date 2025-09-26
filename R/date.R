@@ -166,13 +166,13 @@ mondiff <- function(sdate, edate, day_limit = c(0:31)) {
 #' one row of input, and contains a sequence of `Date` values
 #' from `from[i]` to `to[i]` (inclusive).
 #'
-#' Optionally, a `label` vector can be provided to tag each
+#' Optionally, a `labels` vector can be provided to tag each
 #' sequence in the output.
 #'
 #' @param from A Date vector of start dates.
 #' @param to A Date vector of end dates. Must be the same
 #'   length as `from`.
-#' @param label Optional vector of labels (same length as `from`).
+#' @param labels Optional vector of labels (same length as `from`).
 #'
 #' @return A list of `Date` vectors, each element representing
 #'   a full daily sequence between corresponding `from` and `to`.
@@ -180,7 +180,7 @@ mondiff <- function(sdate, edate, day_limit = c(0:31)) {
 #' @details
 #' - Both `from` and `to` must be of class `Date`.
 #' - Sequences are inclusive of both endpoints.
-#' - If `label` is supplied, it is attached to the resulting list
+#' - If `labels` is supplied, it is attached to the resulting list
 #'   as element names.
 #'
 #' @examples
@@ -191,12 +191,12 @@ mondiff <- function(sdate, edate, day_limit = c(0:31)) {
 #' seq_date_list(from, to)
 #'
 #' # With labels
-#' seq_date_list(from, to, label = c("A", "B"))
+#' seq_date_list(from, to, labels = c("A", "B"))
 #'
 #' @export
-seq_date_list <- function(from, to, label = NULL) {
+seq_date_list <- function(from, to, labels = NULL) {
   stopifnot(inherits(from, "Date"), inherits(to, "Date"))
-  .Call(SeqDateList, from, to, label)
+  .Call(SeqDateList, from, to, labels)
 }
 
 #' Collapse overlapping (or near-adjacent) date ranges by (id, group)
