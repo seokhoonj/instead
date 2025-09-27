@@ -421,3 +421,4 @@ insert_plot <- function(wb, sheet, plot, rc = c(1L, 1L), width = 12, height = 6,
   openxlsx::insertPlot(wb, sheet = sheet, width = width, height = height,
                        startRow = rc[1L], startCol = rc[2L], dpi = dpi)
 }
+

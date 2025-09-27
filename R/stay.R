@@ -138,7 +138,7 @@ limit_stay <- function(df, id_var, group_var, from_var, to_var,
   data.table::set(dm, j = "size", value = as.numeric(dm$to - dm$from + 1))
 
   stay_mod <- .Call(LimitStay, stay, dm$size, limit, waiting)
-  from <- as.Date(unlist(seq_date_list(dm$from, dm$to), recursive = FALSE),
+  from <- as.Date(unlist(seq_dates(dm$from, dm$to), recursive = FALSE),
                   origin = as.Date("1970-01-01"))
 
   dm_id <- rep_row(dm[, .SD, .SDcols = id_group_var], times = dm$size)

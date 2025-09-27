@@ -170,12 +170,11 @@ mondiff <- function(sdate, edate, day_limit = c(0:31)) {
 #' sequence in the output.
 #'
 #' @param from A Date vector of start dates.
-#' @param to A Date vector of end dates. Must be the same
-#'   length as `from`.
+#' @param to A Date vector of end dates. Must be the same length as `from`.
 #' @param labels Optional vector of labels (same length as `from`).
 #'
-#' @return A list of `Date` vectors, each element representing
-#'   a full daily sequence between corresponding `from` and `to`.
+#' @return A list of `Date` vectors, each element representing a full daily
+#'   sequence between corresponding `from` and `to`.
 #'
 #' @details
 #' - Both `from` and `to` must be of class `Date`.
@@ -188,15 +187,15 @@ mondiff <- function(sdate, edate, day_limit = c(0:31)) {
 #' to   <- as.Date(c("2024-01-03", "2024-02-02"))
 #'
 #' # Expand to daily sequences
-#' seq_date_list(from, to)
+#' seq_dates(from, to)
 #'
 #' # With labels
-#' seq_date_list(from, to, labels = c("A", "B"))
+#' seq_dates(from, to, labels = c("A", "B"))
 #'
 #' @export
-seq_date_list <- function(from, to, labels = NULL) {
+seq_dates <- function(from, to, labels = NULL) {
   stopifnot(inherits(from, "Date"), inherits(to, "Date"))
-  .Call(SeqDateList, from, to, labels)
+  .Call(SeqDates, from, to, labels)
 }
 
 #' Collapse overlapping (or near-adjacent) date ranges by (id, group)

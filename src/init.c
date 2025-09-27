@@ -5,7 +5,7 @@
 
 // .Call calls
 extern SEXP IsNullExternalPtr(SEXP);
-extern SEXP SeqDateList(SEXP, SEXP, SEXP);
+extern SEXP SeqDates(SEXP, SEXP, SEXP);
 extern SEXP IndexOverlappingDateRanges(SEXP, SEXP, SEXP, SEXP);
 extern SEXP FindGroupBreaks(SEXP);
 extern SEXP FindGroupSizes(SEXP);
@@ -49,7 +49,7 @@ extern SEXP SetOneBeforeFirstOne(SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"IsNullExternalPtr",           (DL_FUNC) &IsNullExternalPtr,           1},
-    {"SeqDateList",                 (DL_FUNC) &SeqDateList,                 3},
+    {"SeqDates",                    (DL_FUNC) &SeqDates,                    3},
     {"IndexOverlappingDateRanges",  (DL_FUNC) &IndexOverlappingDateRanges,  4},
     {"FindGroupBreaks",             (DL_FUNC) &FindGroupBreaks,             1},
     {"FindGroupSizes",              (DL_FUNC) &FindGroupSizes,              1},

@@ -110,7 +110,7 @@ extern "C" {
 #endif
 
   // Date
-  SEXP SeqDateList(SEXP from, SEXP to, SEXP label);
+  SEXP SeqDates(SEXP from, SEXP to, SEXP label);
   SEXP IndexOverlappingDateRanges(SEXP id, SEXP from, SEXP to, SEXP interval);
 
   // Stay

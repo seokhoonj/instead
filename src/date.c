@@ -26,7 +26,7 @@ static inline void fill_int_vector(SEXP x, int value) {
  * Expand each [from,to] into its own Date vector; return list of length n.
  * Optionally set names() of the list from `label` (character of length n).
  * ======================================================================== */
-SEXP SeqDateList(SEXP from, SEXP to, SEXP label) {
+SEXP SeqDates(SEXP from, SEXP to, SEXP label) {
   if (TYPEOF(from) != REALSXP || TYPEOF(to) != REALSXP)
     error("`from` and `to` must be of class Date (double).");
   if (XLENGTH(from) != XLENGTH(to))

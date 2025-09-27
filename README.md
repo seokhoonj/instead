@@ -441,30 +441,59 @@ env$restore(dt)
 
 ## 5. Other Utilities
 
-``` r
+This section collects small but handy helper functions provided by **instead**.  
+They are designed for performance or convenience in common data manipulation tasks.
+
+---
+
+### 1) `unilen()`
+
+Count the number of unique elements (a faster alternative to `length(unique(x))`).
+
+```r
 library(instead)
 
-# Count unique elements (fast alternative to length(unique(x)))
 x <- c(1, 1, 2, 3, 4, 5, 5)
 unilen(x)
 #> [1] 5
+```
 
-# Reverse the order of elements directly (in place)
+### 2) `reverse()`
+
+Reverse the order of elements in place (modifies the vector directly).
+
+``` r
+library(instead)
+
 x <- 1:9
 reverse(x) # modifies x directly
 x
 #> [1] 9 8 7 6 5 4 3 2 1
+```
 
-# Interleave two vectors (alternate elements from each)
+### 3) `interleave()`
+
+Interleave two vectors by alternating elements.
+
+``` r
+library(instead)
+
 x <- c(1, 3, 5, 7)
 y <- c(2, 4, 6, 8)
 interleave(x, y)
 #> [1] 1 2 3 4 5 6 7 8
+```
 
-# Expand to daily sequences
+### 4) `seq_dates()`
+
+Expand paired from / to dates into full daily sequences. Returns a named list of Date vectors when label is provided.
+
+``` r
+library(instead)
+
 from <- as.Date(c("2024-01-01", "2024-02-01"))
 to <- as.Date(c("2024-01-03", "2024-02-02"))
-seq_date_list(from, to, label = c("A", "B")) 
+seq_dates(from, to, label = c("A", "B")) 
 #> $A
 #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
 #>
