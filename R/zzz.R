@@ -7,8 +7,9 @@
   op <- options()
   op.instead <- list(
     instead.eps = 1e-8,
-    instead.scipen = 14,
-    instead.guess_max = 21474836
+    instead.font = NULL,
+    instead.guess_max = 21474836,
+    instead.scipen = 14
   )
   toset <- !(names(op.instead) %in% names(op))
   if (any(toset)) options(op.instead[toset])
