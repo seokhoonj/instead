@@ -54,6 +54,7 @@
 #' @importFrom stats IQR median sd
 #' @importFrom stringi stri_detect_regex stri_enc_toutf32 stri_trans_general
 #' @importFrom stringr str_pad
+#' @importFrom systemfonts system_fonts
 #' @importFrom tibble as_tibble
 #' @importFrom usethis ui_path ui_yeah
 #' @importFrom utils globalVariables head install.packages object.size
