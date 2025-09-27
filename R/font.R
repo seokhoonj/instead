@@ -115,3 +115,95 @@ is_font_available <- function(font_name) {
   # Fallback: assume font is available if we can't check
   return(TRUE)
 }
+
+#' Set or get the default font for instead outputs
+#'
+#' These helpers manage the global font family used by `instead`
+#' (e.g., Excel writers, plot savers), stored in the option `"instead.font"`.
+#'
+#' - `set_instead_font()` updates the option, verifying that the font exists
+#'   in [systemfonts::system_fonts()]. If the font is not found, the previous
+#'   option value is restored and an error is thrown.
+#' - `get_instead_font()` retrieves the currently set option.
+#'
+#' @param family A character string giving the font family to use, or `NULL`.
+#'   - Use `NULL` or `""` to reset to system default.
+#'   - Must match a font available in [systemfonts::system_fonts()].
+#'
+#' @return
+#' - `set_instead_font()`: the font family (character scalar or `NULL`) that was set.
+#' - `get_instead_font()`: the current font family (character scalar or `NULL`).
+#'
+#' @examples
+#' \dontrun{
+#' # Set Comic Sans MS if available
+#' set_instead_font("Comic Sans MS")
+#'
+#' # Reset to system default (two ways)
+#' set_instead_font(NULL)
+#' set_instead_font("")
+#'
+#' # Get current font
+#' get_instead_font()
+#' }
+#'
+#' @export
+set_instead_font <- function(family) {
+  prev <- getOption("instead.font", default = NULL)
+
+  # Treat both NULL and "" as reset
+  if (is.null(family) || identical(family, "")) {
+    options(instead.font = NULL)
+    return(NULL)
+  }
+
+  # system fonts
+  sf <- tryCatch(
+    systemfonts::system_fonts(),
+    error = function(e) NULL
+  )
+  has_font <- !is.null(sf) && any(tolower(sf$family) == tolower(family))
+  if (!has_font) {
+    options(instead.font = prev)
+    stop(
+      sprintf("Font '%s' not found. Reverting to previous option '%s'.",
+              family, ifelse(is.null(prev), "NULL", prev)),
+      call. = FALSE
+    )
+  }
+
+  # try registering with sysfonts if available
+  if (requireNamespace("sysfonts", quietly = TRUE)) {
+    row <- sf[match(tolower(family), tolower(sf$family)), , drop = FALSE]
+    path <- row$path[1L]
+    if (is.character(path) && nzchar(path) && file.exists(path)) {
+      try(sysfonts::font_add(family, path), silent = TRUE)
+    }
+  }
+
+  options(instead.font = family)
+
+  os_type <- Sys.info()[["sysname"]]
+  if (os_type == "Windows") {
+    if (requireNamespace("showtext", quietly = TRUE)) {
+      showtext::showtext_auto(.mean_dpi())
+    } else {
+      message("showtext package not found -> skipping font auto-activation.")
+    }
+  }
+
+  family
+}
+
+#' @rdname set_instead_font
+#' @export
+get_instead_font <- function()
+  getOption("instead.font", default = NULL)
+
+# Internal helper function ------------------------------------------------
+
+.mean_dpi <- function() {
+  dpi_x <- grDevices::dev.size("px")[1L] / grDevices::dev.size("in")[1L]
+  dpi_y <- grDevices::dev.size("px")[2L] / grDevices::dev.size("in")[2L]
+  mean(c(dpi_x, dpi_y))
+}
