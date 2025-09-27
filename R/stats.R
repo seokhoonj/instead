@@ -328,7 +328,7 @@ freq_table <- function(x) {
 #'
 #' @export
 set_stat_by <- function(...) {
-  lifecycle::deprecate_warn("0.0.0.9001", "set_stat_by()", "add_group_stats()")
+  lifecycle::deprecate_warn("0.0.0.9000", "set_stat_by()", "add_group_stats()")
   add_group_stats(...)
 }
 
@@ -347,6 +347,6 @@ set_stat_by <- function(...) {
 #'
 #' @export
 get_stat_by <- function(...) {
-  lifecycle::deprecate_warn("0.0.0.9001", "get_stat_by()", "summarise_group_stats()")
+  lifecycle::deprecate_warn("0.0.0.9000", "get_stat_by()", "summarise_group_stats()")
   summarise_group_stats(...)
 }

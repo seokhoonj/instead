@@ -45,7 +45,7 @@ is_null_externalptr <- function(ptr) {
 #'
 #' @export
 set_ptr <- function(df, skip_shiny = TRUE) {
-  lifecycle::deprecate_warn("0.0.0.9001", "set_ptr()", "data.table::setDT()")
+  lifecycle::deprecate_warn("0.0.0.9000", "set_ptr()", "data.table::setDT()")
   if (skip_shiny && .is_shiny_running())
     return(data.table::setDT(df))
   if (!has_ptr(df)) {
@@ -188,7 +188,7 @@ has_ptr <- function(df, error_raise = FALSE) {
 #' @export
 get_copied_dt <- function(df) {
   lifecycle::deprecate_warn(
-    "0.0.0.9001", "get_copied_dt()", "data.table::copy()"
+    "0.0.0.9000", "get_copied_dt()", "data.table::copy()"
   )
   return(data.table::setDT(data.table::copy(df))[])
 }

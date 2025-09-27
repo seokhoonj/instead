@@ -126,7 +126,7 @@ add_band <- function(df, num_var, breaks, interval = 5, right = FALSE,
 #'
 #' @export
 set_band <- function(...) {
-  lifecycle::deprecate_warn("0.0.0.9001", "set_band()", "add_band()")
+  lifecycle::deprecate_warn("0.0.0.9000", "set_band()", "add_band()")
   add_band(...)
 }
 

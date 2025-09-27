@@ -1,5 +1,6 @@
 #' Extract meta information about an object
 #'
+#' @description
 #' `r lifecycle::badge("experimental")`
 #'
 #' Generic function to display meta information about an object.

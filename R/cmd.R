@@ -228,6 +228,9 @@ replace_in_files <- function(path = getwd(),
     return(invisible(list()))
   }
 
+  cat("\n")
+  cat(cli::col_cyan(cli::rule("Replacement preview", line = 2)), "\n")
+
   summary <- list()
   for (fp in names(results)) {
     lines <- readLines(fp, warn = FALSE)
@@ -268,7 +271,9 @@ replace_in_files <- function(path = getwd(),
   }
 
   if (dry_run) {
-    cli::cat_line(cli::col_cyan("Dry run: no files modified. Use `dry_run = FALSE` to apply changes."))
+    cli::cat_line(
+      cli::col_cyan("Dry run: no files modified. Use `dry_run = FALSE` to apply changes.")
+    )
   }
 
   invisible(summary)
