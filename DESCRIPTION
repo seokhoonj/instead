@@ -32,6 +32,7 @@ Imports:
     scales (>= 1.3.0),
     stringi (>= 1.7.6),
     stringr (>= 1.4.0),
+    systemfonts (>= 1.1.0),
     tibble (>= 3.2.1),
     usethis (>= 2.1.6),
     utils
@@ -39,6 +40,8 @@ Suggests:
     magick (>= 2.8.7),
     reticulate (>= 1.40.0),
     shiny (>= 1.9.1),
+    showtext (>= 0.9.7),
+    sysfonts (>= 0.8.9),
     webshot2 (>= 0.1.2)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
