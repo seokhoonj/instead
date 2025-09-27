@@ -2,41 +2,67 @@
 % Please edit documentation in R/excel.R
 \name{save_plot_xlsx}
 \alias{save_plot_xlsx}
-\title{Save ggplot object(s) to an Excel workbook}
+\title{Save ggplot object(s) to a single Excel sheet (stack or fixed positions)}
 \usage{
 save_plot_xlsx(
   plot,
   file,
+  sheet = "Plots",
   rc = c(1L, 1L),
-  width = 12,
-  height = 6,
+  width = 8,
+  height = 4,
   dpi = 300,
+  plot_titles = NULL,
+  title_size = 16,
+  font_name = getOption("instead.font"),
+  row_spacer = 2L,
+  rows_per_inch = 5,
   overwrite = FALSE
 )
 }
 \arguments{
-\item{plot}{A \code{ggplot} object or a named/unnamed list of \code{ggplot} objects.}
+\item{plot}{A ggplot object or a non-empty list of ggplot objects.}
 
-\item{file}{A file path to the target Excel workbook.}
+\item{file}{Path to the target \code{.xlsx} workbook.}
 
-\item{rc}{A length-2 integer vector giving the starting row and column
-(default is \code{c(1L, 1L)}).}
+\item{sheet}{Target sheet name (created if missing). Default \code{"Plots"}.}
 
-\item{width}{Image width (in inches).}
+\item{rc}{Either a single \code{c(row, col)} (stack mode) or a list of such
+vectors (fixed positions).}
 
-\item{height}{Image height (in inches).}
+\item{width, height}{Plot size in inches (passed to \code{openxlsx::insertPlot()}).}
 
-\item{dpi}{Resolution of the image (dots per inch).}
+\item{dpi}{Image resolution for \code{openxlsx::insertPlot()}. Default \code{300}.}
 
-\item{overwrite}{Logical; if TRUE, overwrite an existing workbook.}
+\item{plot_titles}{Optional character vector of titles (length = length(plot)).
+If \code{NULL}, \code{names(plot)} are used when available; otherwise no titles.}
+
+\item{title_size}{Numeric font size for titles. Default \code{16}.}
+
+\item{font_name}{Font family for title text (passed to openxlsx style).
+Default \code{getOption("instead.font")}.}
+
+\item{row_spacer}{Non-negative integer. Blank rows between stacked plots.
+Default \code{2L}.}
+
+\item{rows_per_inch}{Approximate number of worksheet rows consumed per one
+inch of plot height in stack mode. Default \code{5}.}
+
+\item{overwrite}{Overwrite existing workbook on save? Default \code{FALSE}.}
 }
 \value{
-No return value, called for side effects (saves an Excel file).
+(Invisibly) the path to \code{file}. Side-effects: creates/updates an Excel file.
 }
 \description{
-Save one or more \code{ggplot} objects to an Excel workbook. A single \code{ggplot}
-object can be supplied directly, or multiple plots can be passed in a list.
-Each plot is written to a separate worksheet.
+Writes one or more ggplots to a single worksheet using \code{openxlsx}.
+\itemize{
+\item If \code{rc} is a length-2 integer vector (e.g., \code{c(1L, 1L)}), plots are
+stacked vertically with an optional title row and \code{row_spacer} blank rows
+between plots. The next start row is approximated as:
+1 (title if present) + ceiling(height * rows_per_inch) + row_spacer.
+\item If \code{rc} is a list of \code{c(row, col)} pairs with the same length as \code{plot},
+each plot is placed at its specified position (no stacking).
+}
 }
 \examples{
 \dontrun{
@@ -45,11 +71,28 @@ library(ggplot2)
 p1 <- ggplot(mtcars, aes(mpg, wt)) + geom_point()
 p2 <- ggplot(mtcars, aes(hp, qsec)) + geom_point()
 
-# Single plot
-save_plot_xlsx(p1, "single.xlsx")
+# 1) Fixed positions (list rc): place two plots at different rows
+save_plot_xlsx(
+  plot   = list("Scatter 1" = p1, "Scatter 2" = p2),
+  file   = "plots_positions.xlsx",
+  sheet  = "Plots",
+  rc     = list(c(1, 1), c(30, 1)),
+  plot_titles = NULL,      # uses names(plot) as titles
+  title_size  = 16,
+  width = 8, height = 4, dpi = 300,
+  overwrite = TRUE
+)
 
-# Multiple plots
-save_plot_xlsx(list(Scatter1 = p1, Scatter2 = p2), "multi.xlsx")
+# 2) Stack mode (single rc): place plots top-to-bottom with spacing
+save_plot_xlsx(
+  plot   = list(p1, p2),
+  file   = "plots_stacked.xlsx",
+  sheet  = "Plots",
+  rc     = c(1L, 1L),
+  plot_titles = c("MPG vs Weight", "HP vs QSEC"),
+  row_spacer  = 2L,
+  width = 8, height = 4, dpi = 300,
+  overwrite = TRUE
+)
 }
-
 }

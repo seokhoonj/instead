@@ -14,8 +14,7 @@ A meta object summarizing information (see \code{\link[=meta.data.frame]{meta.da
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-}
-\details{
+
 Generic function to display meta information about an object.
 Currently supports data.frame objects with a specific method.
 }
