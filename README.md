@@ -439,18 +439,221 @@ env$restore(dt)
 #> 3 3 6 9
 ```
 
-## 5. Other Utilities
+## 5. Excel Utilities
 
-This section collects small but handy helper functions provided by **instead**.  
+Convenience wrappers to export **tables** into Excel (`.xlsx`) workbooks.\
+They use `openxlsx` internally and handle styling (fonts, borders), title rows, and automatic column width adjustment.
+
+------------------------------------------------------------------------
+
+### 1) `save_data_xlsx()`, `save_data_xlsx_split()`
+
+Wrappers to write **data.frames or matrices** into Excel (`.xlsx`) workbooks using `openxlsx`.
+
+-   **`save_data_xlsx()`**: Writes multiple data sets to a **single worksheet**.
+    -   If `rc` is a length-2 vector (`c(row, col)`), data are **stacked vertically** with optional spacing (`row_spacer`).
+    -   If `rc` is a list of positions, each data is written at the specified coordinates (`c(row, col)`).
+    -   Titles can be added above each data with `data_titles` (defaults to `names(data)`, or none if unavailable).
+    -   With `auto_width = TRUE`, column widths are automatically adjusted (`width_scope = "per_table"` or `"global_max"`).
+-   **`save_data_xlsx_split()`**: Writes each data set to a **separate worksheet**.
+    -   Sheet names can be set via `sheet_names`; defaults to `names(data)` or `"Sheet i"`.
+
+``` r
+library(instead)
+
+# Example data
+d1 <- head(iris)
+d2 <- head(mtcars)
+
+# A) Multiple data stacked in one sheet (with titles + auto width)
+save_data_xlsx(
+  data        = list(iris_tab = d1, mtcars_tab = d2),
+  file        = "data_stacked.xlsx",
+  sheet       = "Summary",
+  rc          = list(c(1, 1)),          # start at A1, subsequent data stacked
+  row_spacer  = 2L,                      # blank rows between data
+  data_titles = c("iris (head)", "mtcars (head)"),
+  auto_width  = TRUE,                    # adjust widths automatically
+  width_scope = "global_max",            # unify widths across all data
+  overwrite   = TRUE
+)
+
+# B) Fixed positions within a single sheet (rc as a list of positions)
+save_data_xlsx(
+  data        = list(A = d1, B = d2),
+  file        = "data_positions.xlsx",
+  sheet       = "Placed",
+  rc          = list(c(1, 1), c(25, 1)), # table A at A1, table B at A25
+  data_titles = c("Block A", "Block B"),
+  auto_width  = TRUE,
+  overwrite   = TRUE
+)
+
+# C) Each table written to a separate sheet
+save_data_xlsx_split(
+  data         = list(iris_tab = d1, mtcars_tab = d2),
+  file         = "data_split.xlsx",
+  rc           = c(1L, 1L),              # all sheets start at A1
+  sheet_names  = c("Iris", "Mtcars"),    # optional sheet names
+  data_titles  = c("iris (head)", "mtcars (head)"),
+  auto_width   = TRUE,
+  overwrite    = TRUE
+)
+```
+
+### 2) `save_plot_xlsx()`, `save_plot_xlsx_split()`
+
+Wrappers to embed **ggplot2 plots** into Excel (`.xlsx`) workbooks using `openxlsx::insertPlot()`. Plots can either be stacked on a single sheet or written one per sheet. Titles above plots are supported, with customizable font family/size.
+
+-   **`save_plot_xlsx()`**: Writes one or more plots into a **single worksheet**.
+    -   If `rc` is a length-2 vector (`c(row, col)`), plots are **stacked vertically** with optional spacing (`row_spacer`) between them.
+    -   If `rc` is a list of positions, each plot is placed at the specified coordinates (`c(row, col)`).
+    -   Titles are taken from `plot_titles` (explicit), then `names(plot)` if available, otherwise omitted.
+-   **`save_plot_xlsx_split()`**: Writes each plot to a **separate worksheet**.
+    -   All sheets share the same start cell `rc` (default `c(1L, 1L)`).
+    -   Sheet names can be set via `sheet_names`; defaults to `names(plot)` or `"Sheet i"`.
+    -   Optional titles can be placed above each plot.
+
+``` r
+library(instead)
+library(ggplot2)
+
+p1 <- ggplot(mtcars, aes(mpg, wt)) + geom_point()
+p2 <- ggplot(mtcars, aes(hp, qsec)) + geom_point()
+
+# A) Fixed positions in one sheet
+save_plot_xlsx(
+  plot        = list("Scatter 1" = p1, "Scatter 2" = p2),
+  file        = "plots_positions.xlsx",
+  sheet       = "Plots",
+  rc          = list(c(1, 1), c(30, 1)),   # manual positions
+  plot_titles = NULL,                       # fall back to names(plot)
+  title_size  = 16,
+  width = 8, height = 4, dpi = 300,
+  overwrite   = TRUE
+)
+
+# B) Stacked vertically in one sheet
+save_plot_xlsx(
+  plot        = list(p1, p2),
+  file        = "plots_stacked.xlsx",
+  sheet       = "Plots",
+  rc          = c(1L, 1L),                  # stack mode
+  plot_titles = c("MPG vs Weight", "HP vs QSEC"),
+  row_spacer  = 2L,
+  width = 8, height = 4, dpi = 300,
+  overwrite   = TRUE
+)
+
+# C) Each plot written to a separate sheet
+save_plot_xlsx_split(
+  plot        = list(Fit1 = p1, Fit2 = p2),
+  file        = "plots_split.xlsx",
+  rc          = c(1L, 1L),
+  sheet_names = c("Scatter MPG~WT", "Scatter HP~QSEC"),
+  plot_titles = c("MPG vs Weight", "HP vs QSEC"),
+  title_size  = 16,
+  width = 8, height = 4, dpi = 300,
+  overwrite   = TRUE
+)
+```
+
+### 3) `save_image_xlsx()`, `save_image_xlsx_split()`
+
+Wrappers to embed **image files** (PNG, JPEG, etc.) into Excel (`.xlsx`) workbooks via `openxlsx::insertImage()`. You can stack multiple images on a single sheet or write one image per sheet. Optional titles above images are supported with customizable font family/size.
+
+-   **`save_image_xlsx()`**: Inserts one or more images into a **single worksheet**.
+    -   **Stack mode** (common): supply a single start cell `rc = c(row, col)`; images are placed **top-to-bottom** with `row_spacer` blank rows between them. The vertical advance is approximated from `height * rows_per_inch`.
+    -   Titles are taken from `image_titles` (explicit), then `names(image)` if available, otherwise omitted.
+    -   Control appearance with `width`, `height`, `dpi`, and title styling via `title_size`, `font_name`.
+-   **`save_image_xlsx_split()`**: Writes each image to a **separate worksheet**.
+    -   All sheets share the same start cell `rc` (default `c(1L, 1L)`).
+    -   Sheet names can be set via `sheet_names`; default is `names(image)` or `"Sheet i"`.
+    -   Optional per-sheet `image_titles` can be placed above each image.
+
+``` r
+library(instead)
+
+img1 <- system.file("img", "Rlogo.png", package = "png")
+img2 <- system.file("img", "Rlogo.png", package = "png")
+
+# A) Fixed positions (manual rc list)
+save_image_xlsx(
+  image        = list("Logo 1" = img1, "Logo 2" = img2),
+  file         = "images_positions.xlsx",
+  sheet        = "Logos",
+  rc           = list(c(1, 1), c(25, 1)),   # place at A1 and A25
+  image_titles = NULL,                       # fall back to names(image)
+  title_size   = 16,
+  width = 6, height = 6, dpi = 300,
+  overwrite    = TRUE
+)
+
+# B) Stacked vertically in one sheet
+save_image_xlsx(
+  image        = list(img1, img2),
+  file         = "images_stacked.xlsx",
+  sheet        = "Logos",
+  rc           = c(1L, 1L),                  # stack mode
+  image_titles = c("Logo A", "Logo B"),
+  row_spacer   = 2L,
+  width = 6, height = 6, dpi = 300,
+  overwrite    = TRUE
+)
+
+# C) Each image written to a separate sheet
+save_image_xlsx_split(
+  image        = list(ImgA = img1, ImgB = img2),
+  file         = "images_split.xlsx",
+  rc           = c(1L, 1L),
+  sheet_names  = c("Logo A", "Logo B"),
+  image_titles = c("First Logo", "Second Logo"),
+  title_size   = 16,
+  width = 6, height = 6, dpi = 300,
+  overwrite    = TRUE
+)
+```
+
+### 4) `set_instead_font()`, `get_instead_font()`
+
+Helpers to manage the **default font family** used by instead’s Excel export utilities (`save_data_xlsx()`, `save_plot_xlsx()`, `save_image_xlsx()`).  
+The font setting is stored in the R option `"instead.font"` and is applied automatically when writing tables, titles, or captions.
+
+- **`set_instead_font()`**: Updates the global `"instead.font"` option.  
+  - Verifies that the font family exists in [systemfonts::system_fonts()].  
+  - If the font is not found, the previous value is restored and an error is raised.  
+  - On Windows, if the `showtext` package is available, fonts are auto-activated for device rendering.
+
+- **`get_instead_font()`**: Retrieves the currently set font family (character scalar).  
+  - Returns `NULL` if no font has been explicitly set.  
+  - Excel functions fall back to the system default when `NULL`.
+
+```r
+library(instead)
+
+# A) Set Comic Sans MS as the default font for Excel outputs
+set_instead_font("Comic Sans MS")
+
+# B) Use system default font again
+set_instead_font(NULL)
+
+# C) Retrieve current setting
+get_instead_font()
+#> [1] "Comic Sans MS"
+```
+
+## 6. Other Utilities
+
+This section collects small but handy helper functions provided by **instead**.\
 They are designed for performance or convenience in common data manipulation tasks.
 
----
+------------------------------------------------------------------------
 
 ### 1) `unilen()`
 
 Count the number of unique elements (a faster alternative to `length(unique(x))`).
 
-```r
+``` r
 library(instead)
 
 x <- c(1, 1, 2, 3, 4, 5, 5)
