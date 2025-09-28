@@ -441,8 +441,7 @@ env$restore(dt)
 
 ## 5. Excel Utilities
 
-Convenience wrappers to export **tables** into Excel (`.xlsx`) workbooks.\
-They use `openxlsx` internally and handle styling (fonts, borders), title rows, and automatic column width adjustment.
+Convenience wrappers to export **tables** into Excel (`.xlsx`) workbooks. They use `openxlsx` internally and handle styling (fonts, borders), title rows, and automatic column width adjustment.
 
 ------------------------------------------------------------------------
 
@@ -616,19 +615,17 @@ save_image_xlsx_split(
 
 ### 4) `set_instead_font()`, `get_instead_font()`
 
-Helpers to manage the **default font family** used by instead’s Excel export utilities (`save_data_xlsx()`, `save_plot_xlsx()`, `save_image_xlsx()`).  
-The font setting is stored in the R option `"instead.font"` and is applied automatically when writing tables, titles, or captions.
+Helpers to manage the **default font family** used by instead’s Excel export utilities (`save_data_xlsx()`, `save_plot_xlsx()`, `save_image_xlsx()`). The font setting is stored in the R option `"instead.font"` and is applied automatically when writing tables, titles, or captions.
 
-- **`set_instead_font()`**: Updates the global `"instead.font"` option.  
-  - Verifies that the font family exists in [systemfonts::system_fonts()].  
-  - If the font is not found, the previous value is restored and an error is raised.  
-  - On Windows, if the `showtext` package is available, fonts are auto-activated for device rendering.
+-   **`set_instead_font()`**: Updates the global `"instead.font"` option.
+    -   Verifies that the font family exists in [systemfonts::system_fonts()].
+    -   If the font is not found, the previous value is restored and an error is raised.
+    -   On Windows, if the `showtext` package is available, fonts are auto-activated for device rendering.
+-   **`get_instead_font()`**: Retrieves the currently set font family (character scalar).
+    -   Returns `NULL` if no font has been explicitly set.
+    -   Excel functions fall back to the system default when `NULL`.
 
-- **`get_instead_font()`**: Retrieves the currently set font family (character scalar).  
-  - Returns `NULL` if no font has been explicitly set.  
-  - Excel functions fall back to the system default when `NULL`.
-
-```r
+``` r
 library(instead)
 
 # A) Set Comic Sans MS as the default font for Excel outputs
@@ -644,8 +641,7 @@ get_instead_font()
 
 ## 6. Other Utilities
 
-This section collects small but handy helper functions provided by **instead**.\
-They are designed for performance or convenience in common data manipulation tasks.
+This section collects small but handy helper functions provided by **instead**. They are designed for performance or convenience in common data manipulation tasks.
 
 ------------------------------------------------------------------------
 
@@ -702,4 +698,30 @@ seq_dates(from, to, label = c("A", "B"))
 #>
 #> $B
 #> [1] "2024-02-01" "2024-02-02"
+```
+
+### 5) `find_group_breaks()`, `find_group_starts()`, `find_group_sizes()`
+
+Helpers to locate **boundaries and sizes of runs (groups)** in a vector. These are useful when working with sequences where values repeat consecutively and you want to know **where groups start, where they end, and how large they are**.
+
+-   **`find_group_breaks(x)`**: Returns the **end indices** of each run of identical consecutive values.
+-   **`find_group_starts(x)`**: Returns the **start indices** of each run.
+-   **`find_group_sizes(x)`**: Returns the **length of each run**.
+
+``` r
+library(instead)
+
+x <- c("a", "a", "b", "b", "b", "c", "a", "a")
+
+# End indices of each group
+find_group_breaks(x)
+#> [1] 2 5 6 8
+
+# Start indices of each group
+find_group_starts(x)
+#> [1] 1 3 6 7
+
+# Sizes of each group
+find_group_sizes(x)
+#> [1] 2 3 1 2
 ```
