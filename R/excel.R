@@ -479,7 +479,7 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
       num_fmt       = num_fmt
     )
 
-    if (isTRUE(auto_width)) {
+    if (auto_width) {
       cw <- .get_col_widths(data[[i]], include_row_names = row_names)
       openxlsx::setColWidths(
         wb, sheet = sheet,
@@ -1246,8 +1246,6 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
                        cols = right_col, gridExpand = TRUE)
   }
 
-  openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
-
   # Applies only to data rows (body + last row), never to header.
   if (!is.null(num_fmt)) {
     fmts <- if (is.list(num_fmt)) unlist(num_fmt) else num_fmt
@@ -1262,7 +1260,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
         if (length(target_cols)) {
           fmt_style <- openxlsx::createStyle(numFmt = fmts)
           for (j in target_cols) {
-            col_on_sheet <- if (isTRUE(row_names)) scol + j else scol + j - 1L
+            col_on_sheet <- if (row_names) scol + j else scol + j - 1L
             openxlsx::addStyle(
               wb, sheet, fmt_style,
               rows = data_rows, cols = col_on_sheet,
@@ -1283,7 +1281,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
               j <- match(nm, colnames(data))
               # format numeric columns only
               if (is.na(j) || !is.numeric(data[[j]])) next
-              col_on_sheet <- if (isTRUE(row_names)) scol + j else scol + j - 1L
+              col_on_sheet <- if (row_names) scol + j else scol + j - 1L
               fmt_style <- openxlsx::createStyle(numFmt = unname(fmts[[nm]]))
               openxlsx::addStyle(
                 wb, sheet, fmt_style,
@@ -1296,6 +1294,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
       }
     }
   }
+  openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
 }
 
 # Internal helper functions -----------------------------------------------
@@ -1305,7 +1304,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
 .get_col_widths <- function(df, include_row_names = FALSE,
                             min_width = 8.43, pad = 3) {
   stopifnot(is.data.frame(df))
-  if (isTRUE(include_row_names)) {
+  if (include_row_names) {
     df <- cbind(.row = rownames(df), df, stringsAsFactors = FALSE)
   }
   cols <- seq_along(df)
