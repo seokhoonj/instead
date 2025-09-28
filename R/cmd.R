@@ -26,15 +26,18 @@ mkdir <- function(folder = c("dev", "data", "info", "inst", "output", "R",
   edir <- folder[exst]
   if (length(ndir) > 0) {
     lapply(ndir, dir.create, recursive = TRUE, showWarnings = FALSE)
-    message(sprintf(
+    message(
       "Created folder(s): ",
       paste0("'", paste(ndir, collapse = "', '"), "'")
-    ))
+    )
   }
   if (length(edir) > 0) {
     message(sprintf(
       "Already exists: ",
-      paste0("'", paste(edir, collapse = "', '"), "'")
+      message(
+        "Already exists: ",
+        paste0("'", paste(edir, collapse = "', '"), "'")
+      )
     ))
   }
 }
