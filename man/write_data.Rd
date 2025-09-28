@@ -11,7 +11,7 @@ write_data(
   rc = c(1L, 1L),
   row_names = TRUE,
   font_name = getOption("instead.font"),
-  font_size = 14,
+  font_size = 11,
   border_colour = "#000000",
   widths = 8.43,
   num_fmt = NULL

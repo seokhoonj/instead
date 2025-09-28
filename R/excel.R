@@ -1127,7 +1127,7 @@ save_image_xlsx_split <- function(image, file,
 #'
 #' @export
 write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
-                       font_name = getOption("instead.font"), font_size = 14,
+                       font_name = getOption("instead.font"), font_size = 11,
                        border_colour = "#000000", widths = 8.43,
                        num_fmt = NULL) {
   header_style1 <- openxlsx::createStyle(
@@ -1154,22 +1154,26 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
   )
   body_style1 <- openxlsx::createStyle(
     fontName = font_name,
+    fontSize = font_size,
     border = "TopRightBottom",
     borderColour = border_colour
   )
   body_style2 <- openxlsx::createStyle(
     fontName = font_name,
+    fontSize = font_size,
     border = "TopBottom",
     borderColour = border_colour
   )
   footer_style1 <- openxlsx::createStyle(
     fontName = font_name,
+    fontSize = font_size,
     border = "TopRightBottom",
     borderColour = border_colour,
     borderStyle = c("thin", "thin", "medium")
   )
   footer_style2 <- openxlsx::createStyle(
     fontName = font_name,
+    fontSize = font_size,
     border = "TopBottom",
     borderColour = border_colour,
     borderStyle = c("thin", "medium")
@@ -1193,7 +1197,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
   left_cols   <- scol:max(ecol - 1L, scol)  # left block (all but last col)
   right_col   <- ecol                       # rightmost column
 
-  # --- Key: Body rows are empty if only 1 row of data ---
+  # Key: Body rows are empty if only 1 row of data
   n <- nrow(data)
   body_rows <- if (n >= 2L) seq.int(srow + 1L, erow - 1L) else integer(0)
 
