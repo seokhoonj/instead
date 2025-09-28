@@ -1188,54 +1188,107 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
 
   if (!row_names) ecol <- ecol - 1
 
-  header_cols  <- scol:ecol
-  header_rows1 <- srow
-  header_cols1 <- scol:max(ecol - 1, 1)
-  header_rows2 <- srow
-  header_cols2 <- ecol
-  body_rows1   <- (srow + 1):max(erow - 1, 2)
-  body_cols1   <- scol:max(ecol - 1, 1)
-  body_rows2   <- (srow + 1):max(erow - 1, 2)
-  body_cols2   <- ecol
-  footer_rows1 <- erow
-  footer_cols1 <- scol:max(ecol - 1, 1)
-  footer_rows2 <- erow
-  footer_cols2 <- ecol
+  # Columns for styling
+  header_cols <- scol:ecol
+  left_cols   <- scol:max(ecol - 1L, scol)  # left block (all but last col)
+  right_col   <- ecol                       # rightmost column
 
-  openxlsx::addStyle(wb, sheet = sheet, header_style1, rows = header_rows1,
-                     cols = header_cols1, gridExpand = TRUE)
-  openxlsx::addStyle(wb, sheet = sheet, header_style2, rows = header_rows2,
-                     cols = header_cols2, gridExpand = TRUE)
-  openxlsx::addStyle(wb, sheet = sheet, body_style1, rows = body_rows1,
-                     cols = body_cols1, gridExpand = TRUE)
-  openxlsx::addStyle(wb, sheet = sheet, body_style2, rows = body_rows2,
-                     cols = body_cols2, gridExpand = TRUE)
-  openxlsx::addStyle(wb, sheet = sheet, footer_style1, rows = footer_rows1,
-                     cols = footer_cols1, gridExpand = TRUE)
-  openxlsx::addStyle(wb, sheet = sheet, footer_style2, rows = footer_rows2,
-                     cols = footer_cols2, gridExpand = TRUE)
+  # --- Key: Body rows are empty if only 1 row of data ---
+  n <- nrow(data)
+  body_rows <- if (n >= 2L) seq.int(srow + 1L, erow - 1L) else integer(0)
+
+  # Header / Footer rows
+  header_row <- srow
+  footer_row <- erow
+
+  # Header styles
+  openxlsx::addStyle(wb, sheet, header_style1, rows = header_row,
+                     cols = left_cols, gridExpand = TRUE)
+  openxlsx::addStyle(wb, sheet, header_style2, rows = header_row,
+                     cols = right_col, gridExpand = TRUE)
+
+  # Body styles (only applied if n >= 2; skipped if body_rows = integer(0))
+  openxlsx::addStyle(wb, sheet, body_style1, rows = body_rows,
+                     cols = left_cols, gridExpand = TRUE)
+  openxlsx::addStyle(wb, sheet, body_style2, rows = body_rows,
+                     cols = right_col, gridExpand = TRUE)
+
+  # Footer styles
+  # Special case: if only 1 row, remove top border to avoid double-line clash
+  footer_style1_top_none <- openxlsx::createStyle(
+    fontName     = font_name,
+    border       = "TopRightBottom",
+    borderColour = border_colour,
+    borderStyle  = c("none", "thin", "medium")  # no top border
+  )
+  footer_style2_top_none <- openxlsx::createStyle(
+    fontName     = font_name,
+    border       = "TopBottom",
+    borderColour = border_colour,
+    borderStyle  = c("none", "medium")          # no top border
+  )
+
+  if (n == 1L) {
+    # Single-row table: apply "no-top-border" footer styles
+    openxlsx::addStyle(wb, sheet, footer_style1_top_none, rows = footer_row,
+                       cols = left_cols, gridExpand = TRUE)
+    openxlsx::addStyle(wb, sheet, footer_style2_top_none, rows = footer_row,
+                       cols = right_col, gridExpand = TRUE)
+  } else {
+    # Multi-row table: apply normal footer styles
+    openxlsx::addStyle(wb, sheet, footer_style1, rows = footer_row,
+                       cols = left_cols, gridExpand = TRUE)
+    openxlsx::addStyle(wb, sheet, footer_style2, rows = footer_row,
+                       cols = right_col, gridExpand = TRUE)
+  }
 
   openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
 
+  # Applies only to data rows (body + last row), never to header.
   if (!is.null(num_fmt)) {
-    fmts <- num_fmt
-    if (is.list(fmts))
-      fmts <- unlist(fmts)
+    fmts <- if (is.list(num_fmt)) unlist(num_fmt) else num_fmt
 
-    valid_cols <- intersect(names(fmts), colnames(data))
-    if (length(valid_cols) > 0) {
-      for (nm in valid_cols) {
-        j <- match(nm, colnames(data))
-        col_on_sheet <- if (row_names) scol + j else scol + j - 1L
+    # rows to format = all body rows + footer row (last data row)
+    data_rows <- c(body_rows, footer_row)
 
-        fmt_style <- openxlsx::createStyle(numFmt = unname(fmts[[nm]]))
+    if (length(data_rows)) {
+      # 1) single unnamed string -> apply to all *numeric* columns
+      if (is.character(fmts) && length(fmts) == 1L && is.null(names(fmts))) {
+        target_cols <- which(vapply(data, is.numeric, logical(1)))
+        if (length(target_cols)) {
+          fmt_style <- openxlsx::createStyle(numFmt = fmts)
+          for (j in target_cols) {
+            col_on_sheet <- if (isTRUE(row_names)) scol + j else scol + j - 1L
+            openxlsx::addStyle(
+              wb, sheet, fmt_style,
+              rows = data_rows, cols = col_on_sheet,
+              gridExpand = TRUE, stack = TRUE
+            )
+          }
+        }
 
-        if (length(body_rows1) > 0)
-          openxlsx::addStyle(wb, sheet, fmt_style, rows = body_rows1,
-                             cols = col_on_sheet, gridExpand = TRUE, stack = TRUE)
-        if (length(footer_rows1) > 0)
-          openxlsx::addStyle(wb, sheet, fmt_style, rows = footer_rows1,
-                             cols = col_on_sheet, gridExpand = TRUE, stack = TRUE)
+      # 2) named vector/list -> apply only to matching columns
+      } else {
+        # keep only valid, existing column names
+        if (is.null(names(fmts))) {
+          warning("Ignoring `num_fmt` because it is an unnamed multi-value vector.")
+        } else {
+          fmts <- fmts[intersect(names(fmts), colnames(data))]
+          if (length(fmts)) {
+            for (nm in names(fmts)) {
+              j <- match(nm, colnames(data))
+              # format numeric columns only
+              if (is.na(j) || !is.numeric(data[[j]])) next
+              col_on_sheet <- if (isTRUE(row_names)) scol + j else scol + j - 1L
+              fmt_style <- openxlsx::createStyle(numFmt = unname(fmts[[nm]]))
+              openxlsx::addStyle(
+                wb, sheet, fmt_style,
+                rows = data_rows, cols = col_on_sheet,
+                gridExpand = TRUE, stack = TRUE
+              )
+            }
+          }
+        }
       }
     }
   }
