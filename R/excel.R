@@ -1294,7 +1294,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
       }
     }
   }
-  openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
+  # openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
 }
 
 # Internal helper functions -----------------------------------------------
