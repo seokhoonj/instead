@@ -13,7 +13,8 @@ write_data(
   font_name = getOption("instead.font"),
   font_size = 14,
   border_colour = "#000000",
-  widths = 8.43
+  widths = 8.43,
+  num_fmt = NULL
 )
 }
 \arguments{
@@ -38,9 +39,20 @@ write_data(
 
 \item{widths}{Column width(s) to apply. Can be a single numeric (recycled)
 or a numeric vector matching the number of columns. Default \code{8.43}.}
+
+\item{num_fmt}{Optional numeric format(s) applied to data cells (headers
+excluded). Accepts either:
+\itemize{
+\item A \strong{single character format string} applied to all numeric cells
+(e.g. \code{"0.00"} for 2 decimals, \code{"#,##0"} for thousands separator,
+\code{"0.00\%"} for percentages).
+\item A \strong{named character vector or list} mapping column names to formats,
+e.g. \code{c(value = "#,##0", rate = "0.0\%")}. Columns not listed are left
+unchanged. Unknown column names are silently ignored.
+}}
 }
 \value{
-No return value; called for side effects (modifies the workbook).
+No return value. Called for side effects (writes into workbook).
 }
 \description{
 Low-level helper for writing tabular data into an Excel sheet with
@@ -59,6 +71,15 @@ Features:
 \item \strong{Footer}: thicker bottom border.
 }
 \item Sets column widths (fixed or vectorized).
+}
+
+Formatting strings follow Excel's built-in custom number formats. Some
+common patterns:
+\itemize{
+\item \code{"0"} -> integers
+\item \code{"0.00"} -> fixed 2 decimals
+\item \code{"#,##0"} -> thousands separator
+\item \code{"0.00\%"} -> percentages with 2 decimals
 }
 }
 \examples{

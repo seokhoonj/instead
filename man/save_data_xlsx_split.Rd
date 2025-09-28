@@ -17,6 +17,7 @@ save_data_xlsx_split(
   border_colour = "#000000",
   widths = 8.43,
   auto_width = TRUE,
+  num_fmt = NULL,
   overwrite = FALSE
 )
 }
@@ -42,6 +43,17 @@ Written \strong{above} each table. If \code{NULL}, no titles are written.}
 
 \item{auto_width}{Logical. If \code{TRUE}, compute per-column widths and apply to data columns.
 Default \code{TRUE}.}
+
+\item{num_fmt}{Optional numeric format(s) applied to data cells (headers
+excluded). Accepts either:
+\itemize{
+\item A \strong{single character format string} applied to all numeric cells
+(e.g. \code{"0.00"} for 2 decimals, \code{"#,##0"} for thousands separator,
+\code{"0.00\%"} for percentages).
+\item A \strong{named character vector or list} mapping column names to formats,
+e.g. \code{c(value = "#,##0", rate = "0.0\%")}. Columns not listed are left
+unchanged. Unknown column names are silently ignored.
+}}
 
 \item{overwrite}{Logical; if \code{TRUE}, overwrite an existing workbook. Default \code{FALSE}.}
 }

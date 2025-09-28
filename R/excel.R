@@ -107,6 +107,14 @@ to_a1_col <- function(x) {
 #'     takes the **maximum width per column** across them, then applies widths **once**,
 #'     preventing later tables from overwriting the widths set by earlier ones.
 #'   Default `"global_max"`.
+#' @param num_fmt Optional numeric format(s) applied to data cells (headers
+#'   excluded). Accepts either:
+#'   - A **single character format string** applied to all numeric cells
+#'     (e.g. `"0.00"` for 2 decimals, `"#,##0"` for thousands separator,
+#'     `"0.00%"` for percentages).
+#'   - A **named character vector or list** mapping column names to formats,
+#'     e.g. `c(value = "#,##0", rate = "0.0%")`. Columns not listed are left
+#'     unchanged. Unknown column names are silently ignored.
 #' @param overwrite Logical; passed to `openxlsx::saveWorkbook()`. Default `FALSE`.
 #'
 #' @return (Invisibly) the path to `file`. Side-effects: creates/updates an Excel file.
@@ -163,6 +171,7 @@ save_data_xlsx <- function(data, file, sheet = "Data",
                            widths = 8.43,
                            auto_width = TRUE,
                            width_scope = c("global_max", "per_table"),
+                           num_fmt = NULL,
                            overwrite = FALSE) {
   width_scope <- match.arg(width_scope)
 
@@ -277,7 +286,8 @@ save_data_xlsx <- function(data, file, sheet = "Data",
       font_size     = font_size,
       font_name     = font_name,
       border_colour = border_colour,
-      widths        = widths
+      widths        = widths,
+      num_fmt       = num_fmt
     )
 
     if (auto_width) {
@@ -323,6 +333,14 @@ save_data_xlsx <- function(data, file, sheet = "Data",
 #' @param font_name,font_size,border_colour,widths Styling forwarded to [write_data()].
 #' @param auto_width Logical. If `TRUE`, compute per-column widths and apply to data columns.
 #'   Default `TRUE`.
+#' @param num_fmt Optional numeric format(s) applied to data cells (headers
+#'   excluded). Accepts either:
+#'   - A **single character format string** applied to all numeric cells
+#'     (e.g. `"0.00"` for 2 decimals, `"#,##0"` for thousands separator,
+#'     `"0.00%"` for percentages).
+#'   - A **named character vector or list** mapping column names to formats,
+#'     e.g. `c(value = "#,##0", rate = "0.0%")`. Columns not listed are left
+#'     unchanged. Unknown column names are silently ignored.
 #' @param overwrite Logical; if `TRUE`, overwrite an existing workbook. Default `FALSE`.
 #'
 #' @return (Invisibly) the path to `file`. Side-effects: creates/updates an Excel file.
@@ -366,6 +384,7 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
                                  border_colour = "#000000",
                                  widths = 8.43,
                                  auto_width = TRUE,
+                                 num_fmt = NULL,
                                  overwrite = FALSE) {
   # normalize input
   if (is.data.frame(data) || is.matrix(data)) data <- list(data)
@@ -456,7 +475,8 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
       font_size     = font_size,
       font_name     = font_name,
       border_colour = border_colour,
-      widths        = widths
+      widths        = widths,
+      num_fmt       = num_fmt
     )
 
     if (isTRUE(auto_width)) {
@@ -1068,9 +1088,26 @@ save_image_xlsx_split <- function(image, file,
 #' @param border_colour Border colour (hex string). Default `"#000000"`.
 #' @param widths Column width(s) to apply. Can be a single numeric (recycled)
 #'   or a numeric vector matching the number of columns. Default `8.43`.
+#' @param num_fmt Optional numeric format(s) applied to data cells (headers
+#'   excluded). Accepts either:
+#'   - A **single character format string** applied to all numeric cells
+#'     (e.g. `"0.00"` for 2 decimals, `"#,##0"` for thousands separator,
+#'     `"0.00%"` for percentages).
+#'   - A **named character vector or list** mapping column names to formats,
+#'     e.g. `c(value = "#,##0", rate = "0.0%")`. Columns not listed are left
+#'     unchanged. Unknown column names are silently ignored.
 #'
-#' @return No return value; called for side effects (modifies the workbook).
+#' @return No return value. Called for side effects (writes into workbook).
 #'
+#' @details
+#' Formatting strings follow Excel's built-in custom number formats. Some
+#' common patterns:
+#' \itemize{
+#'   \item `"0"` -> integers
+#'   \item `"0.00"` -> fixed 2 decimals
+#'   \item `"#,##0"` -> thousands separator
+#'   \item `"0.00%"` -> percentages with 2 decimals
+#' }
 #' @examples
 #' \dontrun{
 #' wb <- openxlsx::createWorkbook()
@@ -1091,7 +1128,8 @@ save_image_xlsx_split <- function(image, file,
 #' @export
 write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
                        font_name = getOption("instead.font"), font_size = 14,
-                       border_colour = "#000000", widths = 8.43) {
+                       border_colour = "#000000", widths = 8.43,
+                       num_fmt = NULL) {
   header_style1 <- openxlsx::createStyle(
     fontName = font_name,
     fontSize = font_size,
@@ -1101,7 +1139,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
     fgFill = "#E6E6E7",
     border = "TopRightBottom",
     borderColour = border_colour,
-    borderStyle = c("thick", "thin", "double")
+    borderStyle = c("medium", "thin", "double")
   )
   header_style2 <- openxlsx::createStyle(
     fontName = font_name,
@@ -1112,7 +1150,7 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
     fgFill = "#E6E6E7",
     border = "TopBottom",
     borderColour = border_colour,
-    borderStyle = c("thick", "double")
+    borderStyle = c("medium", "double")
   )
   body_style1 <- openxlsx::createStyle(
     fontName = font_name,
@@ -1128,13 +1166,13 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
     fontName = font_name,
     border = "TopRightBottom",
     borderColour = border_colour,
-    borderStyle = c("thin", "thin", "thick")
+    borderStyle = c("thin", "thin", "medium")
   )
   footer_style2 <- openxlsx::createStyle(
     fontName = font_name,
     border = "TopBottom",
     borderColour = border_colour,
-    borderStyle = c("thin", "thick")
+    borderStyle = c("thin", "medium")
   )
 
   openxlsx::writeData(wb = wb, sheet = sheet, x = data, xy = rev(rc),
@@ -1178,6 +1216,29 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
                      cols = footer_cols2, gridExpand = TRUE)
 
   openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
+
+  if (!is.null(num_fmt)) {
+    fmts <- num_fmt
+    if (is.list(fmts))
+      fmts <- unlist(fmts)
+
+    valid_cols <- intersect(names(fmts), colnames(data))
+    if (length(valid_cols) > 0) {
+      for (nm in valid_cols) {
+        j <- match(nm, colnames(data))
+        col_on_sheet <- if (row_names) scol + j else scol + j - 1L
+
+        fmt_style <- openxlsx::createStyle(numFmt = unname(fmts[[nm]]))
+
+        if (length(body_rows1) > 0)
+          openxlsx::addStyle(wb, sheet, fmt_style, rows = body_rows1,
+                             cols = col_on_sheet, gridExpand = TRUE, stack = TRUE)
+        if (length(footer_rows1) > 0)
+          openxlsx::addStyle(wb, sheet, fmt_style, rows = footer_rows1,
+                             cols = col_on_sheet, gridExpand = TRUE, stack = TRUE)
+      }
+    }
+  }
 }
 
 # Internal helper functions -----------------------------------------------

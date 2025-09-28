@@ -19,6 +19,7 @@ save_data_xlsx(
   widths = 8.43,
   auto_width = TRUE,
   width_scope = c("global_max", "per_table"),
+  num_fmt = NULL,
   overwrite = FALSE
 )
 }
@@ -61,6 +62,17 @@ Default \code{TRUE}.}
 takes the \strong{maximum width per column} across them, then applies widths \strong{once},
 preventing later tables from overwriting the widths set by earlier ones.
 Default \code{"global_max"}.
+}}
+
+\item{num_fmt}{Optional numeric format(s) applied to data cells (headers
+excluded). Accepts either:
+\itemize{
+\item A \strong{single character format string} applied to all numeric cells
+(e.g. \code{"0.00"} for 2 decimals, \code{"#,##0"} for thousands separator,
+\code{"0.00\%"} for percentages).
+\item A \strong{named character vector or list} mapping column names to formats,
+e.g. \code{c(value = "#,##0", rate = "0.0\%")}. Columns not listed are left
+unchanged. Unknown column names are silently ignored.
 }}
 
 \item{overwrite}{Logical; passed to \code{openxlsx::saveWorkbook()}. Default \code{FALSE}.}
