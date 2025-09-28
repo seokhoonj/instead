@@ -13,7 +13,7 @@ save_image_xlsx(
   height = 6,
   dpi = 300,
   image_titles = NULL,
-  title_size = 16,
+  title_size = 14,
   font_name = getOption("instead.font"),
   row_spacer = 2L,
   rows_per_inch = 5L,
@@ -33,7 +33,7 @@ save_image_xlsx(
 
 \item{image_titles}{Optional character vector of titles (one per image); written one row above the image.}
 
-\item{title_size}{Numeric font size for titles. Default 16.}
+\item{title_size}{Numeric font size for titles. Default 14.}
 
 \item{font_name}{Font family for title text. Default getOption("instead.font").}
 
@@ -63,7 +63,7 @@ save_image_xlsx(
   sheet        = "MyImages",
   rc           = c(1L, 1L),   # start at A1
   image_titles = c("First Image Title", "Second Image Title"),
-  title_size   = 14,
+  title_size   = 16,
   width        = 6, height = 4, dpi = 300,
   row_spacer   = 2L,
   overwrite    = TRUE

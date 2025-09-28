@@ -13,7 +13,7 @@ save_plot_xlsx_split(
   height = 4,
   dpi = 300,
   plot_titles = NULL,
-  title_size = 16,
+  title_size = 14,
   font_name = getOption("instead.font"),
   overwrite = FALSE
 )
@@ -33,7 +33,7 @@ save_plot_xlsx_split(
 
 \item{plot_titles}{Optional character vector of titles (one per plot); written one row above the plot.}
 
-\item{title_size}{Numeric font size for titles. Default 16.}
+\item{title_size}{Numeric font size for titles. Default 14.}
 
 \item{font_name}{Font family for title text. Default getOption("instead.font").}
 

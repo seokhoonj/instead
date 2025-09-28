@@ -10,7 +10,7 @@ save_image_xlsx_split(
   rc = c(1L, 1L),
   sheet_names = NULL,
   image_titles = NULL,
-  title_size = 16,
+  title_size = 14,
   font_name = getOption("instead.font"),
   width = 12,
   height = 6,
@@ -30,7 +30,7 @@ If NULL, names(image) (when present) are used; otherwise "Sheet i".}
 
 \item{image_titles}{Optional character vector of titles (one per image); written one row above the image.}
 
-\item{title_size}{Numeric font size for titles. Default 16.}
+\item{title_size}{Numeric font size for titles. Default 14.}
 
 \item{font_name}{Font family for title text. Default getOption("instead.font").}
 
@@ -57,7 +57,7 @@ save_image_xlsx_split(
   file         = "images_split.xlsx",
   rc           = c(1L, 1L),
   image_titles = c("Title for first image", "Title for second image"),
-  title_size   = 14,
+  title_size   = 16,
   overwrite    = TRUE
 )
 

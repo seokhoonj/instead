@@ -11,7 +11,7 @@ save_data_xlsx(
   rc = list(c(1L, 1L)),
   row_spacer = 2L,
   data_titles = NULL,
-  title_size = 18,
+  title_size = 14,
   row_names = FALSE,
   font_name = getOption("instead.font"),
   font_size = 14,
@@ -41,7 +41,7 @@ length matches \code{length(data)}, these are written \strong{above} each table.
 If \code{data_titles} is \code{NULL}, \code{names(data)} are used when available.
 If neither is available, no title is written for that table.}
 
-\item{title_size}{Numeric font size for titles. Default \code{18}.}
+\item{title_size}{Numeric font size for titles. Default \code{14}.}
 
 \item{row_names}{Logical; forwarded to \code{\link[=write_data]{write_data()}} to include row names
 in the written table. Default \code{FALSE}.}

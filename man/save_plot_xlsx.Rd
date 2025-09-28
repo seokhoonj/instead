@@ -13,7 +13,7 @@ save_plot_xlsx(
   height = 4,
   dpi = 300,
   plot_titles = NULL,
-  title_size = 16,
+  title_size = 14,
   font_name = getOption("instead.font"),
   row_spacer = 2L,
   rows_per_inch = 5,
@@ -37,7 +37,7 @@ vectors (fixed positions).}
 \item{plot_titles}{Optional character vector of titles (length = length(plot)).
 If \code{NULL}, \code{names(plot)} are used when available; otherwise no titles.}
 
-\item{title_size}{Numeric font size for titles. Default \code{16}.}
+\item{title_size}{Numeric font size for titles. Default \code{14}.}
 
 \item{font_name}{Font family for title text (passed to openxlsx style).
 Default \code{getOption("instead.font")}.}
