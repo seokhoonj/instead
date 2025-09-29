@@ -43,6 +43,7 @@
 #' @export
 count_stay <- function(df, id_var, group_var, from_var, to_var) {
   assert_class(df, "data.frame")
+
   env <- ensure_dt_env(df)
   dt  <- env$dt
 
@@ -120,6 +121,7 @@ count_stay <- function(df, id_var, group_var, from_var, to_var) {
 limit_stay <- function(df, id_var, group_var, from_var, to_var,
                        limit, waiting, deduction = 0) {
   assert_class(df, "data.frame")
+
   env <- ensure_dt_env(df)
   dt  <- env$dt
 
