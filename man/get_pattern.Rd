@@ -20,6 +20,8 @@ A character vector of the same length as \code{x}.
 Extract the first regex match from each string (empty string if no match).
 }
 \examples{
-\donttest{get_pattern(pattern = "c", c("a|b|c", "a|c|c"))}
+\donttest{
+get_pattern(pattern = "c", c("a|b|c", "a|c|c"))
+}
 
 }

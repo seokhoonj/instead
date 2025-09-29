@@ -20,6 +20,8 @@ An integer vector of match counts (same length as \code{x}).
 Count regex matches in each string.
 }
 \examples{
-\donttest{count_pattern(pattern = "c", c("a|b|c", "a|c|c"))}
+\donttest{
+count_pattern(pattern = "c", c("a|b|c", "a|c|c"))
+}
 
 }

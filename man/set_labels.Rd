@@ -32,7 +32,7 @@ of a data.frame. Labels are stored as the \code{"label"} attribute
 of each column.
 }
 \examples{
-\dontrun{
+\donttest{
 df <- data.frame(Q1 = c(0, 1, 1), Q2 = c(1, 0, 1))
 
 # set labels
@@ -41,7 +41,7 @@ set_labels(df, labels = c("Rainy?", "Umbrella?"))
 # get labels
 get_labels(df)
 
-View(df)
+# View(df)
 }
 
 }

@@ -30,7 +30,7 @@ Fast preprocessing of admission/discharge spans:
 \item \strong{I/O conveniences}
 Thin wrappers for pragmatic data loading: \code{read_rds()}, \code{read_xl()}, \code{read_wb()}.
 \item \strong{String utilities (Japanese text support)}
-Detection and \strong{Zenkaku → Hankaku} conversion, plus simple regex pattern builders.
+Detection and \strong{Zenkaku -> Hankaku} conversion, plus simple regex pattern builders.
 }
 
 Functions that operate on a \strong{\code{data.table}} typically \strong{modify in place};

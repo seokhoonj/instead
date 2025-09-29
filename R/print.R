@@ -29,9 +29,15 @@
 draw_line <- function(width, mark = "=") {
   if (missing(width))
     width <- getOption("width")
-  sapply(width, function(x)
-    paste(rep(mark, times = ifelse(!is.na(x), min(x, getOption("width")), 0)),
-          collapse = "")
+  vapply(
+    width,
+    function(x) {
+      paste(
+        rep(mark, times = ifelse(!is.na(x), min(x, getOption("width")), 0)),
+        collapse = ""
+      )
+    },
+    character(1L)
   )
 }
 
@@ -134,24 +140,24 @@ aprint <- function(x, width = 4, nchar_limit = 16,
   align <- match.arg(align)
   cols <- names(df)
   nchar_cols <- nchar(cols)
-  notc_cols_no <- which(sapply(df, class) != "character")
+  notc_cols_no <- which(!vapply(df, is.character, logical(1L)))
   if (length(notc_cols_no) > 0)
     df[, notc_cols_no] <- lapply(df[, notc_cols_no, drop = FALSE],
                                  as.character)
-  names_width <- sapply(df, function(x) {
-    if (all(is.na(x))) 2L else max(nchar(x), na.rm = T)
-  })
+  names_width <- vapply(df, function(x) {
+    if (all(is.na(x))) 2L else max(nchar(x), na.rm = TRUE)
+  }, integer(1L))
   if (missing(width)) {
     width <- pmax(names_width)
   } else {
     width <- pmax(names_width, min(width, max(nchar_cols)))
   }
   df[] <- lapply(df, function(x) if (is.character(x)) ifelse(is.na(x), "", x) else x)
-  side <- sapply(df, function(x) if (is.character(x)) "right" else "left")
+  side <- ifelse(vapply(df, is.character, logical(1L)), "right", "left")
   df[] <- lapply(seq_along(df), function(x)
     stringr::str_pad(df[[x]], width = width[x], side = side[x])
   )
-  abb_cols <- substr(names(width), 1L, width)
+  abb_cols <- substr(cols, 1L, width)
   new_cols <- stringr::str_pad(abb_cols, width = width, pad = " ", side = align)
   names(df) <- new_cols
   attr(df, "columns") <- cols

@@ -38,13 +38,14 @@ read_rds <- function(file, refhook = NULL) {
   if (inherits(df, "data.frame"))
     return(data.table::setalloccol(df))
   if (inherits(df, "list")) {
-    loc <- sapply(df, function(x) inherits(x, "data.frame"))
+    loc <- vapply(df, function(x) inherits(x, "data.frame"), logical(1L))
     if (any(loc)) {
       df[loc] <- lapply(df[loc], function(x) data.table::setalloccol(x))
       return(df)
     }
   }
-  return(df)
+
+  df
 }
 
 #' Read an Excel sheet as a data.table
@@ -100,7 +101,8 @@ read_xl <- function(path, sheet = NULL, range = NULL, col_names = TRUE,
     n_max = n_max, guess_max = guess_max, .name_repair = .name_repair
   )
   data.table::setDT(z)
-  return(z)
+
+  z
 }
 
 #' Read an Excel sheet with openxlsx as a data.table
@@ -162,5 +164,6 @@ read_wb <- function(xlsx_file, sheet = NULL, start_row = 1, col_names = TRUE,
     fillMergedCells = fill_merged_cells
   )
   data.table::setDT(z)
-  return(z)
+
+  z
 }

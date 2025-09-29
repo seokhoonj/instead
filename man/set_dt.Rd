@@ -21,7 +21,7 @@ A wrapper around \code{\link[data.table:setDT]{data.table::setDT()}} that conver
 preserves naming in the calling environment.
 }
 \examples{
-\dontrun{
+\donttest{
 df <- data.frame(x = 1:3, y = 4:6)
 set_dt(df)
 class(df)  # now includes "data.table"

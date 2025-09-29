@@ -28,7 +28,7 @@
 #'   Thin wrappers for pragmatic data loading: `read_rds()`, `read_xl()`, `read_wb()`.
 #'
 #' - **String utilities (Japanese text support)**
-#'   Detection and **Zenkaku → Hankaku** conversion, plus simple regex pattern builders.
+#'   Detection and **Zenkaku -> Hankaku** conversion, plus simple regex pattern builders.
 #'
 #' Functions that operate on a **`data.table`** typically **modify in place**;
 #' most others return new objects. See individual topics for details and examples.

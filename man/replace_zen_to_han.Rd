@@ -28,11 +28,11 @@ as the input.
 }
 \examples{
 \dontrun{
-# data.frame input → returns a modified copy
+# data.frame input -> returns a modified copy
 df <- data.frame("Ａ" = c("Ａ", "Ｂ"))
 replace_zen_to_han(df)
 
-# data.table input → modified in place
+# data.table input -> modified in place
 dt <- data.table::data.table("Ａ" = c("Ａ", "Ｂ"))
 replace_zen_to_han(dt)
 dt  # column names and values converted

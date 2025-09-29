@@ -45,7 +45,7 @@
 ensure_dt_env <- function(x) {
   lifecycle::signal_stage("experimental", "ensure_dt_env()")
   if (inherits(x, "data.table")) {
-    # Input is already a data.table → modify in place
+    # Input is already a data.table -> modify in place
     list(
       dt = x,
       restore = function(z) z,   # return unchanged

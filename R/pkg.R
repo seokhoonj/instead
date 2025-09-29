@@ -69,14 +69,14 @@
 }
 
 .print_description_imports <- function(packages = c("data.table", "ggplot2")) {
-  lines <- sort(unique(sapply(packages, function(x)
-    sprintf("%s (>= %s)", x, utils::packageVersion(x)))))
+  lines <- sort(unique(vapply(packages, function(x)
+    sprintf("%s (>= %s)", x, utils::packageVersion(x)), character(1L))))
   cat("Imports:", paste0("\n  ", lines))
 }
 
 .print_description_license <- function(packages = c("data.table", "ggplot2")) {
-  lines <- sort(unique(sapply(packages, function(x)
-    sprintf("%s (%s)", x, .package_license(x)))))
+  lines <- sort(unique(vapply(packages, function(x)
+    sprintf("%s (%s)", x, .package_license(x)), character(1L))))
   cat("X-PackageLicense:", paste0("\n  ", lines))
 }
 
@@ -86,7 +86,11 @@
                                           "readxl", "reticulate", "rlang",
                                           "scales", "stringi", "stringr",
                                           "tibble", "usethis", "utils")) {
-  license <- sapply(packages, function(x) utils::packageDescription(x)["License"])
+  license <- vapply(
+    packages,
+    function(x) utils::packageDescription(x)["License"],
+    character(1L)
+  )
   names(license) <- packages
   license
 }

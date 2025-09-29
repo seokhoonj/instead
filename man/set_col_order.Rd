@@ -24,7 +24,7 @@ column reordering with tidy-eval expressions. The function modifies
 the input object \strong{in place}.
 }
 \examples{
-\dontrun{
+\donttest{
 # With data.frame
 df1 <- mtcars
 set_col_order(df1, .(gear, carb), after = mpg)

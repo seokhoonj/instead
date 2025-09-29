@@ -191,11 +191,11 @@ capture_chr <- function(x) {
 
 #' Normalize a raw language object (symbol or call) into a character vector
 #'
-#' - If `x` is a symbol → returns its name.
-#' - If `x` is a call to `c()`, `list()`, or `.(...)` → recursively
+#' - If `x` is a symbol -> returns its name.
+#' - If `x` is a call to `c()`, `list()`, or `.(...)` -> recursively
 #'   convert arguments and flatten to a character vector.
-#' - If `x` is already a character vector → returns it unchanged.
-#' - Otherwise → throws an error.
+#' - If `x` is already a character vector -> returns it unchanged.
+#' - Otherwise -> throws an error.
 #'
 #' @examples
 #' \donttest{

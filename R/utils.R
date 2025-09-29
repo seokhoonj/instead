@@ -274,7 +274,7 @@ set_col_upper <- function(df)
 #' @return No return value, called for side effects (the column order of `df` is changed).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # With data.frame
 #' df1 <- mtcars
 #' set_col_order(df1, .(gear, carb), after = mpg)
@@ -313,16 +313,14 @@ set_col_order <- function(df, neworder, before = NULL, after = NULL) {
 #'   to the requested columns.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' df <- data.frame(Q1 = c(0, 1, 1), Q2 = c(1, 0, 1))
 #'
 #' # set labels
 #' set_labels(df, labels = c("Rainy?", "Umbrella?"))
 #'
 #' # get labels
-#' get_labels(df)
-#'
-#' View(df)
+#' get_labels(df) # or View(df)
 #' }
 #'
 #' @export
@@ -361,7 +359,7 @@ get_labels <- function(df, cols) {
 #' @seealso [data.table::setDT()]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' df <- data.frame(x = 1:3, y = 4:6)
 #' set_dt(df)
 #' class(df)  # now includes "data.table"
@@ -402,7 +400,7 @@ set_dt <- function(df) {
 #' @seealso [tibble::as_tibble()]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' df <- data.frame(x = 1:3, y = 4:6)
 #' set_tibble(df)
 #' class(df)  # "tbl_df" "tbl" "data.frame"

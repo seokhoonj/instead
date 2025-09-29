@@ -22,7 +22,7 @@ semantics similar to \code{\link[data.table:setDT]{data.table::setDT()}}, then a
 class attribute.
 }
 \examples{
-\dontrun{
+\donttest{
 df <- data.frame(x = 1:3, y = 4:6)
 set_tibble(df)
 class(df)  # "tbl_df" "tbl" "data.frame"

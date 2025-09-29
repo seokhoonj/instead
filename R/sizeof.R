@@ -22,7 +22,7 @@
 #' @return A data frame (or data.table) describing object size(s) in the chosen unit.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Check the size of the current frame
 #' sizeof(sys.frame(), unit = "KB")
 #'
@@ -52,8 +52,8 @@ sizeof.default <- function(x, unit = "MB") {
 #' @export
 sizeof.data.frame <- function(x, unit = "MB") {
   column <- names(x)
-  class  <- sapply(x, function(s) paste(class(s), collapse = ","))
-  type   <- sapply(x, typeof)
+  class  <- vapply(x, function(s) paste(class(s), collapse = ","), character(1L))
+  type   <- vapply(x, typeof, character(1L))
   size   <- c(lapply(x, function(s) utils::object.size(s)),
               total = utils::object.size(x))
   power  <- switch(toupper(unit), B = 0, KB = 1, MB = 2, GB = 3)
@@ -70,8 +70,8 @@ sizeof.data.frame <- function(x, unit = "MB") {
 #' @export
 sizeof.data.table <- function(x, unit = "MB") {
   column <- names(x)
-  class  <- sapply(x, function(s) paste(class(s), collapse = ","))
-  type   <- sapply(x, typeof)
+  class  <- vapply(x, function(s) paste(class(s), collapse = ","), character(1L))
+  type   <- vapply(x, typeof, character(1L))
   size   <- c(lapply(x, function(s) utils::object.size(s)),
               total = utils::object.size(x))
   power  <- switch(toupper(unit), B = 0, KB = 1, MB = 2, GB = 3)
@@ -90,8 +90,16 @@ sizeof.environment <- function(x, unit = "MB") {
   x <- sys.frame()
   env <- ls(all.names = TRUE, envir = x)
   if (length(env) == 0L) stop("Object not found.")
-  class <- sapply(env, function(s) paste(class(get(s, envir = x)), collapse = ","))
-  size  <- sapply(env, function(s) utils::object.size(get(s, envir = x)))
+  class <- vapply(
+    env,
+    function(s) paste(class(get(s, envir = x)), collapse = ","),
+    character(1L)
+  )
+  size  <- vapply(
+    env,
+    function(s) as.numeric(utils::object.size(get(s, envir = x))),
+    numeric(1L)
+  )
   sizes <- c(size, total = sum(size))
   power <- switch(toupper(unit), B = 0, KB = 1, MB = 2, GB = 3)
   data.frame(

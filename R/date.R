@@ -102,21 +102,22 @@ as_date_iso <- function(x) {
 #' - POSIXt drops time (converted via as.Date()).
 #' - "" treated as NA.
 #' - First parse ISO-like formats (fast, unambiguous), then handle 2-digit day/month.
-#' - Anything not parsed → error with a short preview.
+#' - Anything not parsed -> error with a short preview.
 #'
 #' @param x character | factor | Date | POSIXt vector
 #'
 #' @return Date vector the same length as `x`
 #'
 #' @examples
-#' \dontrun{
 #' # ISO-like formats
 #' as_date_safe(c("2024-01-01", "20240102", "2024/01/03"))
 #' #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
 #'
+#' \dontrun{
 #' # Ambiguous two-digit cases raise an error
 #' as_date_safe("01/08/2017")
 #' #> Error: Ambiguous date(s): 01/08/2017 (could be DD/MM/YYYY or MM/DD/YYYY).
+#' }
 #'
 #' # Unambiguous two-digit cases are parsed
 #' as_date_safe(c("13/02/2017", "02/13/2017"))
@@ -131,7 +132,8 @@ as_date_iso <- function(x) {
 #' as_date_safe(f)
 #' #> [1] "2024-01-10"
 #'
-#' # Unsupported formats → error
+#' \dontrun{
+#' # Unsupported formats -> error
 #' as_date_safe("2024.01.01")
 #' #> Error: Unsupported date format(s): 2024.01.01.
 #' }

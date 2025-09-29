@@ -103,11 +103,11 @@ zen_to_han <- function(x) {
 #'
 #' @examples
 #' \dontrun{
-#' # data.frame input → returns a modified copy
+#' # data.frame input -> returns a modified copy
 #' df <- data.frame("Ａ" = c("Ａ", "Ｂ"))
 #' replace_zen_to_han(df)
 #'
-#' # data.table input → modified in place
+#' # data.table input -> modified in place
 #' dt <- data.table::data.table("Ａ" = c("Ａ", "Ｂ"))
 #' replace_zen_to_han(dt)
 #' dt  # column names and values converted
@@ -119,7 +119,7 @@ replace_zen_to_han <- function(df) {
   env <- ensure_dt_env(df)
   dt <- env$dt
   data.table::setnames(dt, zen_to_han(names(dt)))
-  cols <- names(which(sapply(dt, function(x) any(is_japanese(x)))))
+  cols <- names(which(vapply(dt, function(x) any(is_japanese(x)), logical(1))))
   lapply(dt, is_japanese)
   if (length(cols))
     dt[, `:=`((cols), lapply(.SD, zen_to_han)), .SDcols = cols]

@@ -85,7 +85,7 @@ split_str <- function(x, split = "|")
 #' @export
 split_and_paste_uni_str <- function(x, split = "|") {
   z <- split_str(x, split = split)
-  sapply(z, function(x) paste_uni_str(x, collapse = split))
+  vapply(z, function(x) paste_uni_str(x, collapse = split), character(1L))
 }
 
 #' @rdname split_and_paste_uni_str
@@ -95,7 +95,7 @@ split_and_paste_uni_str <- function(x, split = "|") {
 #' @export
 split_and_paste_sort_uni_str <- function(x, split = "|") {
   z <- split_str(x, split = split)
-  sapply(z, function(x) paste_sort_uni_str(x, collapse = split))
+  vapply(z, function(x) paste_sort_uni_str(x, collapse = split), character(1L))
 }
 
 #' Count pattern matches
@@ -109,12 +109,17 @@ split_and_paste_sort_uni_str <- function(x, split = "|") {
 #' @return An integer vector of match counts (same length as `x`).
 #'
 #' @examples
-#' \donttest{count_pattern(pattern = "c", c("a|b|c", "a|c|c"))}
+#' \donttest{
+#' count_pattern(pattern = "c", c("a|b|c", "a|c|c"))
+#' }
 #'
 #' @export
 count_pattern <- function(pattern, x, ignore.case = FALSE) {
-  sapply(gregexpr(pattern, x, ignore.case = ignore.case, perl = TRUE),
-         function(x) length(x[x != -1]))
+  vapply(
+    gregexpr(pattern, x, ignore.case = ignore.case, perl = TRUE),
+    function(m) length(m[m != -1]),
+    integer(1L)
+  )
 }
 
 #' Get first match
@@ -128,7 +133,9 @@ count_pattern <- function(pattern, x, ignore.case = FALSE) {
 #' @return A character vector of the same length as `x`.
 #'
 #' @examples
-#' \donttest{get_pattern(pattern = "c", c("a|b|c", "a|c|c"))}
+#' \donttest{
+#' get_pattern(pattern = "c", c("a|b|c", "a|c|c"))
+#' }
 #'
 #' @export
 get_pattern <- function(pattern, x, ignore.case = TRUE) {
@@ -158,9 +165,8 @@ get_pattern <- function(pattern, x, ignore.case = TRUE) {
 get_pattern_all <- function(pattern, x, collapse = "|", ignore.case = TRUE) {
   r <- gregexpr(pattern, x, ignore.case = ignore.case, perl = TRUE)
   z <- regmatches(x, r)
-  sapply(z, function(s) paste(s, collapse = collapse))
+  vapply(z, function(s) paste(s, collapse = collapse), character(1L))
 }
-
 
 #' Delete patterns
 #'

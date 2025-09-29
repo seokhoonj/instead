@@ -33,7 +33,7 @@ environment plus the total.
 Internally uses \code{\link[utils:object.size]{utils::object.size()}}.
 }
 \examples{
-\dontrun{
+\donttest{
 # Check the size of the current frame
 sizeof(sys.frame(), unit = "KB")
 

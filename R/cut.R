@@ -90,8 +90,8 @@ add_band <- function(df, num_var, breaks, interval = 5, right = FALSE,
   l <- levels(col_band)
   r <- gregexpr("[0-9]+", l, perl = TRUE)
   m <- regmatches(l, r)
-  s <- vapply(m, function(x) x[1L], integer(1L))
-  e <- vapply(m, function(x) x[2L], integer(1L)) - 1L
+  s <- as.integer(vapply(m, function(x) x[1L], character(1L)))
+  e <- as.integer(vapply(m, function(x) x[2L], character(1L))) - 1
   labels <- sprintf("%d-%d", s, e)
 
   # apply open/closed label style
