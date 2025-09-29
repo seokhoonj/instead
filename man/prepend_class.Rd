@@ -26,10 +26,10 @@ it is moved to the front without duplication.
 df <- data.frame(a = 1)
 
 # Prepend a single class
-prepend_class(df, "new_class")
+df <- prepend_class(df, "new_class")
 
 # Prepend multiple classes
-prepend_class(df, c("new_class1", "new_class2"))
+df <- prepend_class(df, c("new_class1", "new_class2"))
 }
 
 }
