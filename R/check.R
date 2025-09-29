@@ -308,7 +308,7 @@ check_col_spec <- function(df, col_spec) {
 
   if (!is.list(col_spec) || is.null(names(col_spec)) || any(names(col_spec) == ""))
     stop("col_spec must be a named list.")
-  if (!all(sapply(col_spec, is.character)))
+  if (!all(vapply(col_spec, is.character, logical(1))))
     stop("All elements of col_spec must be character strings (expected classes).")
 
   cols_act <- names(df)

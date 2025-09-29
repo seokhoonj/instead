@@ -54,8 +54,8 @@ is_japanese <- function(x) {
 #' @name get_japanese_cols
 #' @export
 get_japanese_cols <- function(x) {
-  japanese_cols <- sapply(x, function(s) any(is_japanese(s)))
-  names(japanese_cols)[japanese_cols == TRUE]
+  japanese_cols <- vapply(x, function(s) any(is_japanese(s)), logical(1L))
+  names(japanese_cols)[japanese_cols]
 }
 
 #' Zenkaku to Hankaku
@@ -78,10 +78,10 @@ zen_to_han <- function(x) {
     x <- iconv(x, from = "", to = "UTF-8")
   x <- stringi::stri_trans_general(x, "Halfwidth-Fullwidth")
   s <- strsplit(x, split = "")
-  v <- sapply(seq_along(s), function(x) {
+  v <- vapply(seq_along(s), function(x) {
     i <- unlist(stringi::stri_enc_toutf32(s[[x]]))
     intToUtf8(ifelse(i >= 65281 & i <= 65374, i - 65248, i))
-  })
+  }, character(1L))
   gsub(intToUtf8(12288), " ", v)
 }
 

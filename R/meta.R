@@ -44,22 +44,27 @@ meta <- function(x) {
 #' @export
 meta.data.frame <- function(x) {
   column <- names(x)
-  class <- sapply(x, class)
-  if (is.list(class))
-    class <- sapply(class, function(x) paste(x, collapse = ","))
-  type <- sapply(x, typeof)
+  class <- vapply(x, function(col) paste(class(col), collapse = ","), character(1L))
+  type  <- vapply(x, typeof, character(1L))
+  n <- vapply(x, function(col) sum(!is.na(col)), integer(1L))
+  missing <- vapply(x, function(col) sum(is.na(col)), integer(1L))
+  zero <- vapply(x, function(col) sum(col == 0, na.rm = TRUE), integer(1L))
+  distinct <- vapply(x, unilen, integer(1L))
+  mode <- vapply(x, function(col) mostfreq(col, na.rm = TRUE), numeric(1L))
+
   nrows <- nrow(x)
-  n <- sapply(x, function(x) sum(!is.na(x)))
-  missing <- sapply(x, function(x) sum(is.na(x)))
-  zero <- sapply(x, function(x) sum(x == 0, na.rm = TRUE))
-  distinct <- sapply(x, unilen)
-  mode <- sapply(x, function(s) mostfreq(s, na.rm = TRUE))
-  df <- data.table(column, class, type, n, missing, zero, distinct,
-                   prop = 1 - missing/nrows, nzprop = 1 - zero/nrows, mode)
+  df <- data.table::data.table(
+    column, class, type, n, missing, zero, distinct,
+    prop   = 1 - missing / nrows,
+    nzprop = 1 - zero    / nrows,
+    mode   = mode
+  )
+
   data.table::setattr(df, "nrow", nrows)
   data.table::setattr(df, "ncol", ncol(x))
   data.table::setattr(df, "nunique", nrow(unique(x)))
-  data.table::setattr(df, "class", c("meta", class(df)))
+  df <- prepend_class(df, "meta")
+
   df
 }
 
@@ -93,7 +98,7 @@ type <- function(x) UseMethod("type")
 #' @export
 type.data.frame <- function(x) {
   column <- names(x)
-  class <- sapply(x, class)
-  type <- sapply(x, typeof)
-  data.table::data.table(column, class, type)
+  class  <- vapply(x, function(col) paste(class(col), collapse = ","), character(1))
+  type   <- vapply(x, typeof, character(1))
+  data.table::data.table(column = column, class = class, type = type)
 }
