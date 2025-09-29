@@ -198,6 +198,123 @@ seq_dates <- function(from, to, labels = NULL) {
   .Call(SeqDates, from, to, labels)
 }
 
+#' Split stay intervals by cut dates
+#'
+#' Splits rows of a data frame into smaller intervals whenever a given
+#' set of split dates falls within the `[from, to]` range.
+#' Each affected row is divided into two intervals:
+#' - Left interval: `[from, split_date - 1]`
+#' - Right interval: `[split_date, to]`
+#'
+#' Useful for scenarios such as hospitalization episodes or claim periods,
+#' where intervals need to be aligned with administrative cut-off dates.
+#'
+#' @param df A data.frame or data.table containing stay intervals.
+#' @param from_var Column specifying the start date of the stay.
+#'   Can be provided unquoted.
+#' @param to_var Column specifying the end date of the stay.
+#'   Can be provided unquoted.
+#' @param dates A vector of Date objects. Each date is used as a split
+#'   point if it falls strictly inside an interval (`from < d <= to`).
+#' @param all Logical; if `TRUE` (default), keeps rows without any splits
+#'   alongside split rows. If `FALSE`, only the split pieces are returned.
+#' @param verbose Logical; if `TRUE` (default), prints progress messages
+#'   showing how many rows were affected at each split and a final summary.
+#'
+#' @return A data.table with the same columns as `df`, but possibly with
+#'   more rows due to interval splitting. The original class of `df` is
+#'   preserved if wrapped by [ensure_dt_env()].
+#'
+#' @examples
+#' \donttest{
+#' df <- data.frame(
+#'   id   = 1:3,
+#'   from = as.Date(c("2024-01-01","2024-01-10","2024-01-20")),
+#'   to   = as.Date(c("2024-01-15","2024-01-20","2024-01-25"))
+#' )
+#'
+#' # Split stays at Jan 5 and Jan 18
+#' split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
+#' }
+#'
+#' @export
+split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
+                               verbose = TRUE) {
+  assert_class(df, "data.frame")
+
+  env <- ensure_dt_env(df)
+  dt  <- env$dt
+
+  # resolve column names
+  fv <- capture_names(dt, !!rlang::enquo(from_var))
+  tv <- capture_names(dt, !!rlang::enquo(to_var))
+
+  # unique sorted split dates
+  dates <- sort(unique(dates))
+
+  # for final summary
+  n_before <- nrow(dt)
+
+  applied <- 0L
+  for (d in dates) {
+    # find rows where from < d <= to
+    idx <- which(dt[[fv]] < d & dt[[tv]] >= d)
+    if (!length(idx)) next
+
+    # shallow subset
+    left  <- dt[idx]                 # shallow copy for left interval
+    right <- data.table::copy(left)  # deep copy for right interval
+
+    # adjust interval boundaries
+    data.table::set(left,  j = tv, value = d - 1L)  # [from, d-1]
+    data.table::set(right, j = fv, value = d)       # [d, to]
+
+    if (all) {
+      dt <- data.table::rbindlist(
+        list(dt[-idx], left, right),
+        use.names = TRUE
+      )
+    } else {
+      dt <- data.table::rbindlist(
+        list(left, right),
+        use.names = TRUE
+      )
+    }
+
+    applied <- applied + 1L
+    if (verbose) {
+      affected <- length(idx)
+      cat(sprintf(
+        "Stay split at %s (affected rows: %s)\n",
+        as.Date(d),
+        scales::comma(affected)
+      ))
+    }
+  }
+
+  if (verbose) {
+    n_after <- nrow(dt)
+    delta   <- n_after - n_before
+
+    cat(sprintf(
+      "Completed: %s split date(s) applied across %s rows -> %s (%s) rows.\n",
+      scales::comma(applied),
+      scales::comma(n_before),
+      scales::comma(n_after),
+      if (delta >= 0) paste0("+", scales::comma(delta)) else scales::comma(delta)
+    ))
+
+    cat("! Please review variables derived from stay totals.\n",
+        "! Re-calculation may be required after splitting.\n", sep = "")
+  }
+
+  data.table::setorderv(dt, names(dt))
+
+  env$restore(dt)
+}
+
+
+
 #' Collapse overlapping (or near-adjacent) date ranges by (id, group)
 #'
 #' Merges multiple date ranges that either overlap or are within a user-defined

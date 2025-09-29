@@ -229,10 +229,9 @@ set_one_before_first_one(x) # edit x directly
 
 ``` r
 library(instead)
-library(data.table)
 
 # toy data: two insureds, with small gaps between stays
-dt <- data.table::data.table(
+dt <- data.frame(
   id    = c("A","A","B","B"),
   group = c("x","x","y","y"),
   work  = c("cleaning", "analysis", "cleaning", "QA"),
@@ -278,7 +277,45 @@ collapse_date_ranges(
 #> 2:    B     y       cleaning, QA 2022-03-08 2022-03-15    8
 ```
 
-### 2) `count_stay()`
+### 2) `split_stay_by_date()`
+
+`split_stay_by_date()` splits any interval that spans one or more **split dates** into two parts, within each row’s `[from, to]` range.\
+For each split date `d`, affected rows become `[from, d - 1]` and `[d, to]`.
+
+#### Why you’d use this
+
+-   **Align episodes to cut-off dates** (policy renewals, month/quarter ends, product changes).
+-   **Prepare for monthly aggregation** or benefit rules that depend on calendar boundaries.
+-   **Normalize messy intervals** before downstream calculations (e.g., counting days per month).
+
+#### Key behavior
+
+-   **Inclusive dates** throughout; the split condition is **`from < d <= to`**.
+-   Each split date is applied **once per row**; multiple dates can create multiple segments.
+-   `all = TRUE` keeps rows with no splits; `all = FALSE` returns only the split pieces.
+-   Preserves original columns and order (re-sorted at the end for stable output).
+-   Verbose mode prints how many rows were affected at each split and a final summary.
+
+``` r
+library(instead)
+
+# toy stays
+df <- data.frame(
+  id   = 1:3,
+  from = as.Date(c("2024-01-01","2024-01-10","2024-01-20")),
+  to   = as.Date(c("2024-01-15","2024-01-20","2024-01-25"))
+)
+
+# split at the 5th and 18th
+split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
+#> Stay split at 2024-01-05 (affected rows: 1)
+#> Stay split at 2024-01-18 (affected rows: 1)
+#> Completed: 2 split date(s) applied across 3 rows -> 5 (+2) rows.
+#> ! Please review variables derived from stay totals.
+#> ! Re-calculation may be required after splitting.
+```
+
+### 3) `count_stay()`
 
 `count_stay()` counts the total number of unique stay days within groups. Overlapping or adjacent date ranges are merged internally, so days are not double-counted.
 
@@ -312,7 +349,7 @@ count_stay(dt, id, group, from, to)
 # 3  2     c    2
 ```
 
-### 3) `limit_stay()`
+### 4) `limit_stay()`
 
 `limit_stay()` applies insurance contract rules (limit, waiting period, deduction) to inpatient stays. Typical settings are:
 
@@ -334,9 +371,8 @@ count_stay(dt, id, group, from, to)
 
 ``` r
 library(instead)
-library(data.table)
 
-dt <- data.table::data.table(
+dt <- data.frame(
   id    = c(1, 1, 1, 2, 2),
   group = c("A", "A", "A", "B", "B"),
   from  = as.Date(c("2024-01-01", "2024-07-01", "2024-12-01",
