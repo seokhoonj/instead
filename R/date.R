@@ -1,3 +1,206 @@
+#' Fast parser for ISO-like date formats
+#'
+#' A lightweight, vectorized helper to parse ISO-like dates:
+#' - "YYYY-MM-DD"
+#' - "YYYY/MM/DD"
+#' - "YYYYMMDD"
+#'
+#' This function is fast-path only: it does not attempt to resolve
+#' ambiguous formats (e.g., "01/08/2017") and will warn on unsupported
+#' patterns. Intended for ETL pipelines, logs, or databases where input
+#' is guaranteed to be ISO-like.
+#'
+#' @param x A character, factor, Date, or POSIXt vector.
+#'
+#' @return A Date vector the same length as `x`.
+#'
+#' @examples
+#' \donttest{
+#' # ISO-like formats are parsed safely
+#' as_date_iso(c("2024-01-01", "20240102", "2024/01/03"))
+#' #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
+#'
+#' # Already Date objects pass through unchanged
+#' d <- as.Date("2024-01-05")
+#' as_date_iso(d)
+#' #> [1] "2024-01-05"
+#'
+#' # POSIXt values drop the time component
+#' ts <- as.POSIXct("2024-01-07 12:34:56")
+#' as_date_iso(ts)
+#' #> [1] "2024-01-07"
+#'
+#' # Unsupported formats produce a warning
+#' as_date_iso("01/08/2024")
+#' #> Warning: Unsupported date format(s): 01/08/2024
+#' #> [1] NA
+#' }
+#'
+#' @seealso [as_date_safe()]
+#'
+#' @export
+as_date_iso <- function(x) {
+  # fast path for Date objects
+  if (inherits(x, "Date")) return(x)
+
+  # drop time component if POSIXt
+  if (inherits(x, "POSIXt")) return(as.Date(x))
+
+  # coerce factors to character
+  if (is.factor(x)) x <- as.character(x)
+
+  # enforce character
+  if (!is.character(x)) {
+    stop("Input must be Date, POSIXt, character, or factor.", call. = FALSE)
+  }
+
+  # normalize empty strings as NA
+  x[x == ""] <- NA_character_
+
+  # pre-allocate output
+  out <- as.Date(rep(NA_character_, length(x)))
+
+  # patterns & formats (ISO-like only)
+  pats <- c("^\\d{4}-\\d{2}-\\d{2}$",  # YYYY-MM-DD
+            "^\\d{8}$",                # YYYYMMDD
+            "^\\d{4}/\\d{2}/\\d{2}$")  # YYYY/MM/DD
+  fmts <- c("%Y-%m-%d", "%Y%m%d", "%Y/%m/%d")
+
+  # parse by pattern (fast and safe)
+  for (k in seq_along(pats)) {
+    idx <- !is.na(x) & grepl(pats[k], x)
+    if (any(idx)) {
+      out[idx] <- as.Date(x[idx], format = fmts[k])
+    }
+  }
+
+  # warn if unsupported formats remain
+  bad <- !is.na(x) & is.na(out)
+  if (any(bad)) {
+    warn_vals <- unique(x[bad])
+    n_show <- min(5L, length(warn_vals))
+    warning(sprintf(
+      "Unsupported date format(s): %s%s",
+      paste(warn_vals[seq_len(n_show)], collapse = ", "),
+      if (length(warn_vals) > n_show) ", ..." else ""
+    ), call. = FALSE)
+  }
+
+  out
+}
+
+#' Safely coerce to Date with ambiguity checks (ISO-first)
+#'
+#' Vectorized date parser that accepts character, factor, Date, or POSIXt.
+#' Supported formats:
+#' - ISO-like: "YYYY-MM-DD", "YYYY/MM/DD", "YYYYMMDD"
+#' - Two-digit day/month with "/" or "-": "DD/MM/YYYY" vs "MM/DD/YYYY"
+#'   (and "DD-MM-YYYY" vs "MM-DD-YYYY"); ambiguous cases error.
+#'
+#' Rules:
+#' - Dates returned unchanged.
+#' - POSIXt drops time (converted via as.Date()).
+#' - "" treated as NA.
+#' - First parse ISO-like formats (fast, unambiguous), then handle 2-digit day/month.
+#' - Anything not parsed → error with a short preview.
+#'
+#' @param x character | factor | Date | POSIXt vector
+#'
+#' @return Date vector the same length as `x`
+#'
+#' @examples
+#' \dontrun{
+#' # ISO-like formats
+#' as_date_safe(c("2024-01-01", "20240102", "2024/01/03"))
+#' #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
+#'
+#' # Ambiguous two-digit cases raise an error
+#' as_date_safe("01/08/2017")
+#' #> Error: Ambiguous date(s): 01/08/2017 (could be DD/MM/YYYY or MM/DD/YYYY).
+#'
+#' # Unambiguous two-digit cases are parsed
+#' as_date_safe(c("13/02/2017", "02/13/2017"))
+#' #> [1] "2017-02-13" "2017-02-13"
+#'
+#' # POSIXt is allowed
+#' as_date_safe(as.POSIXct("2024-01-07 12:34:56"))
+#' #> [1] "2024-01-07"
+#'
+#' # Factor input is coerced
+#' f <- factor("2024-01-10")
+#' as_date_safe(f)
+#' #> [1] "2024-01-10"
+#'
+#' # Unsupported formats → error
+#' as_date_safe("2024.01.01")
+#' #> Error: Unsupported date format(s): 2024.01.01.
+#' }
+#'
+#' @seealso [as_date_iso()]
+#'
+#' @export
+as_date_safe <- function(x) {
+  # fast-path passthroughs
+  if (inherits(x, "Date"))   return(x)
+  if (inherits(x, "POSIXt")) return(as.Date(x))
+  if (is.factor(x)) x <- as.character(x)
+  if (!is.character(x)) {
+    stop("Input must be character, factor, Date, or POSIXt.", call. = FALSE)
+  }
+
+  # treat "" as NA
+  x[x == ""] <- NA_character_
+
+  n   <- length(x)
+  out <- as.Date(rep(NA_character_, n))
+  if (all(is.na(x))) return(out)
+
+  xs  <- trimws(x)
+  idx <- which(!is.na(xs))
+  if (!length(idx)) return(out)
+
+  v <- xs[idx]
+
+  # ISO-like first (safe & fast)
+  is_ymd_dash  <- grepl("^\\d{4}-\\d{2}-\\d{2}$", v)  # YYYY-MM-DD
+  is_ymd_slash <- grepl("^\\d{4}/\\d{2}/\\d{2}$", v)  # YYYY/MM/DD
+  is_ymd       <- grepl("^\\d{8}$", v)                # YYYYMMDD
+
+  if (any(is_ymd_dash)) {
+    i <- which(is_ymd_dash)
+    out[idx[i]] <- as.Date(v[i], "%Y-%m-%d")
+  }
+  if (any(is_ymd_slash)) {
+    i <- which(is_ymd_slash)
+    out[idx[i]] <- as.Date(v[i], "%Y/%m/%d")
+  }
+  if (any(is_ymd)) {
+    i <- which(is_ymd)
+    out[idx[i]] <- as.Date(v[i], "%Y%m%d")
+  }
+
+  # Two-digit day/month with "/" or "-" (disambiguation via helpers)
+  is_dmy_slash <- grepl("^\\d{2}/\\d{2}/\\d{4}$", v)
+  is_dmy_dash  <- grepl("^\\d{2}-\\d{2}-\\d{4}$", v)
+
+  out <- .handle_two_digit(v, out, idx, is_dmy_slash, "/", "%d/%m/%Y", "%m/%d/%Y")
+  out <- .handle_two_digit(v, out, idx, is_dmy_dash,  "-", "%d-%m-%Y", "%m-%d-%Y")
+
+  # Anything still unparsed (non-NA input) is unsupported
+  still_bad <- is.na(out[idx]) & !is.na(v)
+  if (any(still_bad)) {
+    bad_vals <- unique(v[still_bad])
+    n_show <- min(5L, length(bad_vals))
+    stop(sprintf(
+      "Unsupported date format(s): %s%s.",
+      paste(bad_vals[seq_len(n_show)], collapse = ", "),
+      if (length(bad_vals) > n_show) ", ..." else ""
+    ), call. = FALSE)
+  }
+
+  out
+}
+
 #' Add months to a date
 #'
 #' Add a specified number of months to a date-like object. Negative values
@@ -66,7 +269,7 @@ add_year <- function(date, year) {
 #'
 #' @export
 bmonth <- function(date) {
-  as.Date(format(as.Date(date), format = "%Y-%m-01"))
+  as.Date(format(date, format = "%Y-%m-01"))
 }
 
 #' @rdname bmonth
@@ -91,7 +294,7 @@ is_date_format <- function(x) {
     return(TRUE)
   }
   if (inherits(x, c("character", "factor"))) {
-    return(all(grepl(local(.DATE_FORMAT, envir = .INSTEAD_ENV), x)))
+    return(all(grepl(local(.DATE_FORMAT, envir = .INSTEAD_ENV), x[!is.na(x)])))
   }
   FALSE
 }
@@ -197,123 +400,6 @@ seq_dates <- function(from, to, labels = NULL) {
   stopifnot(inherits(from, "Date"), inherits(to, "Date"))
   .Call(SeqDates, from, to, labels)
 }
-
-#' Split stay intervals by cut dates
-#'
-#' Splits rows of a data frame into smaller intervals whenever a given
-#' set of split dates falls within the `[from, to]` range.
-#' Each affected row is divided into two intervals:
-#' - Left interval: `[from, split_date - 1]`
-#' - Right interval: `[split_date, to]`
-#'
-#' Useful for scenarios such as hospitalization episodes or claim periods,
-#' where intervals need to be aligned with administrative cut-off dates.
-#'
-#' @param df A data.frame or data.table containing stay intervals.
-#' @param from_var Column specifying the start date of the stay.
-#'   Can be provided unquoted.
-#' @param to_var Column specifying the end date of the stay.
-#'   Can be provided unquoted.
-#' @param dates A vector of Date objects. Each date is used as a split
-#'   point if it falls strictly inside an interval (`from < d <= to`).
-#' @param all Logical; if `TRUE` (default), keeps rows without any splits
-#'   alongside split rows. If `FALSE`, only the split pieces are returned.
-#' @param verbose Logical; if `TRUE` (default), prints progress messages
-#'   showing how many rows were affected at each split and a final summary.
-#'
-#' @return A data.table with the same columns as `df`, but possibly with
-#'   more rows due to interval splitting. The original class of `df` is
-#'   preserved if wrapped by [ensure_dt_env()].
-#'
-#' @examples
-#' \donttest{
-#' df <- data.frame(
-#'   id   = 1:3,
-#'   from = as.Date(c("2024-01-01","2024-01-10","2024-01-20")),
-#'   to   = as.Date(c("2024-01-15","2024-01-20","2024-01-25"))
-#' )
-#'
-#' # Split stays at Jan 5 and Jan 18
-#' split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
-#' }
-#'
-#' @export
-split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
-                               verbose = TRUE) {
-  assert_class(df, "data.frame")
-
-  env <- ensure_dt_env(df)
-  dt  <- env$dt
-
-  # resolve column names
-  fv <- capture_names(dt, !!rlang::enquo(from_var))
-  tv <- capture_names(dt, !!rlang::enquo(to_var))
-
-  # unique sorted split dates
-  dates <- sort(unique(dates))
-
-  # for final summary
-  n_before <- nrow(dt)
-
-  applied <- 0L
-  for (d in dates) {
-    # find rows where from < d <= to
-    idx <- which(dt[[fv]] < d & dt[[tv]] >= d)
-    if (!length(idx)) next
-
-    # shallow subset
-    left  <- dt[idx]                 # shallow copy for left interval
-    right <- data.table::copy(left)  # deep copy for right interval
-
-    # adjust interval boundaries
-    data.table::set(left,  j = tv, value = d - 1L)  # [from, d-1]
-    data.table::set(right, j = fv, value = d)       # [d, to]
-
-    if (all) {
-      dt <- data.table::rbindlist(
-        list(dt[-idx], left, right),
-        use.names = TRUE
-      )
-    } else {
-      dt <- data.table::rbindlist(
-        list(left, right),
-        use.names = TRUE
-      )
-    }
-
-    applied <- applied + 1L
-    if (verbose) {
-      affected <- length(idx)
-      cat(sprintf(
-        "Stay split at %s (affected rows: %s)\n",
-        as.Date(d),
-        scales::comma(affected)
-      ))
-    }
-  }
-
-  if (verbose) {
-    n_after <- nrow(dt)
-    delta   <- n_after - n_before
-
-    cat(sprintf(
-      "Completed: %s split date(s) applied across %s rows -> %s (%s) rows.\n",
-      scales::comma(applied),
-      scales::comma(n_before),
-      scales::comma(n_after),
-      if (delta >= 0) paste0("+", scales::comma(delta)) else scales::comma(delta)
-    ))
-
-    cat("! Please review variables derived from stay totals.\n",
-        "! Re-calculation may be required after splitting.\n", sep = "")
-  }
-
-  data.table::setorderv(dt, names(dt))
-
-  env$restore(dt)
-}
-
-
 
 #' Collapse overlapping (or near-adjacent) date ranges by (id, group)
 #'
@@ -457,6 +543,122 @@ collapse_date_ranges <- function(df, id_var, group_var, merge_var,
   env$restore(z)
 }
 
+#' Split stay intervals by cut dates
+#'
+#' Splits rows of a data frame into smaller intervals whenever a given
+#' set of split dates falls within the `[from, to]` range.
+#' Each affected row is divided into two intervals:
+#' - Left interval: `[from, split_date - 1]`
+#' - Right interval: `[split_date, to]`
+#'
+#' Useful for scenarios such as hospitalization episodes or claim periods,
+#' where intervals need to be aligned with administrative cut-off dates.
+#'
+#' @param df A data.frame or data.table containing stay intervals.
+#' @param from_var Column specifying the start date of the stay.
+#'   Can be provided unquoted.
+#' @param to_var Column specifying the end date of the stay.
+#'   Can be provided unquoted.
+#' @param dates A vector of Date objects. Each date is used as a split
+#'   point if it falls strictly inside an interval (`from < d <= to`).
+#' @param all Logical; if `TRUE` (default), keeps rows without any splits
+#'   alongside split rows. If `FALSE`, only the split pieces are returned.
+#' @param verbose Logical; if `TRUE` (default), prints progress messages
+#'   showing how many rows were affected at each split and a final summary.
+#'
+#' @return A data.table with the same columns as `df`, but possibly with
+#'   more rows due to interval splitting. The original class of `df` is
+#'   preserved if wrapped by [ensure_dt_env()].
+#'
+#' @examples
+#' \donttest{
+#' df <- data.frame(
+#'   id   = 1:3,
+#'   from = as.Date(c("2024-01-01","2024-01-10","2024-01-20")),
+#'   to   = as.Date(c("2024-01-15","2024-01-20","2024-01-25"))
+#' )
+#'
+#' # Split stays at Jan 5 and Jan 18
+#' split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
+#' }
+#'
+#' @export
+split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
+                               verbose = TRUE) {
+  assert_class(df, "data.frame")
+
+  env <- ensure_dt_env(df)
+  dt  <- env$dt
+
+  # resolve column names
+  fv <- capture_names(dt, !!rlang::enquo(from_var))
+  tv <- capture_names(dt, !!rlang::enquo(to_var))
+
+  # unique sorted split dates
+  dates <- sort(unique(as_date_safe(dates)))
+
+  # for final summary
+  n_before <- nrow(dt)
+
+  applied <- 0L
+  for (d in dates) {
+    # find rows where from < d <= to
+    idx <- which(dt[[fv]] < d & dt[[tv]] >= d)
+    if (!length(idx)) next
+
+    # shallow subset
+    left  <- dt[idx]                 # shallow copy for left interval
+    right <- data.table::copy(left)  # deep copy for right interval
+
+    # adjust interval boundaries
+    data.table::set(left,  j = tv, value = d - 1L)  # [from, d-1]
+    data.table::set(right, j = fv, value = d)       # [d, to]
+
+    if (all) {
+      dt <- data.table::rbindlist(
+        list(dt[-idx], left, right),
+        use.names = TRUE
+      )
+    } else {
+      dt <- data.table::rbindlist(
+        list(left, right),
+        use.names = TRUE
+      )
+    }
+
+    applied <- applied + 1L
+    if (verbose) {
+      affected <- length(idx)
+      cat(sprintf(
+        "Stay split at %s (affected rows: %s)\n",
+        as.Date(d),
+        scales::comma(affected)
+      ))
+    }
+  }
+
+  if (verbose) {
+    n_after <- nrow(dt)
+    delta   <- n_after - n_before
+
+    cat(sprintf(
+      "Completed: %s split date(s) applied across %s rows -> %s (%s) rows.\n",
+      scales::comma(applied),
+      scales::comma(n_before),
+      scales::comma(n_after),
+      if (delta >= 0) paste0("+", scales::comma(delta)) else scales::comma(delta)
+    ))
+
+    cat("! Please review variables derived from stay totals.\n",
+        "! Re-calculation may be required after splitting.\n", sep = "")
+  }
+
+  env$restore(dt)
+}
+
+
+# Deprecated function -----------------------------------------------------
+
 #' Deprecated: combine_overlapping_date_range
 #'
 #' `r lifecycle::badge("deprecated")`
@@ -473,4 +675,85 @@ collapse_date_ranges <- function(df, id_var, group_var, merge_var,
 combine_overlapping_date_range <- function(...) {
   lifecycle::deprecate_warn("0.0.0.9000", "combine_overlapping_date_ranges()", "collapse_date_ranges()")
   collapse_date_ranges(...)
+}
+
+
+# Internal helper functions -----------------------------------------------
+
+#' Split "dd<sep>mm<sep>YYYY" or "mm<sep>dd<sep>YYYY" into numeric parts
+#'
+#' @keywords internal
+#' @noRd
+.split_dmy <- function(strings, sep) {
+  parts <- strsplit(strings, sep, fixed = TRUE)
+  m <- matrix(unlist(parts, use.names = FALSE), ncol = 3, byrow = TRUE)
+  data.frame(
+    a = as.integer(m[, 1]),
+    b = as.integer(m[, 2]),
+    Y = as.integer(m[, 3]),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Disambiguate two-digit day/month dates and fill parsed results
+#'
+#' Handle strings like "DD/MM/YYYY" vs "MM/DD/YYYY" (or '-' separator).
+#' - If only one interpretation is valid, parse with that format.
+#' - If both are valid *and* (a <= 12 & b <= 12), stop with an ambiguity error.
+#' - If neither valid, leave as NA (caller will handle unsupported cases).
+#'
+#' @param v    character vector of non-NA values (a subset of original input)
+#' @param out  Date vector (same length as original) to be updated
+#' @param idx  integer index positions in the original vector corresponding to `v`
+#' @param mask logical mask over `v` indicating which elements match the pattern
+#' @param sep  separator ("/" or "-")
+#' @param fmt_dmy format string for DD<sep>MM<sep>YYYY
+#' @param fmt_mdy format string for MM<sep>DD<sep>YYYY
+#'
+#' @return updated Date vector `out`
+#' @keywords internal
+#' @noRd
+.handle_two_digit <- function(v, out, idx, mask, sep, fmt_dmy, fmt_mdy) {
+  if (!any(mask)) return(out)
+
+  # only positions still NA in 'out' and matching the mask
+  i <- which(mask & is.na(out[idx]))
+  if (!length(i)) return(out)
+
+  s <- v[i]
+  d <- .split_dmy(s, sep = sep)
+
+  # validity checks
+  valid_dmy <- (d$a >= 1 & d$a <= 31) & (d$b >= 1 & d$b <= 12)
+  valid_mdy <- (d$a >= 1 & d$a <= 12) & (d$b >= 1 & d$b <= 31)
+
+  # ambiguous when both valid and both parts <= 12
+  ambiguous <- valid_dmy & valid_mdy & (d$a <= 12 & d$b <= 12)
+
+  # assign unambiguous cases
+  only_dmy <- valid_dmy & !valid_mdy
+  if (any(only_dmy)) {
+    j <- i[only_dmy]                 # positions within v
+    out[idx[j]] <- as.Date(s[only_dmy], format = fmt_dmy)
+  }
+
+  only_mdy <- valid_mdy & !valid_dmy
+  if (any(only_mdy)) {
+    j <- i[only_mdy]
+    out[idx[j]] <- as.Date(s[only_mdy], format = fmt_mdy)
+  }
+
+  # ambiguous -> stop with message
+  if (any(ambiguous)) {
+    amb_vals <- unique(s[ambiguous])
+    n_show <- min(5L, length(amb_vals))
+    stop(sprintf(
+      "Ambiguous date(s): %s%s (could be DD%sMM%sYYYY or MM%sDD%sYYYY).",
+      paste(amb_vals[seq_len(n_show)], collapse = ", "),
+      if (length(amb_vals) > n_show) ", ..." else "",
+      sep, sep, sep, sep
+    ), call. = FALSE)
+  }
+
+  out
 }
