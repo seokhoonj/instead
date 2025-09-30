@@ -9,22 +9,32 @@ replace_empty_with_na(df, cols)
 \arguments{
 \item{df}{A data.table (modified in place).}
 
-\item{cols}{A character vector of column names. Defaults to all character columns.}
+\item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).
+If missing, all character columns are used.}
 }
 \value{
-The modified data.table.
+The modified data.table, returned invisibly.
 }
 \description{
-Efficiently replace \code{""} with \code{NA_character_} in character columns of a
-data.table. If \code{cols} is missing, all character columns are targeted.
+Replaces \code{""} with \code{NA_character_} in selected \strong{character} columns.
+Uses \code{\link[data.table:assign]{data.table::set()}} for in-place updates.
+}
+\details{
+\itemize{
+\item Only \strong{character} columns are targeted by default.
+\item Empty strings (\code{""}) are converted to \code{NA_character_} \strong{in place}.
+\item If \code{cols} includes non-character columns, they are rejected with an error.
+}
 }
 \examples{
 \dontrun{
-# Replace "" with NA
-df <- data.table(x = c("A", "B", ""), y = c(1, NA, 3), z = c("", "E", ""))
-data.table::address(df)
-replace_empty_with_na(df)
-data.table::address(df)
+library(data.table)
+dt <- data.table(x = c("a","",NA), y = c("", "b", "c"))
+print(dt)
+replace_empty_with_na(dt)
+print(dt)
 }
 
 }

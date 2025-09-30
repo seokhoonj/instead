@@ -1,249 +1,469 @@
-#' Replace NA with zero (in place)
+#' Replace NA with zero (in place, type-preserving)
 #'
-#' Efficiently replace numeric NA values with 0 in a data.table. If `cols`
-#' is missing, all numeric and integer columns are targeted.
+#' Efficiently replaces `NA` values with `0` in selected numeric columns
+#' of a data.table. The replacement is done *in place* using
+#' [data.table::set()], modifying only rows where `NA` values exist.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all numeric/integer columns.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all numeric columns are used.
 #'
-#' @return The modified data.table (invisibly for chaining).
+#' @return The modified data.table, returned invisibly for chaining.
+#'
+#' @details
+#' - Only **numeric** columns are targeted by default.
+#' - Columns are updated **in place** only at the affected row indices.
+#' - If `cols` includes non-numeric columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Replace NA with 0
-#' df <- data.table(x = c(1, NA, 3), y = c("A", "B", NA), z = c(NA, 5, NA))
-#' data.table::address(df)
-#' replace_na_with_zero(df)
-#' data.table::address(df)
+#' library(data.table)
+#'
+#' dt <- data.table::data.table(
+#'   x = c(1, NA, 3),
+#'   y = c(NA, 5, NA),
+#'   z = c("a", NA, "c")
+#' )
+#'
+#' # Replace NA with 0 in numeric columns
+#' replace_na_with_zero(dt)
+#' print(dt)
+#'
+#' # Replace NA with 0 in specific columns only
+#' replace_na_with_zero(dt, cols = c("x"))
+#' print(dt)
 #' }
 #'
 #' @export
 replace_na_with_zero <- function(df, cols) {
   assert_class(df, "data.table")
-  class <- sapply(df, class)
-  if (missing(cols))
-    cols <- names(class)[which(class %in% c("numeric", "integer"))]
-  df[, `:=`((cols), lapply(.SD, function(x) ifelse(is.na(x), 0, x))),
-     .SDcols = cols]
-  df
+
+  if (missing(cols)) {
+    cols <- .get_numeric_cols(df)
+  } else {
+    cols_captured <- capture_names(df, !!rlang::enquo(cols))
+    cols_numeric  <- .get_numeric_cols(df)
+    cols_non_numeric <- setdiff(cols_captured, cols_numeric)
+    if (length(cols_non_numeric)) {
+      stop(sprintf(
+        "Non-numeric column(s) not allowed: %s",
+        paste(cols_non_numeric, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    i <- which(is.na(df[[j]]))
+    if (length(i))
+      data.table::set(df, i = i, j = j, value = 0)
+  }
+
+  invisible(df[])
 }
 
-#' Replace zero with NA (in place)
+#' Replace zero with NA (in place, type-preserving)
 #'
-#' Efficiently replace `0` with `NA` in numeric/integer columns of a data.table.
-#' If `cols` is missing, all numeric and integer columns are targeted.
+#' Replaces `0` with `NA` in selected **numeric** columns of a data.table.
+#' Uses [data.table::set()] to modify only affected rows *in place*.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all numeric/integer columns.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all numeric columns are used.
 #'
-#' @return The modified data.table.
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **numeric** columns are targeted by default.
+#' - Columns are updated **in place** only at the affected row indices.
+#' - If `cols` includes non-numeric columns, they are rejected with an error.
+#'
+#' @details
+#' - Only **numeric** columns are targeted by default.
+#' - Columns are updated **in place** only at the affected row indices.
+#' - If `cols` includes non-numeric columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Replace 0 with NA
-#' df <- data.table(x = c(1, 0, 3), y = c("A", "B", NA), z = c(0, 5, 0))
-#' data.table::address(df)
-#' replace_zero_with_na(df)
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table::data.table(x = c(0,1,0), y = c(2,0,3), z = c("a","b","c"))
+#' replace_zero_with_na(dt)
+#' print(dt)
 #' }
 #'
 #' @export
 replace_zero_with_na <- function(df, cols) {
   assert_class(df, "data.table")
-  class <- sapply(df, class)
-  if (missing(cols))
-    cols <- names(class)[which(class %in% c("numeric", "integer"))]
-  df[, `:=`((cols), lapply(.SD, function(x) ifelse(x == 0, NA, x))),
-     .SDcols = cols]
-  df
+
+  if (missing(cols)) {
+    cols <- .get_numeric_cols(df)
+  } else {
+    cols_captured <- capture_names(df, !!rlang::enquo(cols))
+    cols_numeric  <- .get_numeric_cols(df)
+    cols_non_numeric <- setdiff(cols_captured, cols_numeric)
+    if (length(cols_non_numeric)) {
+      stop(sprintf(
+        "Non-numeric column(s) not allowed: %s",
+        paste(cols_non_numeric, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    i <- which(df[[j]] == 0)
+    if (length(i))
+      data.table::set(df, i = i, j = j, value = NA)
+  }
+
+  invisible(df[])
 }
 
 #' Replace empty strings with NA (in place)
 #'
-#' Efficiently replace `""` with `NA_character_` in character columns of a
-#' data.table. If `cols` is missing, all character columns are targeted.
+#' Replaces `""` with `NA_character_` in selected **character** columns.
+#' Uses [data.table::set()] for in-place updates.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all character columns.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all character columns are used.
 #'
-#' @return The modified data.table.
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **character** columns are targeted by default.
+#' - Empty strings (`""`) are converted to `NA_character_` **in place**.
+#' - If `cols` includes non-character columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Replace "" with NA
-#' df <- data.table(x = c("A", "B", ""), y = c(1, NA, 3), z = c("", "E", ""))
-#' data.table::address(df)
-#' replace_empty_with_na(df)
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table(x = c("a","",NA), y = c("", "b", "c"))
+#' print(dt)
+#' replace_empty_with_na(dt)
+#' print(dt)
 #' }
 #'
 #' @export
 replace_empty_with_na <- function(df, cols) {
   assert_class(df, "data.table")
-  class <- sapply(df, class)
-  if (missing(cols))
-    cols <- names(class)[which(class == "character")]
-  df[, `:=`((cols), lapply(.SD, function(x) ifelse(x == "", NA, x))),
-     .SDcols = cols]
-  df
+
+  if (missing(cols)) {
+    cols <- .get_character_cols(df)
+  } else {
+    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(df)
+    cols_non_character <- setdiff(cols_captured, cols_character)
+    if (length(cols_non_character)) {
+      stop(sprintf(
+        "Non-character column(s) not allowed: %s",
+        paste(cols_non_character, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    i <- which(df[[j]] == "")
+    if (length(i))
+      data.table::set(df, i = i, j = j, value = NA_character_)
+  }
+
+  invisible(df[])
 }
 
 #' Replace NA with empty strings (in place)
 #'
-#' Efficiently replace `NA_character_` with `""` in character columns of a
-#' data.table. If `cols` is missing, all character columns are targeted.
+#' Replaces `NA_character_` with `""` in selected **character** columns.
+#' Uses [data.table::set()] for in-place updates.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all character columns.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all character columns are used.
 #'
-#' @return The modified data.table (invisibly for chaining).
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **character** columns are targeted by default.
+#' - `NA_character_` values are converted to `""` **in place**.
+#' - If `cols` includes non-character columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Replace NA with ""
-#' df <- data.table(x = c("A", "B", NA), y = c(1, NA, 3), z = c(NA, "E", NA))
-#' data.table::address(df)
-#' replace_na_with_empty(df)
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table::data.table(x = c("a", NA, "c"), y = c(NA, "b", NA))
+#' replace_na_with_empty(dt)
+#' print(dt)
 #' }
 #'
 #' @export
 replace_na_with_empty <- function(df, cols) {
   assert_class(df, "data.table")
-  class <- sapply(df, class)
-  if (missing(cols))
-    cols <- names(class)[which(class == "character")]
-  df[, `:=`((cols), lapply(.SD, function(x) ifelse(is.na(x), "", x))),
-     .SDcols = cols]
+
+  if (missing(cols)) {
+    cols <- .get_character_cols(df)
+  } else {
+    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(df)
+    cols_non_character <- setdiff(cols_captured, cols_character)
+    if (length(cols_non_character)) {
+      stop(sprintf(
+        "Non-character column(s) not allowed: %s",
+        paste(cols_non_character, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    i <- which(is.na(df[[j]]))
+    if (length(i))
+      data.table::set(df, i = i, j = j, value = "")
+  }
+
   invisible(df[])
 }
 
-#' Replace a specific value with another (in place)
+#' Replace a specific string with another (in place)
 #'
-#' Efficiently replace occurrences of string `a` with string `b` across selected
-#' character columns in a data.table. If `cols` is missing, all character columns
-#' are targeted.
+#' Replaces occurrences of string `a` with string `b` across selected
+#' **character** columns, *in place* using [data.table::set()].
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all character columns.
-#' @param a A string to be replaced.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all character columns are used.
+#' @param a String to be replaced.
 #' @param b Replacement string.
 #'
-#' @return The modified data.table.
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **character** columns are targeted by default.
+#' - Exact matches of `a` are replaced with `b` **in place** (no regex).
+#' - `NA` values are left unchanged.
+#' - If `cols` includes non-character columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Replace A with B
-#' df <- data.table(x = c("A", "A", "C"), y = c("A", "C", "C"))
-#' data.table::address(df)
-#' replace_a_with_b(df, a = "A", b = "B")
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table::data.table(x = c("A","B","A"), y = c("C","A","C"))
+#' replace_a_with_b(dt, a = "A", b = "Z")
+#' print(dt)
 #' }
 #'
 #' @export
 replace_a_with_b <- function(df, cols, a, b) {
   assert_class(df, "data.table")
-  class <- sapply(df, class)
-  if (missing(cols))
-    cols <- names(class)[which(class == "character")]
-  df[, `:=`((cols), lapply(.SD, function(x) ifelse(x == a, b, x))), .SDcols = cols]
-  df
+
+  if (missing(cols)) {
+    cols <- .get_character_cols(df)
+  } else {
+    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(df)
+    cols_non_character <- setdiff(cols_captured, cols_character)
+    if (length(cols_non_character)) {
+      stop(sprintf(
+        "Non-character column(s) not allowed: %s",
+        paste(cols_non_character, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    i <- which(df[[j]] == a)
+    if (length(i))
+      data.table::set(df, i = i, j = j, value = b)
+  }
+
+  invisible(df[])
 }
 
-#' Trim whitespace (in place)
+#' Trim leading/trailing whitespace (in place)
 #'
-#' Remove leading and trailing whitespace from character columns in a
-#' data.table. If `cols` is missing, all character columns are targeted.
+#' Removes leading and trailing whitespace from selected **character** columns.
+#' Vectorized via `gsub()` per column; assigns results *in place*.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all character columns.
-#' @param ws A regular expression describing whitespace to trim.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all character columns are used.
+#' @param ws A regex describing whitespace (default `"[ \\t\\r\\n]"`).
 #'
-#' @return The modified data.table.
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **character** columns are targeted by default.
+#' - Leading/trailing whitespace (as defined by `ws`) is trimmed **in place**.
+#' - `NA` values are preserved as `NA`.
+#' - If `cols` includes non-character columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Trim whitespace
-#' df <- data.table(x = c(" A", "B ", " C "), y = c(1, 2, 3))
-#' data.table::address(df)
-#' trim_ws(df)
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table(x = c(" a", "b ", " c "), y = c("d", " e", "f "))
+#' trim_ws(dt)
+#' print(dt)
 #' }
 #'
 #' @export
 trim_ws <- function(df, cols, ws = "[ \t\r\n]") {
   assert_class(df, "data.table")
+
   if (missing(cols)) {
-    cols <- names(df)[vapply(df, is.character, logical(1L))]
+    cols <- .get_character_cols(df)
   } else {
-    cols <- capture_names(df, !!rlang::enquo(cols))
+    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(df)
+    cols_non_character <- setdiff(cols_captured, cols_character)
+    if (length(cols_non_character)) {
+      stop(sprintf(
+        "Non-character column(s) not allowed: %s",
+        paste(cols_non_character, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
   }
+
+  if (!length(cols)) return(invisible(df[]))
+
   re <- sprintf("^%s+|%s+$", ws, ws)
-  df[, `:=`((cols), lapply(.SD, function(x)
-    gsub(re, "", x, perl = TRUE))), .SDcols = cols]
-  df
+  for (j in cols) {
+    v <- df[[j]]
+    # keep NA as NA; only trim non-NA strings
+    v2 <- ifelse(is.na(v), v, gsub(re, "", v, perl = TRUE))
+    if (!identical(v, v2)) data.table::set(df, j = j, value = v2)
+  }
+  invisible(df[])
 }
 
 #' Remove punctuation (in place)
 #'
-#' Remove punctuation characters from character columns in a data.table. If
-#' `cols` is missing, all character columns are targeted. The default pattern
-#' avoids removing asterisks.
+#' Removes punctuation from selected **character** columns using a regex.
+#' Default pattern keeps asterisks: `pattern = "(?!\\\\*)[[:punct:]]"`.
 #'
 #' @param df A data.table (modified in place).
-#' @param cols A character vector of column names. Defaults to all character columns.
-#' @param pattern A regular expression describing punctuation to remove.
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all character columns are used.
+#' @param pattern Regex of punctuation to remove.
 #'
-#' @return The modified data.table.
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **character** columns are targeted by default.
+#' - Punctuation matched by `pattern` is removed **in place**; `NA` is preserved.
+#' - The default pattern keeps asterisks: `pattern = "(?!\\\\*)[[:punct:]]"`.
+#' - If `cols` includes non-character columns, they are rejected with an error.
 #'
 #' @examples
 #' \dontrun{
-#' # Remove punctuations
-#' df <- data.table(x = c("A3-", "$+_B", "C+_&"), y = c("123", "R&", "4q_++"))
-#' data.table::address(df)
-#' rm_punct(df)
-#' data.table::address(df)
+#' library(data.table)
+#' dt <- data.table(x = c("A3-", "$*_B", "C+*&"), y = c("12-3", "R&", "4q_++"))
+#' rm_punct(dt)
+#' print(dt)
 #' }
 #'
 #' @export
 rm_punct <- function(df, cols, pattern = "(?!\\*)[[:punct:]]") {
   assert_class(df, "data.table")
+
   if (missing(cols)) {
-    class <- sapply(df, class)
-    cols <- names(class)[which(class == "character")]
+    cols <- .get_character_cols(df)
   } else {
-    cols <- capture_names(df, !!rlang::enquo(cols))
+    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(df)
+    cols_non_character <- setdiff(cols_captured, cols_character)
+    if (length(cols_non_character)) {
+      stop(sprintf(
+        "Non-character column(s) not allowed: %s",
+        paste(cols_non_character, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
   }
-  df[, `:=`((cols), lapply(.SD, function(x)
-    gsub(pattern, "", x, perl = TRUE))), .SDcols = cols]
-  df
+
+  if (!length(cols))
+    return(invisible(df[]))
+
+  for (j in cols) {
+    v <- df[[j]]
+    value <- ifelse(is.na(v), v, gsub(pattern, "", v, perl = TRUE))
+    if (!identical(v, value))
+      data.table::set(df, j = j, value = value)
+  }
+
+  invisible(df[])
 }
 
-#' Remove columns from a data.table
+#' Remove columns by reference (in place)
 #'
-#' Remove one or more columns from a data.table by reference,
-#' without making a copy. This is more memory-efficient than
-#' creating a modified copy of the object.
+#' Removes one or more columns from a data.table **by reference** (no copy)
 #'
-#' @param df A data.table, modified in place.
-#' @param cols Columns to remove, specified as a tidy-style
-#'   expression (e.g., `.(x, y)`, `list(x, y)`).
+#' @param df A data.table (modified in place).
+#' @param cols Columns to remove, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
 #'
 #' @return The modified data.table, returned invisibly.
 #'
+#' @details
+#' - Columns are removed **by reference** (no copy).
+#' - `cols` may be provided as unquoted names, character vector, or integer indices.
+#' - Silently does nothing if `cols` is empty after resolution.
+#'
 #' @examples
 #' \dontrun{
-#' # Remove columns
-#' df <- data.table::as.data.table(mtcars)
-#' address(df)
-#' rm_cols(df, .(mpg, cyl, disp))
-#' address(df)
+#' library(data.table)
+#'
+#' dt <- data.table::as.data.table(mtcars)
+#' rm_cols(dt, .(mpg, cyl))
+#' head(dt)
 #' }
 #'
 #' @export
 rm_cols <- function(df, cols) {
   assert_class(df, "data.table")
   cols <- capture_names(df, !!rlang::enquo(cols))
+  if (!length(cols)) return(invisible(df[]))
   df[, `:=`((cols), NULL)]
-  df
+  invisible(df[])
+}
+
+
+# Internal helper functions -----------------------------------------------
+
+.get_numeric_cols <- function(df) {
+  names(df)[vapply(df, is.numeric, logical(1L))]
+}
+
+.get_character_cols <- function(df) {
+  names(df)[vapply(df, is.character, logical(1L))]
 }

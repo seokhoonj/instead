@@ -9,25 +9,34 @@ rm_punct(df, cols, pattern = "(?!\\\\*)[[:punct:]]")
 \arguments{
 \item{df}{A data.table (modified in place).}
 
-\item{cols}{A character vector of column names. Defaults to all character columns.}
+\item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).
+If missing, all character columns are used.}
 
-\item{pattern}{A regular expression describing punctuation to remove.}
+\item{pattern}{Regex of punctuation to remove.}
 }
 \value{
-The modified data.table.
+The modified data.table, returned invisibly.
 }
 \description{
-Remove punctuation characters from character columns in a data.table. If
-\code{cols} is missing, all character columns are targeted. The default pattern
-avoids removing asterisks.
+Removes punctuation from selected \strong{character} columns using a regex.
+Default pattern keeps asterisks: \code{pattern = "(?!\\\\\\\\*)[[:punct:]]"}.
+}
+\details{
+\itemize{
+\item Only \strong{character} columns are targeted by default.
+\item Punctuation matched by \code{pattern} is removed \strong{in place}; \code{NA} is preserved.
+\item The default pattern keeps asterisks: \code{pattern = "(?!\\\\\\\\*)[[:punct:]]"}.
+\item If \code{cols} includes non-character columns, they are rejected with an error.
+}
 }
 \examples{
 \dontrun{
-# Remove punctuations
-df <- data.table(x = c("A3-", "$+_B", "C+_&"), y = c("123", "R&", "4q_++"))
-data.table::address(df)
-rm_punct(df)
-data.table::address(df)
+library(data.table)
+dt <- data.table(x = c("A3-", "$*_B", "C+*&"), y = c("12-3", "R&", "4q_++"))
+rm_punct(dt)
+print(dt)
 }
 
 }

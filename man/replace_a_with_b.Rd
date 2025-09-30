@@ -2,34 +2,43 @@
 % Please edit documentation in R/replace.R
 \name{replace_a_with_b}
 \alias{replace_a_with_b}
-\title{Replace a specific value with another (in place)}
+\title{Replace a specific string with another (in place)}
 \usage{
 replace_a_with_b(df, cols, a, b)
 }
 \arguments{
 \item{df}{A data.table (modified in place).}
 
-\item{cols}{A character vector of column names. Defaults to all character columns.}
+\item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).
+If missing, all character columns are used.}
 
-\item{a}{A string to be replaced.}
+\item{a}{String to be replaced.}
 
 \item{b}{Replacement string.}
 }
 \value{
-The modified data.table.
+The modified data.table, returned invisibly.
 }
 \description{
-Efficiently replace occurrences of string \code{a} with string \code{b} across selected
-character columns in a data.table. If \code{cols} is missing, all character columns
-are targeted.
+Replaces occurrences of string \code{a} with string \code{b} across selected
+\strong{character} columns, \emph{in place} using \code{\link[data.table:assign]{data.table::set()}}.
+}
+\details{
+\itemize{
+\item Only \strong{character} columns are targeted by default.
+\item Exact matches of \code{a} are replaced with \code{b} \strong{in place} (no regex).
+\item \code{NA} values are left unchanged.
+\item If \code{cols} includes non-character columns, they are rejected with an error.
+}
 }
 \examples{
 \dontrun{
-# Replace A with B
-df <- data.table(x = c("A", "A", "C"), y = c("A", "C", "C"))
-data.table::address(df)
-replace_a_with_b(df, a = "A", b = "B")
-data.table::address(df)
+library(data.table)
+dt <- data.table::data.table(x = c("A","B","A"), y = c("C","A","C"))
+replace_a_with_b(dt, a = "A", b = "Z")
+print(dt)
 }
 
 }

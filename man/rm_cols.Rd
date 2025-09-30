@@ -2,31 +2,37 @@
 % Please edit documentation in R/replace.R
 \name{rm_cols}
 \alias{rm_cols}
-\title{Remove columns from a data.table}
+\title{Remove columns by reference (in place)}
 \usage{
 rm_cols(df, cols)
 }
 \arguments{
-\item{df}{A data.table, modified in place.}
+\item{df}{A data.table (modified in place).}
 
-\item{cols}{Columns to remove, specified as a tidy-style
-expression (e.g., \code{.(x, y)}, \code{list(x, y)}).}
+\item{cols}{Columns to remove, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).}
 }
 \value{
 The modified data.table, returned invisibly.
 }
 \description{
-Remove one or more columns from a data.table by reference,
-without making a copy. This is more memory-efficient than
-creating a modified copy of the object.
+Removes one or more columns from a data.table \strong{by reference} (no copy)
+}
+\details{
+\itemize{
+\item Columns are removed \strong{by reference} (no copy).
+\item \code{cols} may be provided as unquoted names, character vector, or integer indices.
+\item Silently does nothing if \code{cols} is empty after resolution.
+}
 }
 \examples{
 \dontrun{
-# Remove columns
-df <- data.table::as.data.table(mtcars)
-address(df)
-rm_cols(df, .(mpg, cyl, disp))
-address(df)
+library(data.table)
+
+dt <- data.table::as.data.table(mtcars)
+rm_cols(dt, .(mpg, cyl))
+head(dt)
 }
 
 }

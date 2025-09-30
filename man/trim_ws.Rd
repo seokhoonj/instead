@@ -2,31 +2,41 @@
 % Please edit documentation in R/replace.R
 \name{trim_ws}
 \alias{trim_ws}
-\title{Trim whitespace (in place)}
+\title{Trim leading/trailing whitespace (in place)}
 \usage{
 trim_ws(df, cols, ws = "[ \\t\\r\\n]")
 }
 \arguments{
 \item{df}{A data.table (modified in place).}
 
-\item{cols}{A character vector of column names. Defaults to all character columns.}
+\item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).
+If missing, all character columns are used.}
 
-\item{ws}{A regular expression describing whitespace to trim.}
+\item{ws}{A regex describing whitespace (default \code{"[ \\\\t\\\\r\\\\n]"}).}
 }
 \value{
-The modified data.table.
+The modified data.table, returned invisibly.
 }
 \description{
-Remove leading and trailing whitespace from character columns in a
-data.table. If \code{cols} is missing, all character columns are targeted.
+Removes leading and trailing whitespace from selected \strong{character} columns.
+Vectorized via \code{gsub()} per column; assigns results \emph{in place}.
+}
+\details{
+\itemize{
+\item Only \strong{character} columns are targeted by default.
+\item Leading/trailing whitespace (as defined by \code{ws}) is trimmed \strong{in place}.
+\item \code{NA} values are preserved as \code{NA}.
+\item If \code{cols} includes non-character columns, they are rejected with an error.
+}
 }
 \examples{
 \dontrun{
-# Trim whitespace
-df <- data.table(x = c(" A", "B ", " C "), y = c(1, 2, 3))
-data.table::address(df)
-trim_ws(df)
-data.table::address(df)
+library(data.table)
+dt <- data.table(x = c(" a", "b ", " c "), y = c("d", " e", "f "))
+trim_ws(dt)
+print(dt)
 }
 
 }

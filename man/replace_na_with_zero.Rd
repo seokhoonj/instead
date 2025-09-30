@@ -2,29 +2,50 @@
 % Please edit documentation in R/replace.R
 \name{replace_na_with_zero}
 \alias{replace_na_with_zero}
-\title{Replace NA with zero (in place)}
+\title{Replace NA with zero (in place, type-preserving)}
 \usage{
 replace_na_with_zero(df, cols)
 }
 \arguments{
 \item{df}{A data.table (modified in place).}
 
-\item{cols}{A character vector of column names. Defaults to all numeric/integer columns.}
+\item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
+Can be specified as unquoted names (e.g., \code{c(x, y)}),
+a character vector (e.g., \code{c("x","y")}), or integer indices (e.g., \code{c(1,2)}).
+If missing, all numeric columns are used.}
 }
 \value{
-The modified data.table (invisibly for chaining).
+The modified data.table, returned invisibly for chaining.
 }
 \description{
-Efficiently replace numeric NA values with 0 in a data.table. If \code{cols}
-is missing, all numeric and integer columns are targeted.
+Efficiently replaces \code{NA} values with \code{0} in selected numeric columns
+of a data.table. The replacement is done \emph{in place} using
+\code{\link[data.table:assign]{data.table::set()}}, modifying only rows where \code{NA} values exist.
+}
+\details{
+\itemize{
+\item Only \strong{numeric} columns are targeted by default.
+\item Columns are updated \strong{in place} only at the affected row indices.
+\item If \code{cols} includes non-numeric columns, they are rejected with an error.
+}
 }
 \examples{
 \dontrun{
-# Replace NA with 0
-df <- data.table(x = c(1, NA, 3), y = c("A", "B", NA), z = c(NA, 5, NA))
-data.table::address(df)
-replace_na_with_zero(df)
-data.table::address(df)
+library(data.table)
+
+dt <- data.table::data.table(
+  x = c(1, NA, 3),
+  y = c(NA, 5, NA),
+  z = c("a", NA, "c")
+)
+
+# Replace NA with 0 in numeric columns
+replace_na_with_zero(dt)
+print(dt)
+
+# Replace NA with 0 in specific columns only
+replace_na_with_zero(dt, cols = c("x"))
+print(dt)
 }
 
 }
