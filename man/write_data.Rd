@@ -12,7 +12,8 @@ write_data(
   row_names = TRUE,
   font_name = getOption("instead.font"),
   font_size = 11,
-  border_colour = "#000000",
+  fg_fill = "#E6E6E7",
+  border_color = "#000000",
   widths = 8.43,
   num_fmt = NULL
 )
@@ -35,7 +36,11 @@ write_data(
 
 \item{font_size}{Numeric font size for all text. Default \code{11}.}
 
-\item{border_colour}{Border colour (hex string). Default \code{"#000000"}.}
+\item{fg_fill}{Background fill colour (hex string) used for header cells,
+and optionally for row-name cells when \code{row_names = TRUE}.
+Default \code{"#E6E6E7"}.}
+
+\item{border_color}{Border colour (hex string). Default \code{"#000000"}.}
 
 \item{widths}{Column width(s) to apply. Can be a single numeric (recycled)
 or a numeric vector matching the number of columns. Default \code{8.43}.}
@@ -93,7 +98,7 @@ write_data(
   row_names = FALSE,
   font_name = "Calibri",
   font_size = 11,
-  border_colour = "#333333",
+  border_color = "#333333",
   widths = 10
 )
 openxlsx::saveWorkbook(wb, "styled_data.xlsx", overwrite = TRUE)

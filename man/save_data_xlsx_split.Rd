@@ -14,7 +14,8 @@ save_data_xlsx_split(
   title_size = 14,
   font_name = getOption("instead.font"),
   font_size = 11,
-  border_colour = "#000000",
+  fg_fill = "#E6E6E7",
+  border_color = "#000000",
   widths = 8.43,
   auto_width = TRUE,
   num_fmt = NULL,
@@ -39,7 +40,8 @@ Written \strong{above} each table. If \code{NULL}, no titles are written.}
 
 \item{title_size}{Numeric font size for title rows. Default \code{14}.}
 
-\item{font_name, font_size, border_colour, widths}{Styling forwarded to \code{\link[=write_data]{write_data()}}.}
+\item{font_name, font_size, fg_fill, border_color, widths}{Styling forwarded to
+\code{\link[=write_data]{write_data()}}.}
 
 \item{auto_width}{Logical. If \code{TRUE}, compute per-column widths and apply to data columns.
 Default \code{TRUE}.}

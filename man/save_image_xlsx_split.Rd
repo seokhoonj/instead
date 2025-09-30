@@ -71,3 +71,6 @@ save_image_xlsx_split(
 }
 
 }
+\seealso{
+\code{\link[=save_image_wb_split]{save_image_wb_split()}}, \code{\link[openxlsx:insertImage]{openxlsx::insertImage()}}
+}

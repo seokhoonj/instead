@@ -78,3 +78,6 @@ save_image_xlsx(
 }
 
 }
+\seealso{
+\code{\link[=save_image_wb]{save_image_wb()}}, \code{\link[openxlsx:insertImage]{openxlsx::insertImage()}}
+}

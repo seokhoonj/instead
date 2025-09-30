@@ -278,8 +278,7 @@ collapse_date_ranges(
 
 ### 2) `split_stay_by_date()`
 
-`split_stay_by_date()` splits any interval that spans one or more **split dates** into two parts, within each row’s `[from, to]` range.\
-For each split date `d`, affected rows become `[from, d - 1]` and `[d, to]`.
+`split_stay_by_date()` splits any interval that spans one or more **split dates** into two parts, within each row’s `[from, to]` range. For each split date `d`, affected rows become `[from, d - 1]` and `[d, to]`.
 
 #### Why you’d use this
 
@@ -494,7 +493,38 @@ env$restore(dt)
 
 ## 5. Excel Utilities
 
-Convenience wrappers to export **tables** into Excel (`.xlsx`) workbooks. They use `openxlsx` internally and handle styling (fonts, borders), title rows, and automatic column width adjustment.
+Convenience wrappers to export **tables, plots, or images** into Excel (`.xlsx`) workbooks. They use `openxlsx` internally and handle styling (fonts, borders), title rows, and automatic column width adjustment.
+
+### Functions
+
+-   **Functions returning a `Workbook` object** (modify in-memory workbook):
+    -   `save_data_wb()`, `save_data_wb_split()`
+    -   `save_plot_wb()`, `save_plot_wb_split()`
+    -   `save_image_wb()`, `save_image_wb_split()`
+-   **Functions writing directly to a `.xlsx` file** (create or update file on disk):
+    -   `save_data_xlsx()`, `save_data_xlsx_split()`
+    -   `save_plot_xlsx()`, `save_plot_xlsx_split()`
+    -   `save_image_xlsx()`, `save_image_xlsx_split()`
+
+### Basic usage patterns
+
+-   **`*_wb()` functions** work with an in-memory workbook. Typical flow:
+
+    ``` r
+    wb <- openxlsx::createWorkbook()
+    wb <- save_data_wb(data, wb, sheet = "Summary")
+    openxlsx::saveWorkbook(wb, "output.xlsx", overwrite = TRUE)
+    ```
+
+-   **`*_xlsx()` functions** write directly to disk. Typical call:
+
+    ``` r
+    save_data_xlsx(data, "output.xlsx", overwrite = TRUE)
+    ```
+
+### Detailed examples
+
+The following examples focus on the `*_xlsx()` family (direct-to-file) for clarity. The corresponding `*_wb()` functions work analogously, except they return a `Workbook` object instead of saving immediately.
 
 ------------------------------------------------------------------------
 
@@ -781,21 +811,18 @@ find_group_sizes(x)
 
 ### 6) `as_date_iso()`, `as_date_safe()`
 
-Helpers to **parse dates safely and consistently**. They handle common formats in data where date fields can appear as strings in different conventions.
+Helpers to **parse dates safely and consistently**. They handle common formats in data where date fields may appear as strings in different conventions.
 
--   **`as_date_iso(x)`**\
-    Fast path parser for **ISO-like formats only**. Accepts:
+-   **`as_date_iso(x)`**: Fast path parser for **ISO-like formats only**. Any unsupported pattern produces a **warning**. Intended for *clean ETL pipelines* or *system-generated logs*. Accepts:
     -   `"YYYY-MM-DD"`
     -   `"YYYY/MM/DD"`
-    -   `"YYYYMMDD"`\
-        Any unsupported pattern produces a **warning**.\
-        Intended for *clean ETL pipelines* or *system-generated logs*.
--   **`as_date_safe(x)`**\
-    More robust parser that also handles **two-digit day/month** formats with `"-"` or `"/"` separators. Ambiguous cases (e.g., `"01/08/2017"`) raise an **error** to prevent misinterpretation.
+    -   `"YYYYMMDD"`
+-   **`as_date_safe(x)`**: More robust parser that also handles **two-digit day/month** formats with `"-"` or `"/"` separators.
     -   Returns unchanged if already `Date`.
     -   Drops time if input is `POSIXt`.
     -   Treats empty strings as `NA`.
     -   Ensures invalid formats are caught early with clear messages.
+    -   Ambiguous cases (e.g., `"01/08/2017"`) raise an **error** to prevent misinterpretation.
 
 ``` r
 library(instead)

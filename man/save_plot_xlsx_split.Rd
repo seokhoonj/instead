@@ -74,3 +74,6 @@ save_plot_xlsx_split(
 }
 
 }
+\seealso{
+\code{\link[=save_plot_wb_split]{save_plot_wb_split()}}, \code{\link[openxlsx:insertPlot]{openxlsx::insertPlot()}}
+}

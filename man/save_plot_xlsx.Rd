@@ -95,4 +95,8 @@ save_plot_xlsx(
   overwrite = TRUE
 )
 }
+
+}
+\seealso{
+\code{\link[=save_plot_wb]{save_plot_wb()}}, \code{\link[openxlsx:insertPlot]{openxlsx::insertPlot()}}
 }

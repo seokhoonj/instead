@@ -15,7 +15,8 @@ save_data_xlsx(
   row_names = FALSE,
   font_name = getOption("instead.font"),
   font_size = 11,
-  border_colour = "#000000",
+  fg_fill = "#E6E6E7",
+  border_color = "#000000",
   widths = 8.43,
   auto_width = TRUE,
   width_scope = c("global_max", "per_table"),
@@ -47,8 +48,8 @@ If neither is available, no title is written for that table.}
 \item{row_names}{Logical; forwarded to \code{\link[=write_data]{write_data()}} to include row names
 in the written table. Default \code{FALSE}.}
 
-\item{font_name, font_size, border_colour, widths}{Styling; forwarded to \code{\link[=write_data]{write_data()}}.
-\code{widths} is used when \code{auto_width = FALSE}.}
+\item{font_name, font_size, fg_fill, border_color, widths}{Styling; forwarded to
+\code{\link[=write_data]{write_data()}}. \code{widths} is used when \code{auto_width = FALSE}.}
 
 \item{auto_width}{Logical. If \code{TRUE}, compute per-column widths from the
 underlying data (and optional row-name column) and call
