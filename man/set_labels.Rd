@@ -39,9 +39,7 @@ df <- data.frame(Q1 = c(0, 1, 1), Q2 = c(1, 0, 1))
 set_labels(df, labels = c("Rainy?", "Umbrella?"))
 
 # get labels
-get_labels(df)
-
-# View(df)
+get_labels(df) # or View(df)
 }
 
 }
