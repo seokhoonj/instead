@@ -33,7 +33,7 @@ write_data(
 \item{font_name}{Character font family for all text. Default
 \code{getOption("instead.font")}.}
 
-\item{font_size}{Numeric font size for all text. Default \code{14}.}
+\item{font_size}{Numeric font size for all text. Default \code{11}.}
 
 \item{border_colour}{Border colour (hex string). Default \code{"#000000"}.}
 

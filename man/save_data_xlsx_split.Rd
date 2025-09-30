@@ -13,7 +13,7 @@ save_data_xlsx_split(
   data_titles = NULL,
   title_size = 14,
   font_name = getOption("instead.font"),
-  font_size = 14,
+  font_size = 11,
   border_colour = "#000000",
   widths = 8.43,
   auto_width = TRUE,

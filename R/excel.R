@@ -166,7 +166,7 @@ save_data_xlsx <- function(data, file, sheet = "Data",
                            title_size = 14,
                            row_names = FALSE,
                            font_name = getOption("instead.font"),
-                           font_size = 14,
+                           font_size = 11,
                            border_colour = "#000000",
                            widths = 8.43,
                            auto_width = TRUE,
@@ -380,7 +380,7 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
                                  data_titles = NULL,
                                  title_size = 14,
                                  font_name = getOption("instead.font"),
-                                 font_size = 14,
+                                 font_size = 11,
                                  border_colour = "#000000",
                                  widths = 8.43,
                                  auto_width = TRUE,
@@ -1084,7 +1084,7 @@ save_image_xlsx_split <- function(image, file,
 #' @param row_names Logical; whether to include row names. Default `TRUE`.
 #' @param font_name Character font family for all text. Default
 #'   `getOption("instead.font")`.
-#' @param font_size Numeric font size for all text. Default `14`.
+#' @param font_size Numeric font size for all text. Default `11`.
 #' @param border_colour Border colour (hex string). Default `"#000000"`.
 #' @param widths Column width(s) to apply. Can be a single numeric (recycled)
 #'   or a numeric vector matching the number of columns. Default `8.43`.
