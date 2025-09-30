@@ -778,3 +778,41 @@ find_group_starts(x)
 find_group_sizes(x)
 #> [1] 2 3 1 2
 ```
+
+### 6) `as_date_iso()`, `as_date_safe()`
+
+Helpers to **parse dates safely and consistently**. They handle common formats in data where date fields can appear as strings in different conventions.
+
+-   **`as_date_iso(x)`**\
+    Fast path parser for **ISO-like formats only**. Accepts:
+    -   `"YYYY-MM-DD"`
+    -   `"YYYY/MM/DD"`
+    -   `"YYYYMMDD"`\
+        Any unsupported pattern produces a **warning**.\
+        Intended for *clean ETL pipelines* or *system-generated logs*.
+-   **`as_date_safe(x)`**\
+    More robust parser that also handles **two-digit day/month** formats with `"-"` or `"/"` separators. Ambiguous cases (e.g., `"01/08/2017"`) raise an **error** to prevent misinterpretation.
+    -   Returns unchanged if already `Date`.
+    -   Drops time if input is `POSIXt`.
+    -   Treats empty strings as `NA`.
+    -   Ensures invalid formats are caught early with clear messages.
+
+``` r
+library(instead)
+
+# ISO-like formats
+as_date_iso(c("2024-01-02", "2024/01/03", "20240104"))
+#> [1] "2024-01-02" "2024-01-03" "2024-01-04"
+
+# Safe parsing with ambiguity checks
+as_date_safe(c("2024-01-02", "20240103", "2024/01/04"))
+#> [1] "2024-01-02" "2024-01-03" "2024-01-04"
+
+# Unambiguous DD/MM vs MM/DD
+as_date_safe(c("13/02/2017", "02/13/2017"))
+#> [1] "2017-02-13" "2017-02-13"
+
+# Ambiguous case -> error
+# as_date_safe("01/08/2017")
+# Error: Ambiguous date(s): 01/08/2017 (could be DD/MM/YYYY or MM/DD/YYYY).
+```
