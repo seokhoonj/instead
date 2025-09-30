@@ -63,13 +63,13 @@ not at the raw daily level.
 }
 \examples{
 \donttest{
-dt <- data.table::data.table(
+dt <- data.frame(
   id    = c(1, 1, 1, 2, 2),
   group = c("A", "A", "A", "B", "B"),
   from  = as.Date(c("2024-01-01", "2024-07-01", "2024-12-01",
                     "2024-02-01", "2024-02-15")),
   to    = as.Date(c("2024-01-20", "2024-07-10", "2024-12-15",
-                    "2024-02-10", "2024-02-20"))
+                    "2024-02-10", "2025-02-20"))
 )
 
 # Apply insurance contract rules: 180-day limit, 180-day waiting, 90-day deduction

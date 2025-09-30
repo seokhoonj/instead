@@ -246,10 +246,10 @@ collapse_date_ranges(
   from_var = from, to_var = to,
   interval = 0
 )
-#>       id  group             work       from         to  stay
-#>   <char> <char>           <char>     <Date>     <Date> <num>
-#> 1:     A     x cleaning|analysis 2022-03-01 2022-03-09     9
-#> 2:     B     y       cleaning|QA 2022-03-08 2022-03-15     8
+#>   id group              work       from         to stay
+#> 1  A     x cleaning|analysis 2022-03-01 2022-03-09    9
+#> 2  B     y          cleaning 2022-03-08 2022-03-10    3
+#> 3  B     y                QA 2022-03-12 2022-03-15    4
 
 # 2) Require overlap (interval = -1)
 # Here, spans that only touch (no overlap) remain separate.
@@ -259,11 +259,10 @@ collapse_date_ranges(
   from_var = from, to_var = to,
   interval = -1
 )
-#>      id group     work       from         to stay
-#> 1:    A     x cleaning 2022-03-01 2022-03-06    6
-#> 2:    A     x analysis 2022-03-05 2022-03-09    5
-#> 3:    B     y cleaning 2022-03-08 2022-03-10    3
-#> 4:    B     y       QA 2022-03-12 2022-03-15    4
+#>   id group              work       from         to stay
+#> 1  A     x cleaning|analysis 2022-03-01 2022-03-09    9
+#> 2  B     y          cleaning 2022-03-08 2022-03-10    3
+#> 3  B     y                QA 2022-03-12 2022-03-15    4
 
 # 3) Allow short gaps (interval = 2)
 collapse_date_ranges(
@@ -272,9 +271,9 @@ collapse_date_ranges(
   from_var = from, to_var = to,
   interval = 2, collapse = ", "
 )
-#>      id group               work       from         to stay
-#> 1:    A     x cleaning, analysis 2022-03-01 2022-03-09    9
-#> 2:    B     y       cleaning, QA 2022-03-08 2022-03-15    8
+#>   id group               work       from         to stay
+#> 1  A     x cleaning, analysis 2022-03-01 2022-03-09    9
+#> 2  B     y       cleaning, QA 2022-03-08 2022-03-15    7
 ```
 
 ### 2) `split_stay_by_date()`
@@ -378,12 +377,30 @@ dt <- data.frame(
   from  = as.Date(c("2024-01-01", "2024-07-01", "2024-12-01",
                     "2024-02-01", "2024-02-15")),
   to    = as.Date(c("2024-01-20", "2024-07-10", "2024-12-15",
-                    "2024-02-10", "2024-02-20"))
+                    "2024-02-10", "2025-02-20"))
 )
 
 # Apply insurance rules: 180-day limit, 180-day waiting, 90-day deduction
 limit_stay(dt, id, group, from, to,
            limit = 180, waiting = 180, deduction = 90)
+
+#>    id group      month       from         to stay stay_mod
+#> 1   1     A 2024-01-01 2024-01-01 2024-01-01   20        0
+#> 2   1     A 2024-07-01 2024-07-01 2024-07-01   10        0
+#> 3   1     A 2024-12-01 2024-12-01 2024-12-01   15        0
+#> 4   2     B 2024-02-01 2024-02-01 2024-02-01   25        0
+#> 5   2     B 2024-03-01 2024-03-01 2024-03-01   31        0
+#> 6   2     B 2024-04-01 2024-04-01 2024-04-01   30        0
+#> 7   2     B 2024-05-01 2024-05-01 2024-05-27   31       27
+#> 8   2     B 2024-06-01 2024-06-01 2024-06-30   30       30
+#> 9   2     B 2024-07-01 2024-07-01 2024-07-31   31       31
+#> 10  2     B 2024-08-01 2024-08-01 2024-08-02   31        2
+#> 11  2     B 2024-09-01 2024-09-01 2024-09-01   30        0
+#> 12  2     B 2024-10-01 2024-10-01 2024-10-01   31        0
+#> 13  2     B 2024-11-01 2024-11-01 2024-11-01   30        0
+#> 14  2     B 2024-12-01 2024-12-01 2024-12-01   31        0
+#> 15  2     B 2025-01-01 2025-01-01 2025-01-02   31        2
+#> 16  2     B 2025-02-01 2025-02-01 2025-02-20   20       20
 ```
 
 ## 4. Developer Utilities (Optional)
