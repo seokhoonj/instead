@@ -50,7 +50,7 @@ meta.data.frame <- function(x) {
   missing <- vapply(x, function(col) sum(is.na(col)), integer(1L))
   zero <- vapply(x, function(col) sum(col == 0, na.rm = TRUE), integer(1L))
   distinct <- vapply(x, unilen, integer(1L))
-  mode <- vapply(x, function(col) mostfreq(col, na.rm = TRUE), numeric(1L))
+  mode <- sapply(x, function(col) mostfreq(col, na.rm = TRUE))
 
   nrows <- nrow(x)
   df <- data.table::data.table(
@@ -98,7 +98,7 @@ type <- function(x) UseMethod("type")
 #' @export
 type.data.frame <- function(x) {
   column <- names(x)
-  class  <- vapply(x, function(col) paste(class(col), collapse = ","), character(1))
-  type   <- vapply(x, typeof, character(1))
+  class  <- vapply(x, function(col) paste(class(col), collapse = ","), character(1L))
+  type   <- vapply(x, typeof, character(1L))
   data.table::data.table(column = column, class = class, type = type)
 }
