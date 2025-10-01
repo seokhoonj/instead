@@ -463,7 +463,7 @@ check_col_equal <- function(x, y) {
     return(FALSE)
   if (is.list(a) || is.list(b)) {
     all(mapply(function(u, v) {
-      (isTRUE(is.na(u)) && isTRUE(is.na(v))) || identical(u, v)
+      (is.na(u) && is.na(v)) || identical(u, v)
     }, a, b))
   } else {
     eq <- a == b

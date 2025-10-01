@@ -169,8 +169,7 @@ plot_image <- function(file, width = NULL, height = NULL, clear = TRUE) {
     stop("Install 'magick' to use this function: install.packages('magick')", call. = FALSE)
   }
   img <- magick::image_read(file)
-  if (isTRUE(clear))
-    grid::grid.newpage()
+  if (clear) grid::grid.newpage()
   grid::grid.raster(grDevices::as.raster(img), width = width, height = height,
                     interpolate = TRUE)
   invisible(img)

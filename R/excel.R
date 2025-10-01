@@ -510,7 +510,7 @@ save_data_wb_split <- function(data,
     )
 
     # auto width (data columns only)
-    if (isTRUE(auto_width)) {
+    if (auto_width) {
       cw <- .get_col_widths(data[[i]], row_names = row_names)
       openxlsx::setColWidths(
         wb, sheet = sheet,
