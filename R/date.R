@@ -92,26 +92,36 @@ as_date_iso <- function(x) {
 #' Safely coerce to Date with ambiguity checks (ISO-first)
 #'
 #' Vectorized date parser that accepts character, factor, Date, or POSIXt.
-#' Supported formats:
-#' - ISO-like: "YYYY-MM-DD", "YYYY/MM/DD", "YYYYMMDD"
-#' - Two-digit day/month with "/" or "-": "DD/MM/YYYY" vs "MM/DD/YYYY"
-#'   (and "DD-MM-YYYY" vs "MM-DD-YYYY"); ambiguous cases error.
 #'
-#' Rules:
-#' - Dates returned unchanged.
-#' - POSIXt drops time (converted via as.Date()).
-#' - "" treated as NA.
-#' - First parse ISO-like formats (fast, unambiguous), then handle 2-digit day/month.
-#' - Anything not parsed -> error with a short preview.
+#' **Supported formats**
+#' - ISO-like dates: `"YYYY-MM-DD"`, `"YYYY/MM/DD"`, `"YYYYMMDD"`
+#' - ISO-like datetimes (time dropped): `"YYYY-MM-DD HH:MM:SS"`, `"YYYY/MM/DD HH:MM:SS"`
+#' - Two-digit day/month with "/" or "-":
+#'   `"DD/MM/YYYY"` vs `"MM/DD/YYYY"` (and `"DD-MM-YYYY"` vs `"MM-DD-YYYY"`);
+#'   ambiguous cases error.
+#'
+#' **Rules**
+#' - `Date` inputs are returned unchanged.
+#' - `POSIXt` inputs drop the time via `as.Date()`.
+#' - Empty strings `""` are treated as `NA`.
+#' - Parsing order: unambiguous ISO(-like) (date or datetime) → two-digit day/month.
+#' - Anything not parsed → error with a short preview.
+#' - Datetime strings (e.g., `"2012-01-01 00:00:00"`, `"2012/01/01 00:00:00"`) are
+#'   parsed as calendar dates (time is ignored); beware that `as.Date()` on
+#'   `POSIXt` uses a timezone—set `tz` explicitly if needed.
 #'
 #' @param x character | factor | Date | POSIXt vector
 #'
 #' @return Date vector the same length as `x`
 #'
 #' @examples
-#' # ISO-like formats
+#' # ISO-like dates
 #' as_date_safe(c("2024-01-01", "20240102", "2024/01/03"))
 #' #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
+#'
+#' # ISO-like datetimes (time is dropped)
+#' as_date_safe(c("2012-01-01 00:00:00", "2012/01/01 12:34:56"))
+#' #> [1] "2012-01-01" "2012-01-01"
 #'
 #' \dontrun{
 #' # Ambiguous two-digit cases raise an error
@@ -123,8 +133,8 @@ as_date_iso <- function(x) {
 #' as_date_safe(c("13/02/2017", "02/13/2017"))
 #' #> [1] "2017-02-13" "2017-02-13"
 #'
-#' # POSIXt is allowed
-#' as_date_safe(as.POSIXct("2024-01-07 12:34:56"))
+#' # POSIXt is allowed (timezone may affect the calendar date)
+#' as_date_safe(as.POSIXct("2024-01-07 00:00:00", tz = "Asia/Seoul"))
 #' #> [1] "2024-01-07"
 #'
 #' # Factor input is coerced
@@ -167,6 +177,9 @@ as_date_safe <- function(x) {
   is_ymd_dash  <- grepl("^\\d{4}-\\d{2}-\\d{2}$", v)  # YYYY-MM-DD
   is_ymd_slash <- grepl("^\\d{4}/\\d{2}/\\d{2}$", v)  # YYYY/MM/DD
   is_ymd       <- grepl("^\\d{8}$", v)                # YYYYMMDD
+  is_ymd_dash_time  <- grepl("^\\d{4}-\\d{2}-\\d{2} +\\d{2}:\\d{2}:\\d{2}$", v) # YYYY-MM-DD HH:MM:SS
+  is_ymd_slash_time <- grepl("^\\d{4}/\\d{2}/\\d{2} +\\d{2}:\\d{2}:\\d{2}$", v) # YYYY/MM/DD HH:MM:SS
+
 
   if (any(is_ymd_dash)) {
     i <- which(is_ymd_dash)
@@ -179,6 +192,14 @@ as_date_safe <- function(x) {
   if (any(is_ymd)) {
     i <- which(is_ymd)
     out[idx[i]] <- as.Date(v[i], "%Y%m%d")
+  }
+  if (any(is_ymd_dash_time)) {
+    i <- which(is_ymd_dash_time)
+    out[idx[i]] <- as.Date(as.POSIXct(v[i], format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+  }
+  if (any(is_ymd_slash_time)) {
+    i <- which(is_ymd_slash_time)
+    out[idx[i]] <- as.Date(as.POSIXct(v[i], format = "%Y/%m/%d %H:%M:%S", tz = "UTC"))
   }
 
   # Two-digit day/month with "/" or "-" (disambiguation via helpers)

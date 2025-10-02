@@ -14,27 +14,37 @@ Date vector the same length as \code{x}
 }
 \description{
 Vectorized date parser that accepts character, factor, Date, or POSIXt.
-Supported formats:
-\itemize{
-\item ISO-like: "YYYY-MM-DD", "YYYY/MM/DD", "YYYYMMDD"
-\item Two-digit day/month with "/" or "-": "DD/MM/YYYY" vs "MM/DD/YYYY"
-(and "DD-MM-YYYY" vs "MM-DD-YYYY"); ambiguous cases error.
-}
 }
 \details{
-Rules:
+\strong{Supported formats}
 \itemize{
-\item Dates returned unchanged.
-\item POSIXt drops time (converted via as.Date()).
-\item "" treated as NA.
-\item First parse ISO-like formats (fast, unambiguous), then handle 2-digit day/month.
-\item Anything not parsed -> error with a short preview.
+\item ISO-like dates: \code{"YYYY-MM-DD"}, \code{"YYYY/MM/DD"}, \code{"YYYYMMDD"}
+\item ISO-like datetimes (time dropped): \code{"YYYY-MM-DD HH:MM:SS"}, \code{"YYYY/MM/DD HH:MM:SS"}
+\item Two-digit day/month with "/" or "-":
+\code{"DD/MM/YYYY"} vs \code{"MM/DD/YYYY"} (and \code{"DD-MM-YYYY"} vs \code{"MM-DD-YYYY"});
+ambiguous cases error.
+}
+
+\strong{Rules}
+\itemize{
+\item \code{Date} inputs are returned unchanged.
+\item \code{POSIXt} inputs drop the time via \code{as.Date()}.
+\item Empty strings \code{""} are treated as \code{NA}.
+\item Parsing order: unambiguous ISO(-like) (date or datetime) → two-digit day/month.
+\item Anything not parsed → error with a short preview.
+\item Datetime strings (e.g., \code{"2012-01-01 00:00:00"}, \code{"2012/01/01 00:00:00"}) are
+parsed as calendar dates (time is ignored); beware that \code{as.Date()} on
+\code{POSIXt} uses a timezone—set \code{tz} explicitly if needed.
 }
 }
 \examples{
-# ISO-like formats
+# ISO-like dates
 as_date_safe(c("2024-01-01", "20240102", "2024/01/03"))
 #> [1] "2024-01-01" "2024-01-02" "2024-01-03"
+
+# ISO-like datetimes (time is dropped)
+as_date_safe(c("2012-01-01 00:00:00", "2012/01/01 12:34:56"))
+#> [1] "2012-01-01" "2012-01-01"
 
 \dontrun{
 # Ambiguous two-digit cases raise an error
@@ -46,8 +56,8 @@ as_date_safe("01/08/2017")
 as_date_safe(c("13/02/2017", "02/13/2017"))
 #> [1] "2017-02-13" "2017-02-13"
 
-# POSIXt is allowed
-as_date_safe(as.POSIXct("2024-01-07 12:34:56"))
+# POSIXt is allowed (timezone may affect the calendar date)
+as_date_safe(as.POSIXct("2024-01-07 00:00:00", tz = "Asia/Seoul"))
 #> [1] "2024-01-07"
 
 # Factor input is coerced
