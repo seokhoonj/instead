@@ -402,6 +402,66 @@ limit_stay(dt, id, group, from, to,
 #> 16  2     B 2025-02-01 2025-02-01 2025-02-20   20       20
 ```
 
+### 5) `pack_left()`
+
+`pack_left()` shifts non-missing values **leftwards across multiple columns**, filling vacated positions with type-consistent `NA`s. This is particularly useful for structured insurance data such as **diagnosis codes** (`kcd1`, `kcd2`, …), where values should always occupy the earliest available column.
+
+#### Why you’d use this
+
+- **Normalize wide code columns**: Ensure codes are packed to the left for easier downstream analysis.  
+- **Prevent type coercion**: All selected columns are required to share the same type; if a column is entirely `NA`, its type is inferred from the source column when values are shifted in.  
+- **Memory efficient**: Uses `data.table::set()` for in-place modification (if input is a `data.table`).  
+
+#### Key behavior
+
+- Operates **in place** if `df` is a `data.table`.  
+  For a plain `data.frame`, a temporary `data.table` is used and a modified copy is returned.  
+- Performs up to `(p - 1)` passes (where `p = length(cols)`) so that values can shift multiple steps left.  
+- Type safety: if source and destination columns have incompatible types, the function stops with an error.  
+
+```r
+library(data.table)
+library(instead)
+
+# data.table: in-place modification
+dt <- data.table(
+  kcd1 = c(NA, NA, NA),
+  kcd2 = c("W49","S925", NA),
+  kcd3 = c("S925", NA, "D12")
+)
+
+# pack_left() modifies dt in place
+pack_left(dt, c(kcd1, kcd2, kcd3))
+
+dt
+#    kcd1  kcd2  kcd3
+# 1:  W49  S925  <NA>
+# 2: S925  <NA>  <NA>
+# 3:  D12  <NA>  <NA>
+
+# data.frame: copy returned
+df <- data.frame(
+  kcd1 = c(NA, NA, NA),
+  kcd2 = c("W49","S925", NA),
+  kcd3 = c("S925", NA, "D12")
+)
+
+# pack_left() returns a modified copy; original df is unchanged
+df2 <- pack_left(df, c(kcd1, kcd2, kcd3))
+
+df   # unchanged
+#   kcd1 kcd2 kcd3
+# 1 <NA>  W49 S925
+# 2 <NA> S925 <NA>
+# 3 <NA> <NA>  D12
+
+df2  # modified result
+#   kcd1  kcd2  kcd3
+# 1  W49  S925  <NA>
+# 2 S925  <NA>  <NA>
+# 3  D12  <NA>  <NA>
+```
+
 ## 4. Developer Utilities (Optional)
 
 Large R projects often need quick ways to **locate** and optionally **replace** text across multiple files. `instead` provides two developer-focused utilities for this purpose:

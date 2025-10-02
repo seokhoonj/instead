@@ -44,6 +44,12 @@ df <- data.table::data.table(
   kcd2 = c("W49","S925", NA),
   kcd3 = c("S925", NA, "D12")
 )
+df
+#    kcd1  kcd2  kcd3
+# 1:   NA   W49  S925
+# 2:   NA  S925  <NA>
+# 3:   NA  <NA>   D12
+
 pack_left(df, c(kcd1, kcd2, kcd3))
 df
 #    kcd1  kcd2  kcd3
