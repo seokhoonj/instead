@@ -578,6 +578,8 @@ collapse_date_ranges <- function(df, id_var, group_var, merge_var,
 #' where intervals need to be aligned with administrative cut-off dates.
 #'
 #' @param df A data.frame or data.table containing stay intervals.
+#' @param id_var Column specifying the unique identifier for each stay or entity.
+#'   Can be provided unquoted.
 #' @param from_var Column specifying the start date of the stay.
 #'   Can be provided unquoted.
 #' @param to_var Column specifying the end date of the stay.
@@ -602,11 +604,14 @@ collapse_date_ranges <- function(df, id_var, group_var, merge_var,
 #' )
 #'
 #' # Split stays at Jan 5 and Jan 18
-#' split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
+#' split_stay_by_date(
+#'   df, id, from, to,
+#'   dates = as.Date(c("2024-01-05","2024-01-18"))
+#' )
 #' }
 #'
 #' @export
-split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
+split_stay_by_date <- function(df, id_var, from_var, to_var, dates, all = TRUE,
                                verbose = TRUE) {
   assert_class(df, "data.frame")
 
@@ -614,6 +619,7 @@ split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
   dt  <- env$dt
 
   # resolve column names
+  iv <- capture_names(dt, !!rlang::enquo(id_var))
   fv <- capture_names(dt, !!rlang::enquo(from_var))
   tv <- capture_names(dt, !!rlang::enquo(to_var))
 
@@ -660,6 +666,8 @@ split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
     }
   }
 
+  data.table::setorderv(dt, c(iv, fv, tv))
+
   if (verbose) {
     n_after <- nrow(dt)
     delta   <- n_after - n_before
@@ -673,7 +681,8 @@ split_stay_by_date <- function(df, from_var, to_var, dates, all = TRUE,
     ))
 
     cat("! Please review variables derived from stay totals.\n",
-        "! Re-calculation may be required after splitting.\n", sep = "")
+        "! Re-calculation may be required for duration-based statistics.\n",
+        sep = "")
   }
 
   env$restore(dt)

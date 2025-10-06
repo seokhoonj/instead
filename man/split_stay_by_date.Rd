@@ -4,10 +4,21 @@
 \alias{split_stay_by_date}
 \title{Split stay intervals by cut dates}
 \usage{
-split_stay_by_date(df, from_var, to_var, dates, all = TRUE, verbose = TRUE)
+split_stay_by_date(
+  df,
+  id_var,
+  from_var,
+  to_var,
+  dates,
+  all = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{df}{A data.frame or data.table containing stay intervals.}
+
+\item{id_var}{Column specifying the unique identifier for each stay or entity.
+Can be provided unquoted.}
 
 \item{from_var}{Column specifying the start date of the stay.
 Can be provided unquoted.}
@@ -51,7 +62,10 @@ df <- data.frame(
 )
 
 # Split stays at Jan 5 and Jan 18
-split_stay_by_date(df, from, to, dates = as.Date(c("2024-01-05","2024-01-18")))
+split_stay_by_date(
+  df, id, from, to,
+  dates = as.Date(c("2024-01-05","2024-01-18"))
+)
 }
 
 }
