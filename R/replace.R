@@ -304,6 +304,30 @@ replace_a_with_b <- function(df, cols, a, b) {
   invisible(df[])
 }
 
+#' Replace a column vector in a matrix (in place)
+#'
+#' Replace one or more columns of a matrix with a new vector, directly
+#' modifying the matrix memory. This avoids reallocation and can be more
+#' efficient for large matrices.
+#'
+#' @param mat A numeric matrix (modified in place).
+#' @param cols Column(s) to replace; either character names or integer indices.
+#' @param vec A numeric vector to insert in place of the selected columns.
+#'
+#' @return No return value, called for side effects (the matrix is updated in place).
+#'
+#' @examples
+#' \dontrun{
+#' x <- matrix(as.numeric(1:9), 3, 3)
+#' replace_cols_in_mat(x, c(1, 3), c(100, 200, 300)) # replace 1st and 3rd columns
+#' }
+#'
+#' @export
+replace_cols_in_mat <- function(mat, cols, vec) {
+  if (is.character(cols)) cols <- index_cols(mat, col)
+  invisible(.Call(ReplaceColsInMat, mat, cols, vec))
+}
+
 #' Trim leading/trailing whitespace (in place)
 #'
 #' Removes leading and trailing whitespace from selected **character** columns.

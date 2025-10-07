@@ -159,7 +159,7 @@ extern "C" {
   SEXP ColDiff(SEXP x, SEXP snarm);
 
   // Replace
-  SEXP ReplaceVecInMat(SEXP mat, SEXP col, SEXP vec);
+  SEXP ReplaceColsInMat(SEXP mat, SEXP col, SEXP vec);
   SEXP ReplaceValInMat(SEXP mat, SEXP val, SEXP refmat, SEXP refval);
 
   // Mult

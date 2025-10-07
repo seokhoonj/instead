@@ -367,30 +367,6 @@ matXnum <- function(mat, num) {
   invisible(.Call(MatXNum, mat, num))
 }
 
-#' Replace a column vector in a matrix (in place)
-#'
-#' Replace one or more columns of a matrix with a new vector, directly
-#' modifying the matrix memory. This avoids reallocation and can be more
-#' efficient for large matrices.
-#'
-#' @param mat A numeric matrix (modified in place).
-#' @param col Column(s) to replace; either character names or integer indices.
-#' @param vec A numeric vector to insert in place of the selected columns.
-#'
-#' @return No return value, called for side effects (the matrix is updated in place).
-#'
-#' @examples
-#' \dontrun{
-#' x <- matrix(as.numeric(1:6), 3, 2)
-#' replace_vec_in_mat(x, 2, c(100, 200, 300)) # replace 2nd column
-#' }
-#'
-#' @export
-replace_vec_in_mat <- function(mat, col, vec) {
-  if (is.character(col)) col <- index_cols(mat, col)
-  invisible(.Call(ReplaceVecInMat, mat, col, vec))
-}
-
 # Sample matrix -----------------------------------------------------------
 
 #' Create a zero matrix

@@ -1,84 +1,97 @@
 #include "instead.h"
 
 /* =========================================================================
- * ReplaceVecInMat
+ * ReplaceColsInMat
  *
- * Replace a single column of a matrix with values from a vector.
+ * Replace one or more columns of a matrix with values from a vector.
  *
- * mat  : R matrix (logical, integer, double, complex, or character).
- * col  : 1-based column index to replace.
- * vec  : Vector of replacement values; length must equal nrows(mat).
+ * mat   : R matrix (logical, integer, double, complex, or character).
+ * cols  : Integer vector of 1-based column indices to replace.
+ * vec   : Vector of replacement values; length must equal
+ *          nrows(mat) * length(cols), ordered by column (column-major).
  *
  * Notes:
  * - Type of vec must match mat, except integer matrices also accept logical.
- * - For numeric/logical/complex types, values are copied element-wise.
- * - For character matrices, elements are assigned with SET_STRING_ELT.
- * - Input validity is checked (matrix type, length, bounds).
+ * - For numeric, logical, and complex types, values are copied element-wise.
+ * - For character matrices, elements are assigned via SET_STRING_ELT.
+ * - Input validity is checked (matrix type, type compatibility, length, bounds).
  * - Modifies mat in place; returns R_NilValue.
  * ========================================================================= */
-SEXP ReplaceVecInMat(SEXP mat, SEXP col, SEXP vec) {
-  R_xlen_t i, m, p, icol;
+SEXP ReplaceColsInMat(SEXP mat, SEXP cols, SEXP vec) {
+  R_xlen_t i, j, m, ncols_replace;
 
   if (!isMatrix(mat))
     error("not a matrix");
 
-  if (!(TYPEOF(mat)==INTSXP && TYPEOF(vec)==LGLSXP) && TYPEOF(mat) != TYPEOF(vec))
+  // allow logical -> integer replacement, otherwise types must match
+  if (!(TYPEOF(mat) == INTSXP && TYPEOF(vec) == LGLSXP) && TYPEOF(mat) != TYPEOF(vec))
     error("different input types");
 
-  m = nrows(mat), p = XLENGTH(vec);
-  icol = asInteger(col);
+  m = nrows(mat);
+  ncols_replace = XLENGTH(cols);
+  R_xlen_t p = XLENGTH(vec);
 
-  if (icol == NA_INTEGER)
-    error("`col` is NA");
-  if (icol < 1 || icol > ncols(mat))
-    error("`col` out of range");
+  if (ncols_replace < 1)
+    error("`cols` must contain at least one index");
 
-  if (m != p)
-    error("different length");
+  if (p != m * ncols_replace)
+    error("length of `vec` must equal nrows(mat) * length(cols)");
 
-  switch (TYPEOF(mat)) {
-  case LGLSXP: {
-    int *imat = INTEGER(mat);
-    const int *ivec = LOGICAL(vec);
-    R_xlen_t off = (R_xlen_t)(icol - 1) * m;
-    for (i = 0; i < m; ++i) {
-      imat[off + i] = ivec[i];
+  // ensure integer vector for column indices
+  SEXP cols_int = PROTECT(coerceVector(cols, INTSXP));
+  int *icolv = INTEGER(cols_int);
+
+  for (j = 0; j < ncols_replace; ++j) {
+    int icol = icolv[j];
+    if (icol == NA_INTEGER)
+      error("`cols` contains NA");
+    if (icol < 1 || icol > ncols(mat))
+      error("`cols` out of range");
+
+    R_xlen_t off  = (R_xlen_t)(icol - 1) * m;  // matrix offset
+    R_xlen_t voff = (R_xlen_t)j * m;           // vector offset
+
+    switch (TYPEOF(mat)) {
+    case LGLSXP: {
+      int *imat = INTEGER(mat);
+      const int *ivec = LOGICAL(vec);
+      for (i = 0; i < m; ++i)
+        imat[off + i] = ivec[voff + i];
+    } break;
+
+    case INTSXP: {
+      int *imat = INTEGER(mat);
+      const int *ivec = (TYPEOF(vec) == LGLSXP) ? LOGICAL(vec) : INTEGER(vec);
+      for (i = 0; i < m; ++i)
+        imat[off + i] = ivec[voff + i];
+    } break;
+
+    case REALSXP: {
+      double *imat = REAL(mat);
+      const double *ivec = REAL(vec);
+      for (i = 0; i < m; ++i)
+        imat[off + i] = ivec[voff + i];
+    } break;
+
+    case CPLXSXP: {
+      Rcomplex *imat = COMPLEX(mat);
+      const Rcomplex *ivec = COMPLEX(vec);
+      for (i = 0; i < m; ++i)
+        imat[off + i] = ivec[voff + i];
+    } break;
+
+    case STRSXP: {
+      for (i = 0; i < m; ++i)
+        SET_STRING_ELT(mat, off + i, STRING_ELT(vec, voff + i)); // NA_STRING ok
+    } break;
+
+    default:
+      UNPROTECT(1);
+    error("invalid input type");
     }
-  } break;
-  case INTSXP: {
-    int *imat = INTEGER(mat);
-    const int *ivec = (TYPEOF(vec) == LGLSXP) ? LOGICAL(vec) : INTEGER(vec);
-    R_xlen_t off = (R_xlen_t)(icol - 1) * m;
-    for (i = 0; i < m; ++i) {
-      imat[off + i] = ivec[i];
-    }
-  } break;
-  case REALSXP: {
-    double *imat = REAL(mat);
-    const double *ivec = REAL(vec);
-    R_xlen_t off = (R_xlen_t)(icol - 1) * m;
-    for (i = 0; i < m; ++i) {
-      imat[off + i] = ivec[i];
-    }
-  } break;
-  case CPLXSXP: {
-    Rcomplex *imat = COMPLEX(mat);
-    const Rcomplex *ivec = COMPLEX(vec);
-    R_xlen_t off = (R_xlen_t)(icol - 1) * m;
-    for (i = 0; i < m; ++i) {
-      imat[off + i] = ivec[i];
-    }
-  } break;
-  case STRSXP: {
-    R_xlen_t off = (R_xlen_t)(icol - 1) * m;
-    for (i = 0; i < m; ++i) {
-      SET_STRING_ELT(mat, off + i, STRING_ELT(vec, i));  // NA_STRING OK
-    }
-  } break;
-  default:
-    error("invalid input");
   }
 
+  UNPROTECT(1);
   return R_NilValue;
 }
 

@@ -35,7 +35,7 @@ extern SEXP ColMax(SEXP, SEXP);
 extern SEXP ColMin(SEXP, SEXP);
 extern SEXP RowDiff(SEXP, SEXP);
 extern SEXP ColDiff(SEXP, SEXP);
-extern SEXP ReplaceVecInMat(SEXP, SEXP, SEXP);
+extern SEXP ReplaceColsInMat(SEXP, SEXP, SEXP);
 extern SEXP ReplaceValInMat(SEXP, SEXP, SEXP, SEXP);
 extern SEXP MatXMat(SEXP, SEXP);
 extern SEXP MatXRow(SEXP, SEXP);
@@ -79,7 +79,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"ColMin",                      (DL_FUNC) &ColMin,                      2},
     {"RowDiff",                     (DL_FUNC) &RowDiff,                     2},
     {"ColDiff",                     (DL_FUNC) &ColDiff,                     2},
-    {"ReplaceVecInMat",             (DL_FUNC) &ReplaceVecInMat,             3},
+    {"ReplaceColsInMat",            (DL_FUNC) &ReplaceColsInMat,            3},
     {"ReplaceValInMat",             (DL_FUNC) &ReplaceValInMat,             4},
     {"MatXMat",                     (DL_FUNC) &MatXMat,                     2},
     {"MatXRow",                     (DL_FUNC) &MatXRow,                     2},
