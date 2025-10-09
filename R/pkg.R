@@ -86,13 +86,12 @@
                                           "readxl", "reticulate", "rlang",
                                           "scales", "stringi", "stringr",
                                           "tibble", "usethis", "utils")) {
-  license <- vapply(
+  license <- sapply(
     packages,
-    function(x) utils::packageDescription(x)["License"],
-    character(1L)
+    function(x) utils::packageDescription(x)["License"]
   )
   names(license) <- packages
-  license
+  data.frame(package = names(license), license = unlist(license), row.names = NULL)
 }
 
 .fields_package_license <- function(package = "instead",
