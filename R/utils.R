@@ -495,29 +495,114 @@ quote_comma <- function(..., newline = FALSE) {
   cat("\n")
 }
 
-#' Convert integer64 columns in a data.table to numeric (in-place)
+#' Convert columns to numeric (in-place for data.table)
 #'
-#' Modifies a data.table by converting all `integer64` columns to `numeric`.
-#' This function operates **by reference**, so the input data.table
-#' is changed directly without creating a copy.
+#' Efficiently convert selected columns of a data frame, tibble, or
+#' data.table to numeric type.
+#' If the input is a data.table, the conversion is performed **in place**
+#' (no copy).
+#' If the input is a regular data.frame or tibble, a shallow copy is made
+#' and the result is automatically restored to the original class.
 #'
-#' @param df A data.table.
+#' @param df A data.frame, tibble, or data.table containing the columns to convert.
+#' @param cols Character vector of column names to convert to numeric.
+#' @param suppress_warnings Logical; if `TRUE`, suppresses warnings such as
+#'   `"NAs introduced by coercion"`. Default is `FALSE`.
 #'
-#' @return No return value. The input data.table is modified in-place.
+#' @return
+#' - If `df` is a data.table: the same object, modified in place (invisible).
+#' - If `df` is a data.frame or tibble: a new object of the original class,
+#'   with specified columns converted to numeric.
+#'
+#' @details
+#' This function uses [data.table::set()] for direct column replacement,
+#' minimizing memory use and avoiding full table copies.
+#' It is internally wrapped by [ensure_dt_env()] to preserve the input's
+#' original class and ensure safe restoration for non-data.table inputs.
 #'
 #' @examples
 #' \dontrun{
-#' dt <- data.table::data.table(a = bit64::as.integer64(1:3), b = c("x", "y", "z"))
-#' str(dt)
-#' set_i64_to_num(dt)
-#' str(dt) # column 'a' converted to numeric
+#' library(data.table)
+#' DT <- data.table(a = c("1", "2", "3"), b = c("4", "5", "x"))
+#'
+#' # In-place modification (no copy)
+#' numify(DT, c("a", "b"))
+#' DT
+#'
+#' # For data.frame input, returns a new object
+#' df <- data.frame(a = c("1", "2"), b = c("3", "x"))
+#' df2 <- numify(df, "b")
+#' df2
 #' }
 #'
 #' @export
-set_i64_to_num <- function(df) {
-  cols <- type(df)[class == "integer64"]$column
-  df[, (cols) := lapply(.SD, as.numeric), .SDcols = cols]
-  return(df)
+numify <- function(df, cols, suppress_warnings = FALSE) {
+  assert_class(df, "data.frame")
+
+  env <- ensure_dt_env(df)
+  dt  <- env$dt
+
+  for (j in cols) {
+    x <- dt[[j]]
+    if (suppress_warnings) {
+      x <- suppressWarnings(as.numeric(x))
+    } else {
+      x <- as.numeric(x)
+    }
+    data.table::set(dt, j = j, value = x)
+  }
+
+  env$restore(dt)
+}
+
+#' Convert all integer64 columns to numeric
+#'
+#' Detects columns of type `integer64` (from the **bit64** package)
+#' and converts them to `numeric`.
+#' If the input is a `data.table`, the conversion is performed **in place**
+#' (by reference, no copy).
+#' For data.frame or tibble inputs, the function returns a modified copy
+#' restored to the original class.
+#'
+#' @param df A data.frame, tibble, or data.table.
+#'   Columns with class `"integer64"` will be converted to numeric.
+#'
+#' @return
+#' - For data.table input: the same object (modified in place, invisibly).
+#' - For data.frame/tibble input: a new object of the same class, returned
+#'   with integer64 columns converted to numeric.
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' library(bit64)
+#'
+#' # data.table example (in-place)
+#' dt <- data.table(a = as.integer64(1:3), b = letters[1:3])
+#' str(dt)
+#' set_i64_to_num(dt)
+#' str(dt) # 'a' converted to numeric
+#'
+#' # data.frame example (copy returned)
+#' df <- data.frame(a = as.integer64(4:6), b = letters[4:6])
+#' df2 <- set_i64_to_num(df)
+#' str(df2)
+#' }
+#'
+#' @export
+numify_i64 <- function(df) {
+  assert_class(df, "data.frame")
+
+  # Identify integer64 columns
+  cols <- names(df)[vapply(df, inherits, logical(1L), what = "integer64")]
+
+  if (length(cols) == 0L) {
+    message("No integer64 columns found.")
+    return(invisible(df))
+  }
+
+  # Use numify() to handle data.table / data.frame / tibble
+  numify(df, cols = cols, suppress_warnings = TRUE)
 }
 
 # To be updated -----------------------------------------------------------
