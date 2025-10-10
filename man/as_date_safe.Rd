@@ -30,8 +30,8 @@ ambiguous cases error.
 \item \code{Date} inputs are returned unchanged.
 \item \code{POSIXt} inputs drop the time via \code{as.Date()}.
 \item Empty strings \code{""} are treated as \code{NA}.
-\item Parsing order: unambiguous ISO(-like) (date or datetime) → two-digit day/month.
-\item Anything not parsed → error with a short preview.
+\item Parsing order: unambiguous ISO(-like) (date or datetime) -> two-digit day/month.
+\item Anything not parsed -> error with a short preview.
 \item Datetime strings (e.g., \code{"2012-01-01 00:00:00"}, \code{"2012/01/01 00:00:00"}) are
 parsed as calendar dates (time is ignored); beware that \code{as.Date()} on
 \code{POSIXt} uses a timezone—set \code{tz} explicitly if needed.

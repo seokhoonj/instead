@@ -104,8 +104,8 @@ as_date_iso <- function(x) {
 #' - `Date` inputs are returned unchanged.
 #' - `POSIXt` inputs drop the time via `as.Date()`.
 #' - Empty strings `""` are treated as `NA`.
-#' - Parsing order: unambiguous ISO(-like) (date or datetime) → two-digit day/month.
-#' - Anything not parsed → error with a short preview.
+#' - Parsing order: unambiguous ISO(-like) (date or datetime) -> two-digit day/month.
+#' - Anything not parsed -> error with a short preview.
 #' - Datetime strings (e.g., `"2012-01-01 00:00:00"`, `"2012/01/01 00:00:00"`) are
 #'   parsed as calendar dates (time is ignored); beware that `as.Date()` on
 #'   `POSIXt` uses a timezone—set `tz` explicitly if needed.
