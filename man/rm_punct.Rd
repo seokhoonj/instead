@@ -4,10 +4,10 @@
 \alias{rm_punct}
 \title{Remove punctuation (in place)}
 \usage{
-rm_punct(df, cols, pattern = "(?!\\\\*)[[:punct:]]")
+rm_punct(DT, cols, pattern = "(?!\\\\*)[[:punct:]]")
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),

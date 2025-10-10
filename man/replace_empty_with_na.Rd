@@ -4,10 +4,10 @@
 \alias{replace_empty_with_na}
 \title{Replace empty strings with NA (in place)}
 \usage{
-replace_empty_with_na(df, cols)
+replace_empty_with_na(DT, cols)
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),

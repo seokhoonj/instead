@@ -4,7 +4,7 @@
 #' of a data.table. The replacement is done *in place* using
 #' [data.table::set()], modifying only rows where `NA` values exist.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -37,14 +37,14 @@
 #' }
 #'
 #' @export
-replace_na_with_zero <- function(df, cols) {
-  assert_class(df, "data.table")
+replace_na_with_zero <- function(DT, cols) {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_numeric_cols(df)
+    cols <- .get_numeric_cols(DT)
   } else {
-    cols_captured <- capture_names(df, !!rlang::enquo(cols))
-    cols_numeric  <- .get_numeric_cols(df)
+    cols_captured <- capture_names(DT, !!rlang::enquo(cols))
+    cols_numeric  <- .get_numeric_cols(DT)
     cols_non_numeric <- setdiff(cols_captured, cols_numeric)
     if (length(cols_non_numeric)) {
       stop(sprintf(
@@ -56,15 +56,15 @@ replace_na_with_zero <- function(df, cols) {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    i <- which(is.na(df[[j]]))
+    i <- which(is.na(DT[[j]]))
     if (length(i))
-      data.table::set(df, i = i, j = j, value = 0)
+      data.table::set(DT, i = i, j = j, value = 0)
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Replace zero with NA (in place, type-preserving)
@@ -72,7 +72,7 @@ replace_na_with_zero <- function(df, cols) {
 #' Replaces `0` with `NA` in selected **numeric** columns of a data.table.
 #' Uses [data.table::set()] to modify only affected rows *in place*.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -99,14 +99,14 @@ replace_na_with_zero <- function(df, cols) {
 #' }
 #'
 #' @export
-replace_zero_with_na <- function(df, cols) {
-  assert_class(df, "data.table")
+replace_zero_with_na <- function(DT, cols) {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_numeric_cols(df)
+    cols <- .get_numeric_cols(DT)
   } else {
-    cols_captured <- capture_names(df, !!rlang::enquo(cols))
-    cols_numeric  <- .get_numeric_cols(df)
+    cols_captured <- capture_names(DT, !!rlang::enquo(cols))
+    cols_numeric  <- .get_numeric_cols(DT)
     cols_non_numeric <- setdiff(cols_captured, cols_numeric)
     if (length(cols_non_numeric)) {
       stop(sprintf(
@@ -118,15 +118,15 @@ replace_zero_with_na <- function(df, cols) {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    i <- which(df[[j]] == 0)
+    i <- which(DT[[j]] == 0)
     if (length(i))
-      data.table::set(df, i = i, j = j, value = NA)
+      data.table::set(DT, i = i, j = j, value = NA)
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Replace empty strings with NA (in place)
@@ -134,7 +134,7 @@ replace_zero_with_na <- function(df, cols) {
 #' Replaces `""` with `NA_character_` in selected **character** columns.
 #' Uses [data.table::set()] for in-place updates.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -157,14 +157,14 @@ replace_zero_with_na <- function(df, cols) {
 #' }
 #'
 #' @export
-replace_empty_with_na <- function(df, cols) {
-  assert_class(df, "data.table")
+replace_empty_with_na <- function(DT, cols) {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_character_cols(df)
+    cols <- .get_character_cols(DT)
   } else {
-    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
-    cols_character <- .get_character_cols(df)
+    cols_captured  <- capture_names(DT, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(DT)
     cols_non_character <- setdiff(cols_captured, cols_character)
     if (length(cols_non_character)) {
       stop(sprintf(
@@ -176,15 +176,15 @@ replace_empty_with_na <- function(df, cols) {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    i <- which(df[[j]] == "")
+    i <- which(DT[[j]] == "")
     if (length(i))
-      data.table::set(df, i = i, j = j, value = NA_character_)
+      data.table::set(DT, i = i, j = j, value = NA_character_)
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Replace NA with empty strings (in place)
@@ -192,7 +192,7 @@ replace_empty_with_na <- function(df, cols) {
 #' Replaces `NA_character_` with `""` in selected **character** columns.
 #' Uses [data.table::set()] for in-place updates.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -214,14 +214,14 @@ replace_empty_with_na <- function(df, cols) {
 #' }
 #'
 #' @export
-replace_na_with_empty <- function(df, cols) {
-  assert_class(df, "data.table")
+replace_na_with_empty <- function(DT, cols) {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_character_cols(df)
+    cols <- .get_character_cols(DT)
   } else {
-    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
-    cols_character <- .get_character_cols(df)
+    cols_captured  <- capture_names(DT, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(DT)
     cols_non_character <- setdiff(cols_captured, cols_character)
     if (length(cols_non_character)) {
       stop(sprintf(
@@ -233,15 +233,15 @@ replace_na_with_empty <- function(df, cols) {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    i <- which(is.na(df[[j]]))
+    i <- which(is.na(DT[[j]]))
     if (length(i))
-      data.table::set(df, i = i, j = j, value = "")
+      data.table::set(DT, i = i, j = j, value = "")
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Replace a specific string with another (in place)
@@ -249,7 +249,7 @@ replace_na_with_empty <- function(df, cols) {
 #' Replaces occurrences of string `a` with string `b` across selected
 #' **character** columns, *in place* using [data.table::set()].
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -274,14 +274,14 @@ replace_na_with_empty <- function(df, cols) {
 #' }
 #'
 #' @export
-replace_a_with_b <- function(df, cols, a, b) {
-  assert_class(df, "data.table")
+replace_a_with_b <- function(DT, cols, a, b) {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_character_cols(df)
+    cols <- .get_character_cols(DT)
   } else {
-    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
-    cols_character <- .get_character_cols(df)
+    cols_captured  <- capture_names(DT, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(DT)
     cols_non_character <- setdiff(cols_captured, cols_character)
     if (length(cols_non_character)) {
       stop(sprintf(
@@ -293,15 +293,15 @@ replace_a_with_b <- function(df, cols, a, b) {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    i <- which(df[[j]] == a)
+    i <- which(DT[[j]] == a)
     if (length(i))
-      data.table::set(df, i = i, j = j, value = b)
+      data.table::set(DT, i = i, j = j, value = b)
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Replace a column vector in a matrix (in place)
@@ -333,7 +333,7 @@ replace_cols_in_mat <- function(mat, cols, vec) {
 #' Removes leading and trailing whitespace from selected **character** columns.
 #' Vectorized via `gsub()` per column; assigns results *in place*.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -357,14 +357,14 @@ replace_cols_in_mat <- function(mat, cols, vec) {
 #' }
 #'
 #' @export
-trim_ws <- function(df, cols, ws = "[ \t\r\n]") {
-  assert_class(df, "data.table")
+trim_ws <- function(DT, cols, ws = "[ \t\r\n]") {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_character_cols(df)
+    cols <- .get_character_cols(DT)
   } else {
-    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
-    cols_character <- .get_character_cols(df)
+    cols_captured  <- capture_names(DT, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(DT)
     cols_non_character <- setdiff(cols_captured, cols_character)
     if (length(cols_non_character)) {
       stop(sprintf(
@@ -375,16 +375,16 @@ trim_ws <- function(df, cols, ws = "[ \t\r\n]") {
     cols <- cols_captured
   }
 
-  if (!length(cols)) return(invisible(df[]))
+  if (!length(cols)) return(invisible(DT[]))
 
   re <- sprintf("^%s+|%s+$", ws, ws)
   for (j in cols) {
-    v <- df[[j]]
+    v <- DT[[j]]
     # keep NA as NA; only trim non-NA strings
     v2 <- ifelse(is.na(v), v, gsub(re, "", v, perl = TRUE))
-    if (!identical(v, v2)) data.table::set(df, j = j, value = v2)
+    if (!identical(v, v2)) data.table::set(DT, j = j, value = v2)
   }
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Remove punctuation (in place)
@@ -392,7 +392,7 @@ trim_ws <- function(df, cols, ws = "[ \t\r\n]") {
 #' Removes punctuation from selected **character** columns using a regex.
 #' Default pattern keeps asterisks: `pattern = "(?!\\\\*)[[:punct:]]"`.
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to target, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -416,14 +416,14 @@ trim_ws <- function(df, cols, ws = "[ \t\r\n]") {
 #' }
 #'
 #' @export
-rm_punct <- function(df, cols, pattern = "(?!\\*)[[:punct:]]") {
-  assert_class(df, "data.table")
+rm_punct <- function(DT, cols, pattern = "(?!\\*)[[:punct:]]") {
+  assert_class(DT, "data.table")
 
   if (missing(cols)) {
-    cols <- .get_character_cols(df)
+    cols <- .get_character_cols(DT)
   } else {
-    cols_captured  <- capture_names(df, !!rlang::enquo(cols))
-    cols_character <- .get_character_cols(df)
+    cols_captured  <- capture_names(DT, !!rlang::enquo(cols))
+    cols_character <- .get_character_cols(DT)
     cols_non_character <- setdiff(cols_captured, cols_character)
     if (length(cols_non_character)) {
       stop(sprintf(
@@ -435,23 +435,23 @@ rm_punct <- function(df, cols, pattern = "(?!\\*)[[:punct:]]") {
   }
 
   if (!length(cols))
-    return(invisible(df[]))
+    return(invisible(DT[]))
 
   for (j in cols) {
-    v <- df[[j]]
+    v <- DT[[j]]
     value <- ifelse(is.na(v), v, gsub(pattern, "", v, perl = TRUE))
     if (!identical(v, value))
-      data.table::set(df, j = j, value = value)
+      data.table::set(DT, j = j, value = value)
   }
 
-  invisible(df[])
+  invisible(DT[])
 }
 
 #' Remove columns by reference (in place)
 #'
 #' Removes one or more columns from a data.table **by reference** (no copy)
 #'
-#' @param df A data.table (modified in place).
+#' @param DT A data.table (modified in place).
 #' @param cols Columns to remove, passed to [capture_names()].
 #'   Can be specified as unquoted names (e.g., `c(x, y)`),
 #'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
@@ -473,12 +473,12 @@ rm_punct <- function(df, cols, pattern = "(?!\\*)[[:punct:]]") {
 #' }
 #'
 #' @export
-rm_cols <- function(df, cols) {
-  assert_class(df, "data.table")
-  cols <- capture_names(df, !!rlang::enquo(cols))
-  if (!length(cols)) return(invisible(df[]))
-  df[, `:=`((cols), NULL)]
-  invisible(df[])
+rm_cols <- function(DT, cols) {
+  assert_class(DT, "data.table")
+  cols <- capture_names(DT, !!rlang::enquo(cols))
+  if (!length(cols)) return(invisible(DT[]))
+  DT[, `:=`((cols), NULL)]
+  invisible(DT[])
 }
 
 

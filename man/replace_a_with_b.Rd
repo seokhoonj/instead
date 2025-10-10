@@ -4,10 +4,10 @@
 \alias{replace_a_with_b}
 \title{Replace a specific string with another (in place)}
 \usage{
-replace_a_with_b(df, cols, a, b)
+replace_a_with_b(DT, cols, a, b)
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),

@@ -4,10 +4,10 @@
 \alias{rm_cols}
 \title{Remove columns by reference (in place)}
 \usage{
-rm_cols(df, cols)
+rm_cols(DT, cols)
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to remove, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),

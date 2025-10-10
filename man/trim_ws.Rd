@@ -4,10 +4,10 @@
 \alias{trim_ws}
 \title{Trim leading/trailing whitespace (in place)}
 \usage{
-trim_ws(df, cols, ws = "[ \\t\\r\\n]")
+trim_ws(DT, cols, ws = "[ \\t\\r\\n]")
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),

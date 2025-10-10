@@ -4,10 +4,10 @@
 \alias{replace_na_with_zero}
 \title{Replace NA with zero (in place, type-preserving)}
 \usage{
-replace_na_with_zero(df, cols)
+replace_na_with_zero(DT, cols)
 }
 \arguments{
-\item{df}{A data.table (modified in place).}
+\item{DT}{A data.table (modified in place).}
 
 \item{cols}{Columns to target, passed to \code{\link[=capture_names]{capture_names()}}.
 Can be specified as unquoted names (e.g., \code{c(x, y)}),
