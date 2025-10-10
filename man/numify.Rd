@@ -9,7 +9,8 @@ numify(df, cols, suppress_warnings = FALSE)
 \arguments{
 \item{df}{A data.frame, tibble, or data.table containing the columns to convert.}
 
-\item{cols}{Character vector of column names to convert to numeric.}
+\item{cols}{Character vector of column names to convert to numeric. If missing
+or empty, all \code{integer}-type columns are selected automatically.}
 
 \item{suppress_warnings}{Logical; if \code{TRUE}, suppresses warnings such as
 \code{"NAs introduced by coercion"}. Default is \code{FALSE}.}
@@ -18,7 +19,7 @@ numify(df, cols, suppress_warnings = FALSE)
 \itemize{
 \item If \code{df} is a data.table: the same object, modified in place (invisible).
 \item If \code{df} is a data.frame or tibble: a new object of the original class,
-with specified columns converted to numeric.
+with specified (or auto-selected) columns converted to numeric.
 }
 }
 \description{
@@ -30,24 +31,27 @@ If the input is a regular data.frame or tibble, a shallow copy is made
 and the result is automatically restored to the original class.
 }
 \details{
+If \code{cols} is not provided (or is empty), all columns of type \code{integer}
+are automatically selected for conversion.
+
 This function uses \code{\link[data.table:assign]{data.table::set()}} for direct column replacement,
 minimizing memory use and avoiding full table copies.
-It is internally wrapped by \code{\link[=ensure_dt_env]{ensure_dt_env()}} to preserve the input's
+It is internally wrapped by \code{ensure_dt_env()} to preserve the input's
 original class and ensure safe restoration for non-data.table inputs.
 }
 \examples{
 \dontrun{
 library(data.table)
-DT <- data.table(a = c("1", "2", "3"), b = c("4", "5", "x"))
+DT <- data.table(a = 1:3, b = c("4", "5", "x"))
 
-# In-place modification (no copy)
-numify(DT, c("a", "b"))
-DT
+# Auto-select integer columns (here: "a") and convert in place
+numify(DT)
+str(DT)
 
-# For data.frame input, returns a new object
+# Explicit columns
 df <- data.frame(a = c("1", "2"), b = c("3", "x"))
 df2 <- numify(df, "b")
-df2
+str(df2)
 }
 
 }
