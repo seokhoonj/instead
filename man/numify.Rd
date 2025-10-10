@@ -17,7 +17,7 @@ or empty, all \code{integer}-type columns are selected automatically.}
 }
 \value{
 \itemize{
-\item If \code{df} is a data.table: the same object, modified in place (invisible).
+\item If \code{df} is a data.table: the same object, modified in place.
 \item If \code{df} is a data.frame or tibble: a new object of the original class,
 with specified (or auto-selected) columns converted to numeric.
 }

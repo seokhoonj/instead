@@ -555,7 +555,7 @@ quote_comma <- function(..., newline = FALSE) {
 #'   `"NAs introduced by coercion"`. Default is `FALSE`.
 #'
 #' @return
-#' - If `df` is a data.table: the same object, modified in place (invisible).
+#' - If `df` is a data.table: the same object, modified in place.
 #' - If `df` is a data.frame or tibble: a new object of the original class,
 #'   with specified (or auto-selected) columns converted to numeric.
 #'
@@ -594,7 +594,7 @@ numify <- function(df, cols, suppress_warnings = FALSE) {
 
   # Nothing to do
   if (length(cols) == 0L) {
-    return(invisible(env$restore(dt)))
+    return(env$restore(dt))
   }
 
   for (j in cols) {
