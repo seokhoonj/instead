@@ -424,6 +424,47 @@ set_tibble <- function(df) {
   }
 }
 
+#' Convert column names to lowercase (in-place if possible)
+#'
+#' Converts all column names of a `data.frame`, `tibble`, or `data.table`
+#' to lowercase.
+#' The function uses [data.table::setnames()] internally, which directly modifies
+#' the column names of the input object.
+#'
+#' If the input is a `data.table`, modification is done **by reference**
+#' (no copy).
+#' For `data.frame` and similar objects, the operation usually modifies
+#' the object in place as well (since `setnames()` works on name attributes),
+#' but may occasionally trigger a shallow copy depending on how the object
+#' is referenced internally.
+#'
+#' @param x A `data.frame`, `tibble`, or `data.table` whose column names will be
+#'   converted to lowercase.
+#'
+#' @return Invisibly returns the modified object, typically the same object
+#' (in place for `data.table` and usually for `data.frame` as well).
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' dt <- data.table(A = 1, B = 2)
+#' set_lower_names(dt)
+#' names(dt) # "a", "b"
+#'
+#' df <- data.frame(A = 1, B = 2)
+#' set_lower_names(df)
+#' names(df) # "a", "b"
+#' }
+#'
+#' @export
+set_lower_names <- function(x)
+  data.table::setnames(x, colnames(x), tolower(colnames(x)))
+
+#' @rdname set_lower_names
+#' @export
+set_upper_names <- function(x)
+  data.table::setnames(x, colnames(x), toupper(colnames(x)))
+
 #' Format numbers with commas
 #'
 #' Convert a numeric or integer vector into a character vector
