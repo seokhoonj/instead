@@ -142,7 +142,7 @@ get_pattern <- function(pattern, x, ignore.case = TRUE) {
   r <- regexpr(pattern, x, ignore.case = ignore.case, perl = TRUE)
   z <- rep("", length(x))
   z[r != -1] <- regmatches(x, r)
-  return(z)
+  z
 }
 
 #' Get all matches
