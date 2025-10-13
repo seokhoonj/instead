@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{prepend_class}
 \alias{prepend_class}
-\title{Prepend a class to an object}
+\title{Prepend class(es) without duplication}
 \usage{
 prepend_class(x, new_class)
 }
@@ -17,9 +17,9 @@ The input object \code{x} with its class attribute updated to have
 any duplicates).
 }
 \description{
-Ensures that the specified class (or classes) are placed at the
-beginning of the object's class vector. If the class already exists,
-it is moved to the front without duplication.
+Ensure one or more class names appear at the front of an object's class
+vector, without duplicating existing classes. If \code{x} is a data.table,
+uses \code{data.table::setattr()} to avoid copies and preserve selfref.
 }
 \examples{
 \donttest{

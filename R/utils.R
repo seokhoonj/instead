@@ -1,8 +1,8 @@
-#' Prepend a class to an object
+#' Prepend class(es) without duplication
 #'
-#' Ensures that the specified class (or classes) are placed at the
-#' beginning of the object's class vector. If the class already exists,
-#' it is moved to the front without duplication.
+#' Ensure one or more class names appear at the front of an object's class
+#' vector, without duplicating existing classes. If `x` is a data.table,
+#' uses `data.table::setattr()` to avoid copies and preserve selfref.
 #'
 #' @param x An R object.
 #' @param new_class A character vector of class names to prepend.
@@ -24,7 +24,25 @@
 #'
 #' @export
 prepend_class <- function(x, new_class) {
-  class(x) <- c(new_class, setdiff(class(x), new_class))
+  # Fast returns / validation
+  if (length(new_class) == 0L) return(x)
+  if (!is.character(new_class) || anyNA(new_class)) {
+    stop("`new_class` must be a non-empty character vector without NA.",
+         call. = FALSE)
+  }
+
+  # Normalize inputs
+  new_class <- unique(new_class)  # avoid duplicates in input
+  old_class <- setdiff(unname(class(x)), new_class)  # keep original order, remove overlaps
+
+  # Data.table-friendly path: no copy, no selfref warning
+  if (inherits(x, "data.table")) {
+    data.table::setattr(x, "class", c(new_class, old_class))
+    return(x)
+  }
+
+  # Fallback for non-data.table objects
+  class(x) <- c(new_class, old_class)
   x
 }
 
