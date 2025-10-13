@@ -105,6 +105,5 @@
   dep_pkgs <- gsub("\n", " ", dep_pkgs)
   dep_pkgs <- gsub("\\s*\\(>= [^)]+\\)", "", dep_pkgs)
   dep_pkgs <- trimws(strsplit(dep_pkgs, split = ",\\s*")[[1L]])
-  licenses <- .package_license(dep_pkgs)
-  data.frame(package = names(licenses), license = unlist(licenses), row.names = NULL)
+  .package_license(dep_pkgs)
 }
