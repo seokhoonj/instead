@@ -73,7 +73,7 @@ dprint <- function(df, width, align = c("right", "both", "left"), n = 300L) {
   assert_class(df, "data.frame")
   align <- match.arg(align)
   df <- .adjust_names_width(head(df, n), width = width, align = align)
-  txt <- paste_list(df)
+  txt <- paste_cols(df, names(df))
   cols <- names(df)
   cli::cat_rule(line = 2)
   cat(paste0("|", paste0(cols, collapse = "|"), "\n"))
@@ -85,7 +85,7 @@ dprint <- function(df, width, align = c("right", "both", "left"), n = 300L) {
 hprint <- function(x, width, align = c("right", "both", "left")) {
   align <- match.arg(align)
   df <- .adjust_names_width(x, width = width, align = align)
-  txt <- paste_list(df)
+  txt <- paste_cols(df, names(df))
   cols <- colnames(df)
   cli::cat_rule(line = 2)
   cat(paste0("|", paste0(cols, collapse = "|"), "\n"))
@@ -98,7 +98,7 @@ vprint <- function(x, width = 4, nchar_limit = 16,
                    align = c("right", "both", "left")) {
   align <- match.arg(align)
   df <- .adjust_names_width(x, width = width, align = align)
-  txt <- paste_list(df)
+  txt <- paste_cols(df, names(df))
   cols <- toupper(attr(df, "columns"))
   names_width <- max(nchar(cols))
   dots <- stringr::str_pad(cols, width = names_width, pad = " ", side = "right")
@@ -116,7 +116,7 @@ aprint <- function(x, width = 4, nchar_limit = 16,
                    align = c("right", "both", "left")) {
   align <- match.arg(align)
   df <- .adjust_names_width(x, width = width, align = align)
-  txt <- paste_list(df)
+  txt <- paste_cols(df, names(df))
   cols <- toupper(attr(df, "columns"))
   names_width <- max(nchar(cols))
   dots <- stringr::str_pad(cols, width = names_width, pad = " ", side = "right")
@@ -131,7 +131,6 @@ aprint <- function(x, width = 4, nchar_limit = 16,
   cat(paste0(paste0("|", txt), collapse = "\n"), "\n")
   cli::cat_rule(line = 2)
 }
-
 
 
 # Internal helper functions -----------------------------------------------

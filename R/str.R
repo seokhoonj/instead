@@ -184,32 +184,54 @@ get_pattern_all <- function(pattern, x, collapse = "|", ignore.case = TRUE) {
 del_pattern <- function(pattern, x)
   gsub(pattern, "", x)
 
-#' Paste vectors of a list
+#' Paste multiple columns row-wise
 #'
-#' Paste vectors of equal length in a list or data.frame
+#' Concatenate multiple columns of a data frame (or data.table) **row by row**
+#' into a single character vector.
 #'
-#' @param x A list with same length vectors or data frame column vectors you want to paste.
-#' @param sep A character string to separate the terms.
-#' @param na.rm A logical evaluating to TRUE or FALSE indicating whether NA values should be stripped before the computation proceeds.
-#' @return a vector pasted
+#' @param df A data.frame or data.table.
+#' @param cols A character vector of column names to concatenate.
+#' @param sep A string used to separate the values. Default is `"|"`.
+#' @param na.rm Logical; if `TRUE`, missing values are treated as empty strings
+#'   before concatenation. Leading, trailing, or duplicated separators are
+#'   automatically trimmed. Default is `FALSE`.
+#'
+#' @return A character vector of length `nrow(df)`, each element representing
+#'   the row-wise concatenation of the specified columns.
 #'
 #' @examples
 #' \donttest{
-#' iris$size <- paste_list(iris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")])
-#' head(iris)
+#' df <- data.frame(a = c("x", "y"), b = c(1, 2), c = c(NA, 3))
+#'
+#' paste_cols(df, c("a", "b"))
+#' #> [1] "x|1" "y|2"
+#'
+#' paste_cols(df, c("a", "c"), sep = " / ", na.rm = TRUE)
+#' #> [1] "x" "y / 3"
 #' }
 #'
 #' @export
-paste_list <- function(x, sep = "|", na.rm = FALSE) {
+paste_cols <- function(df, cols, sep = "|", na.rm = FALSE) {
+  assert_class(df, "data.frame")
+
+  cols <- capture_names(df, !!rlang::enquo(cols))
+
+  x <- lapply(cols, function(s) df[[s]])
+
   if (na.rm)
     x[] <- lapply(x, function(s) ifelse(is.na(s), "", s))
+
   pattern <- sprintf("^\\%s|\\%s\\%s|\\%s$", sep, sep, sep, sep)
+
   n <- length(x)
   if (n == 1L)
     return(x[[1L]])
-  x <- do.call(function(...) paste(..., sep = sep), x)
-  x <- gsub(pattern, "", x)
+
+  out <- do.call(function(...) paste(..., sep = sep), x)
+  out <- gsub(pattern, "", out)
+
   if (na.rm)
-    x <- ifelse(x == "", NA, x)
-  return(x)
+    out <- ifelse(out == "", NA_character_, out)
+
+  out
 }
