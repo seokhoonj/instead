@@ -50,5 +50,5 @@ as_date_iso("01/08/2024")
 
 }
 \seealso{
-\code{\link[=as_date_safe]{as_date_safe()}}
+\code{\link[=as_date_safe]{as_date_safe()}}, \code{\link[=as_ymd_safe]{as_ymd_safe()}}
 }

@@ -36,7 +36,7 @@
 #' #> [1] NA
 #' }
 #'
-#' @seealso [as_date_safe()]
+#' @seealso [as_date_safe()], [as_ymd_safe()]
 #'
 #' @export
 as_date_iso <- function(x) {
@@ -148,7 +148,7 @@ as_date_iso <- function(x) {
 #' #> Error: Unsupported date format(s): 2024.01.01.
 #' }
 #'
-#' @seealso [as_date_iso()]
+#' @seealso [as_date_iso()], [as_ymd_safe()]
 #'
 #' @export
 as_date_safe <- function(x) {
@@ -221,6 +221,123 @@ as_date_safe <- function(x) {
     ), call. = FALSE)
   }
 
+  out
+}
+
+#' Safely coerce to "YYYYMMDD" string (ISO-first)
+#'
+#' Vectorized date-to-string converter that accepts character, factor, Date, or POSIXt.
+#' It mirrors [as_date_safe()] but returns a `"YYYYMMDD"` character string
+#' instead of a `Date` object.
+#'
+#' **Supported formats**
+#' - ISO-like dates: `"YYYY-MM-DD"`, `"YYYY/MM/DD"`, `"YYYYMMDD"`
+#' - ISO-like datetimes (time dropped): `"YYYY-MM-DD HH:MM:SS"`, `"YYYY/MM/DD HH:MM:SS"`
+#' - Two-digit day/month with "/" or "-":
+#'   `"DD/MM/YYYY"` vs `"MM/DD/YYYY"` (and `"DD-MM-YYYY"` vs `"MM-DD-YYYY"`);
+#'   ambiguous cases error.
+#'
+#' **Rules**
+#' - `Date` inputs are returned formatted.
+#' - `POSIXt` inputs drop the time via `as.Date()`.
+#' - Empty strings `""` are treated as `NA`.
+#' - Parsing order: unambiguous ISO(-like) (date or datetime) -> two-digit day/month.
+#' - Anything not parsed -> error with a short preview.
+#'
+#' @param x character | factor | Date | POSIXt vector
+#'
+#' @return A character vector formatted as `"YYYYMMDD"`.
+#'
+#' @examples
+#' \donttest{
+#' as_ymd_safe("2024-01-01")           # "20240101"
+#' as_ymd_safe("2024/01/02")           # "20240102"
+#' as_ymd_safe("20240103")             # "20240103"
+#' as_ymd_safe("2024-01-04 12:00:00")  # "20240104"
+#' as_ymd_safe(as.Date("2024-01-05"))  # "20240105"
+#' }
+#'
+#' \dontrun{
+#' # Ambiguous day/month cases raise an error
+#' as_ymd_safe("01/08/2017")
+#' }
+#'
+#' @seealso [as_date_safe()]
+#'
+#' @export
+as_ymd_safe <- function(x) {
+  # 1. Pass-throughs
+  if (inherits(x, "Date"))   return(format(x, "%Y%m%d"))
+  if (inherits(x, "POSIXt")) return(format(as.Date(x), "%Y%m%d"))
+  if (is.factor(x)) x <- as.character(x)
+  if (!is.character(x)) {
+    stop("Input must be character, factor, Date, or POSIXt.", call. = FALSE)
+  }
+
+  # 2. Handle blanks
+  x[x == ""] <- NA_character_
+  n <- length(x)
+  out <- rep(NA_character_, n)
+  if (all(is.na(x))) return(out)
+
+  xs  <- trimws(x)
+  idx <- which(!is.na(xs))
+  if (!length(idx)) return(out)
+  v <- xs[idx]
+
+  # 3. ISO-like detection (same as as_date_safe)
+  is_ymd_dash  <- grepl("^\\d{4}-\\d{2}-\\d{2}$", v)
+  is_ymd_slash <- grepl("^\\d{4}/\\d{2}/\\d{2}$", v)
+  is_ymd       <- grepl("^\\d{8}$", v)
+  is_ymd_dash_time  <- grepl("^\\d{4}-\\d{2}-\\d{2} +\\d{2}:\\d{2}:\\d{2}$", v)
+  is_ymd_slash_time <- grepl("^\\d{4}/\\d{2}/\\d{2} +\\d{2}:\\d{2}:\\d{2}$", v)
+
+  date_vec <- as.Date(rep(NA_character_, length(v)))
+
+  if (any(is_ymd_dash)) {
+    i <- which(is_ymd_dash)
+    date_vec[i] <- as.Date(v[i], "%Y-%m-%d")
+  }
+  if (any(is_ymd_slash)) {
+    i <- which(is_ymd_slash)
+    date_vec[i] <- as.Date(v[i], "%Y/%m/%d")
+  }
+  if (any(is_ymd)) {
+    i <- which(is_ymd)
+    date_vec[i] <- as.Date(v[i], "%Y%m%d")
+  }
+  if (any(is_ymd_dash_time)) {
+    i <- which(is_ymd_dash_time)
+    date_vec[i] <- as.Date(as.POSIXct(v[i], format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+  }
+  if (any(is_ymd_slash_time)) {
+    i <- which(is_ymd_slash_time)
+    date_vec[i] <- as.Date(as.POSIXct(v[i], format = "%Y/%m/%d %H:%M:%S", tz = "UTC"))
+  }
+
+  # 4. Handle two-digit ambiguous cases using same helper
+  is_dmy_slash <- grepl("^\\d{2}/\\d{2}/\\d{4}$", v)
+  is_dmy_dash  <- grepl("^\\d{2}-\\d{2}-\\d{4}$", v)
+
+  date_vec <- .handle_two_digit(v, date_vec, seq_along(v), is_dmy_slash,
+                                "/", "%d/%m/%Y", "%m/%d/%Y")
+  date_vec <- .handle_two_digit(v, date_vec, seq_along(v), is_dmy_dash,
+                                "-", "%d-%m-%Y", "%m-%d-%Y")
+
+  # 5. Error if still not parsed
+  still_bad <- is.na(date_vec) & !is.na(v)
+  if (any(still_bad)) {
+    bad_vals <- unique(v[still_bad])
+    n_show <- min(5L, length(bad_vals))
+    stop(sprintf(
+      "Unsupported date format(s): %s%s.",
+      paste(bad_vals[seq_len(n_show)], collapse = ", "),
+      if (length(bad_vals) > n_show) ", ..." else ""
+    ), call. = FALSE)
+  }
+
+  # 6. Final formatting
+  out[idx] <- format(date_vec, "%Y%m%d")
   out
 }
 
