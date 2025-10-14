@@ -4,10 +4,12 @@
 \alias{as_comma}
 \title{Format numbers with commas}
 \usage{
-as_comma(x)
+as_comma(x, digits = 0)
 }
 \arguments{
 \item{x}{A numeric or integer vector.}
+
+\item{digits}{A desired number of digits after the decimal point}
 }
 \value{
 A character vector of formatted numbers.

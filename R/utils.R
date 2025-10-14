@@ -489,6 +489,7 @@ set_upper_names <- function(x)
 #' formatted with commas as thousands separators.
 #'
 #' @param x A numeric or integer vector.
+#' @param digits A desired number of digits after the decimal point
 #'
 #' @return A character vector of formatted numbers.
 #'
@@ -497,9 +498,9 @@ set_upper_names <- function(x)
 #' \donttest{as_comma(c(123456, 234567))}
 #'
 #' @export
-as_comma <- function(x) {
+as_comma <- function(x, digits = 0) {
   assert_class(x, c("integer", "numeric"))
-  format(round(x), big.mark = ",")
+  formatC(x, format = "f", digits = digits, big.mark = ",")
 }
 
 #' Paste vector elements with commas
