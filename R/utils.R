@@ -26,10 +26,9 @@
 prepend_class <- function(x, new_class) {
   # Fast returns / validation
   if (length(new_class) == 0L) return(x)
-  if (!is.character(new_class) || anyNA(new_class)) {
+  if (!is.character(new_class) || anyNA(new_class))
     stop("`new_class` must be a non-empty character vector without NA.",
          call. = FALSE)
-  }
 
   # Normalize inputs
   new_class <- unique(new_class)  # avoid duplicates in input
@@ -38,7 +37,7 @@ prepend_class <- function(x, new_class) {
   # Data.table-friendly path: no copy, no selfref warning
   if (inherits(x, "data.table")) {
     data.table::setattr(x, "class", c(new_class, old_class))
-    return(x)
+    return(x[])
   }
 
   # Fallback for non-data.table objects
