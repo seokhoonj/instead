@@ -184,6 +184,30 @@ get_pattern_all <- function(pattern, x, collapse = "|", ignore.case = TRUE) {
 del_pattern <- function(pattern, x)
   gsub(pattern, "", x)
 
+#' Escape punctuation characters in a string
+#'
+#' Escapes all punctuation characters in a character vector by prefixing
+#' them with a backslash (`\\`). This is useful when preparing text for use
+#' in regular expressions or other contexts where punctuation has special meaning.
+#'
+#' @param x A character vector whose punctuation characters should be escaped.
+#'
+#' @return A character vector of the same length as `x`, with each punctuation
+#'   character replaced by an escaped version (e.g., `"."` becomes `"\\."`).
+#'
+#' @examples
+#' \donttest{
+#' escape_punct("Hello, world!")   # "Hello\\, world\\!"
+#' escape_punct("a+b=c?")          # "a\\+b\\=c\\?"
+#' escape_punct(c("A.B", "C/D"))   # "A\\.B" "C\\/D"
+#' }
+#'
+#' @export
+escape_punct <- function(x) {
+  # Replace every punctuation character with its escaped version
+  gsub("([[:punct:]])", "\\\\\\1", x, perl = TRUE)
+}
+
 #' Paste multiple columns row-wise
 #'
 #' Concatenate multiple columns of a data frame (or data.table) **row by row**
