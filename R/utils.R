@@ -674,6 +674,43 @@ numify_i64 <- function(df) {
   numify(df, cols = cols, suppress_warnings = TRUE)
 }
 
+#' Integer Division and Modulo
+#'
+#' Compute the integer quotient and remainder and return both as a list.
+#'
+#' @param x Numeric vector of values to be divided.
+#' @param div Numeric vector or scalar divisor. If scalar, it will be
+#'   recycled to match the length of `x`.
+#'
+#' @return A list with:
+#' \describe{
+#'   \item{quotient}{Integer division results.}
+#'   \item{remainder}{Modulo results.}
+#' }
+#'
+#' @examples
+#' \donttest{
+#' divmod(17, 5)
+#' divmod(1:10, 3)
+#' divmod(10:12, 1:3)
+#' }
+#'
+#' @export
+divmod <- function(x, div) {
+  if (!is.numeric(x) || !is.numeric(div))
+    stop("Both 'x' and 'div' must be numeric.", call. = FALSE)
+
+  # handle recycling safely
+  if (length(div) == 1L) div <- rep(div, length(x))
+  if (length(x) != length(div))
+    stop("Lengths of 'x' and 'div' must match or div must be length 1.", call. = FALSE)
+
+  list(
+    quotient  = x %/% div,
+    remainder = x %%  div
+  )
+}
+
 # To be updated -----------------------------------------------------------
 
 join <- function(..., by, all = FALSE, all.x = all, all.y = all, sort = TRUE) {
