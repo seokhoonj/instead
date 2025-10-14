@@ -341,6 +341,28 @@ as_ymd_safe <- function(x) {
   out
 }
 
+#' Build Date from year, month, and day
+#'
+#' Construct `Date` objects from separate year, month, and day components.
+#'
+#' @param year Integer or numeric vector of years.
+#' @param month Integer or numeric vector of months (1–12).
+#' @param day Integer or numeric vector of days (1–31).
+#'
+#' @return A `Date` vector the same length as the inputs.
+#'
+#' @examples
+#' \donttest{
+#' build_date(2025, 10, 14)
+#' build_date(c(2024, 2025), c(12, 1), c(31, 1))
+#' }
+#'
+#' @export
+build_date <- function(year, month, day) {
+  # All inputs recycled automatically by sprintf
+  as.Date(sprintf("%04d-%02d-%02d", year, month, day))
+}
+
 #' Add months to a date
 #'
 #' Add a specified number of months to a date-like object. Negative values
