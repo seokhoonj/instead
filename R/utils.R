@@ -1,3 +1,34 @@
+#' Normalize ... arguments into a clean list
+#'
+#' Collects and standardizes inputs from `...`, ensuring that the result
+#' is always a list of objects. If a single list was passed, it is unwrapped
+#' once unless it is a data.frame, data.table, or tibble.
+#'
+#' @param ... Objects or lists of objects.
+#'
+#' @return A list of objects.
+#'
+#' @examples
+#' \donttest{
+#' normalize_dots(1, 2)
+#' normalize_dots(a = 1, b = 2)
+#' normalize_dots(list(a = 1, b = 2))
+#' normalize_dots(data.frame(x = 1))  # protected, not unwrapped
+#' normalize_dots(head(iris, 1), head(mtcars, 1))
+#' normalize_dots(iris = head(iris, 1), mtcars = head(mtcars, 1))
+#' normalize_dots(list(iris = head(iris, 1), mtcars = head(mtcars, 1)))
+#' }
+#'
+#' @export
+normalize_dots <- function(...) {
+  dots <- list(...)
+  if (length(dots) == 1L && is.list(dots[[1L]]) &&
+      !inherits(dots[[1L]], c("data.frame", "data.table"))) {
+    return(dots[[1L]])
+  }
+  dots
+}
+
 #' Prepend class(es) without duplication
 #'
 #' Ensure one or more class names appear at the front of an object's class
