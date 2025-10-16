@@ -183,7 +183,7 @@ limit_stay <- function(df, id_var, group_var, from_var, to_var,
 #' Overlaps are not allowed; use [collapse_date_ranges()] first
 #' if intervals may overlap.
 #'
-#' @param dt A data.table. Must already be ordered by grouping
+#' @param DT A data.table. Must already be ordered by grouping
 #'   variables and date columns.
 #' @param id_var Character vector naming the ID variable(s).
 #' @param group_var Character vector naming optional grouping variables.
@@ -207,24 +207,24 @@ limit_stay <- function(df, id_var, group_var, from_var, to_var,
 #' )
 #' head(stay)
 #' }
-.build_binary_stay_vector <- function(dt, id_var, group_var, from_var, to_var) {
+.build_binary_stay_vector <- function(DT, id_var, group_var, from_var, to_var) {
   # combine ID + group vars
   id_group_var <- c(id_var, group_var)
 
   # safety checks
-  if (!inherits(dt[[from_var]], "Date") || !inherits(dt[[to_var]], "Date"))
+  if (!inherits(DT[[from_var]], "Date") || !inherits(DT[[to_var]], "Date"))
     stop("`from_var` and `to_var` must be Date columns.", call. = FALSE)
-  if (any(dt[[to_var]] < dt[[from_var]]))
+  if (any(DT[[to_var]] < DT[[from_var]]))
     stop("Some `from_var` > `to_var` detected.", call. = FALSE)
 
   # interleave start/end into a single sequence
-  bounds <- as.Date(interleave(dt[[from_var]], dt[[to_var]]))
+  bounds <- as.Date(interleave(DT[[from_var]], DT[[to_var]]))
 
   # differences between consecutive dates (+1 for trailing edge)
   diff <- as.integer(c(diff(bounds), 1L))
 
   # build parallel ID vector (duplicated for start/end)
-  dt_id <- rep_row(dt[, .SD, .SDcols = id_group_var], each = 2L)
+  dt_id <- rep_row(DT[, .SD, .SDcols = id_group_var], each = 2L)
 
   # find group breakpoints (drop the last element, which is total length)
   pt <- find_group_breaks(dt_id)

@@ -22,7 +22,7 @@
 #' The result carries an attribute `"group"` (a data.table of
 #' group counts and final per-group sample sizes) for auditing.
 #'
-#' @param df A data.table.
+#' @param df A data.frame.
 #' @param group_var Grouping columns. Supply bare names in a tidy style,
 #'   e.g. `.(Species)` or `.(g1, g2)`.
 #' @param size A positive number controlling per-group sample size:

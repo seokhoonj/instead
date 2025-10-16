@@ -4,10 +4,10 @@
 \alias{.build_binary_stay_vector}
 \title{Build \strong{binary} stay vector from date intervals}
 \usage{
-.build_binary_stay_vector(dt, id_var, group_var, from_var, to_var)
+.build_binary_stay_vector(DT, id_var, group_var, from_var, to_var)
 }
 \arguments{
-\item{dt}{A data.table. Must already be ordered by grouping
+\item{DT}{A data.table. Must already be ordered by grouping
 variables and date columns.}
 
 \item{id_var}{Character vector naming the ID variable(s).}

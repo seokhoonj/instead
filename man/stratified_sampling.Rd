@@ -16,7 +16,7 @@ stratified_sampling(
 )
 }
 \arguments{
-\item{df}{A data.table.}
+\item{df}{A data.frame.}
 
 \item{group_var}{Grouping columns. Supply bare names in a tidy style,
 e.g. \code{.(Species)} or \code{.(g1, g2)}.}
