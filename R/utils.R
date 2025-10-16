@@ -705,6 +705,8 @@ numify_i64 <- function(df) {
   numify(df, cols = cols, suppress_warnings = TRUE)
 }
 
+# Math --------------------------------------------------------------------
+
 #' Integer Division and Modulo
 #'
 #' Compute the integer quotient and remainder and return both as a list.
@@ -740,6 +742,34 @@ divmod <- function(x, div) {
     quotient  = x %/% div,
     remainder = x %%  div
   )
+}
+
+#' Tests whether each element of a numeric vector is non-integer
+#' (i.e., has a fractional part) within a given tolerance.
+#'
+#' @param x A numeric vector to check.
+#' @param tol Numeric tolerance for floating-point comparison.
+#'   Defaults to `.Machine$double.eps^0.5`.
+#'
+#' @return A logical vector of the same length as `x`, where `TRUE`
+#'   indicates that the value has a decimal (fractional) component.
+#'
+#' @details
+#' The test is based on comparing each value to its nearest integer:
+#' `abs(x - round(x)) > tol`.
+#' This accounts for floating-point rounding errors.
+#'
+#' @examples
+#' \donttest{
+#' has_decimal(c(1, 2.5, 3.0, 4.75))
+#' #> [1] FALSE  TRUE FALSE  TRUE
+#' }
+#'
+#' @export
+has_decimal <- function(x, tol = .Machine$double.eps^0.5) {
+  if (!is.numeric(x))
+    stop("`x` must be numeric.", call. = FALSE)
+  abs(x - round(x)) > tol
 }
 
 # To be updated -----------------------------------------------------------
