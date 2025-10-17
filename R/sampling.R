@@ -276,7 +276,7 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
 .compute_sample_size_wald <- function(p, r, conf.level = 0.95, ceiling_out = TRUE) {
   stopifnot(is.numeric(p), is.numeric(r))
   # vectorized conf.level support
-  z <- qnorm(1 - (1 - conf.level)/2)
+  z <- stats::qnorm(1 - (1 - conf.level)/2)
   n <- (z^2 * (1 - p)) / (r^2 * p)
   if (ceiling_out) ceiling(n) else n
 }
@@ -310,7 +310,7 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
 .compute_sample_size_wilson <- function(p, r, conf.level = 0.95, n_upper = 1e7,
                                         ceiling_out = TRUE) {
   # vectorized conf.level support
-  z <- qnorm(1 - (1 - conf.level)/2)
+  z <- stats::qnorm(1 - (1 - conf.level)/2)
   target <- r * p
 
   wilson_half_width <- function(n, p, z) {

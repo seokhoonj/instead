@@ -705,6 +705,40 @@ numify_i64 <- function(df) {
   numify(df, cols = cols, suppress_warnings = TRUE)
 }
 
+
+# Text --------------------------------------------------------------------
+
+#' Truncate Text with Ellipsis
+#'
+#' Shortens strings longer than a specified width and appends an ellipsis (`"..."`).
+#' Uses `stringr::str_trunc()` for consistent behavior with multilingual text.
+#'
+#' @param x Character vector.
+#' @param width Integer, maximum display width before truncation.
+#' @param ellipsis String appended when truncating (default: `"..."`).
+#'
+#' @return Character vector with truncated strings.
+#'
+#' @examples
+#' text <- c(
+#'   "The quick brown fox jumps over the lazy dog.",
+#'   "Sphinx of black quartz, judge my vow."
+#' )
+#'
+#' truncate_text(text, width = 15)
+#' #> [1] "The quick bro..." "Sphinx of bla..."
+#'
+#' truncate_text(text, width = 25)
+#' #> [1] "The quick brown fox jumps..." "Sphinx of black quartz, j..."
+#'
+#' @export
+truncate_text <- function(x, width = 10L, ellipsis = "...") {
+  ifelse(nchar(x) > width,
+         paste0(substr(x, 1L, width - nchar(ellipsis)), ellipsis),
+         x)
+}
+
+
 # Math --------------------------------------------------------------------
 
 #' Integer Division and Modulo

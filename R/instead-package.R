@@ -51,7 +51,7 @@
 #' @importFrom rlang as_name call_args call_name enexpr enquo enquos eval_tidy
 #'   has_length is_call is_quosure is_symbol quo_is_null
 #' @importFrom scales comma
-#' @importFrom stats IQR median na.omit sd
+#' @importFrom stats IQR median na.omit qnorm sd
 #' @importFrom stringi stri_detect_regex stri_enc_toutf32 stri_trans_general
 #' @importFrom stringr str_pad
 #' @importFrom systemfonts system_fonts
