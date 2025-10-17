@@ -103,7 +103,7 @@
   )
   dep_pkgs <- dep_pkgs[, 1L]
   dep_pkgs <- gsub("\n", " ", dep_pkgs)
-  dep_pkgs <- gsub("\\s*\\(>= [^)]+\\)", "", dep_pkgs)
+  dep_pkgs <- gsub("\\s*\\(>={0,1} [^)]+\\)", "", dep_pkgs)
   dep_pkgs <- trimws(strsplit(dep_pkgs, split = ",\\s*")[[1L]])
   .package_license(dep_pkgs)
 }
