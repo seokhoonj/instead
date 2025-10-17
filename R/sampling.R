@@ -181,3 +181,138 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
   idx <- sample.int(nrow(x), size, replace, prob)
   x[idx, , drop = FALSE]
 }
+
+
+# Compute sample sizes ----------------------------------------------------
+
+#' Compute required sample size for a proportion (relative margin)
+#'
+#' Unified front-end that dispatches to either the **Wald** (closed-form)
+#' or **Wilson** (numerical search) method to obtain the sample size
+#' achieving a target *relative margin of error* at a given confidence level.
+#'
+#' @param p Numeric vector of true/expected proportions (0 < `p` < 1).
+#' @param r Numeric vector of target relative margins of error (0 < `r` < 1).
+#' @param conf.level Confidence level (default 0.95).
+#' @param method One of \code{c("wald","wilson")}. Defaults to \code{"wald"}.
+#' @param ceiling_out Logical; if \code{TRUE} (default), round up to the next integer.
+#'   (Used directly by Wald; passed through to Wilson.)
+#' @param n_upper Maximum search bound for the Wilson method (default \code{1e7}).
+#'
+#' @return Numeric vector of required sample sizes (same length as `p`).
+#'
+#' @details
+#' - Wald uses the closed-form formula \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
+#' - Wilson increases \eqn{n} until the Wilson half-width is no greater than
+#'   \eqn{r \cdot p}. The Wald solution is used as a fast initial guess.
+#'
+#' @examples
+#' compute_sample_size(0.1, 0.05, method = "wald")
+#' compute_sample_size(0.1, 0.05, method = "wilson")
+#' compute_sample_size(p = c(0.1, 0.2, 0.3), r = 0.05, method = "wald")
+#'
+#' @export
+compute_sample_size <- function(p, r, conf.level = 0.95,
+                                method = c("wald", "wilson"),
+                                ceiling_out = TRUE,
+                                n_upper = 1e7) {
+  method <- match.arg(method)
+  stopifnot(is.numeric(p), is.numeric(r))
+
+  # Allow scalar recycling for r and conf.level
+  if (!(length(r) %in% c(1L, length(p)))) {
+    stop("`r` must be length 1 or length(p).", call. = FALSE)
+  }
+  if (!(length(conf.level) %in% c(1L, length(p)))) {
+    stop("`conf.level` must be length 1 or length(p).", call. = FALSE)
+  }
+  if (length(r) == 1L) r <- rep(r, length(p))
+  if (length(conf.level) == 1L) conf.level <- rep(conf.level, length(p))
+
+  if (method == "wald") {
+    return(.compute_sample_size_wald(
+      p = p, r = r, conf.level = conf.level, ceiling_out = ceiling_out
+    ))
+  }
+
+  # method == "wilson"
+  .compute_sample_size_wilson(
+    p = p, r = r, conf.level = conf.level,
+    n_upper = n_upper, ceiling_out = ceiling_out
+  )
+}
+
+#' Compute required sample size (Wald method)
+#'
+#' Calculates the minimum sample size required to achieve a specified
+#' *relative margin of error* for an estimated proportion using the
+#' **Wald confidence interval** (closed-form solution).
+#'
+#' @param p Numeric vector of true proportions (0 < `p` < 1).
+#' @param r Numeric vector of target relative margins of error (0 < `r` < 1).
+#' @param conf.level Confidence level for the interval (default: 0.95).
+#' @param ceiling_out Logical; if `TRUE` (default), rounds up to the next integer.
+#'
+#' @details
+#' The sample size is computed from:
+#' \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
+#' where \eqn{z} is the quantile from the standard normal distribution
+#' corresponding to the chosen confidence level.
+#'
+#' @return A numeric vector of sample sizes (same length as `p`).
+#'
+#' @keywords internal
+.compute_sample_size_wald <- function(p, r, conf.level = 0.95, ceiling_out = TRUE) {
+  stopifnot(is.numeric(p), is.numeric(r))
+  # vectorized conf.level support
+  z <- qnorm(1 - (1 - conf.level)/2)
+  n <- (z^2 * (1 - p)) / (r^2 * p)
+  if (ceiling_out) ceiling(n) else n
+}
+
+#' Compute required sample size (Wilson method)
+#'
+#' Calculates the minimum sample size needed to achieve a specified
+#' *relative margin of error* for an estimated proportion using the
+#' **Wilson score confidence interval** (numerical search).
+#'
+#' @param p Numeric vector of true proportions (0 < `p` < 1).
+#' @param r Numeric vector of target relative margins of error (0 < `r` < 1).
+#' @param conf.level Confidence level for the interval (default: 0.95).
+#' @param n_upper Maximum search bound for `n` (default: 1e7).
+#' @param ceiling_out Logical; if `TRUE` (default), rounds up to the next integer.
+#'
+#' @details
+#' The function iteratively increases `n` until the half-width of the Wilson
+#' score interval is no greater than \code{r * p}.
+#' The Wald approximation is used as an initial guess for faster convergence.
+#'
+#' The Wilson half-width at sample size `n` is computed as:
+#' \deqn{
+#'   h = \frac{z \sqrt{p(1-p)/n + z^2/(4n^2)}}{1 + z^2/n}
+#' }
+#'
+#' @return A numeric vector of sample sizes (same length as `p`).
+#' Returns `NA` if the solution exceeds `n_upper`.
+#'
+#' @keywords internal
+.compute_sample_size_wilson <- function(p, r, conf.level = 0.95, n_upper = 1e7,
+                                        ceiling_out = TRUE) {
+  # vectorized conf.level support
+  z <- qnorm(1 - (1 - conf.level)/2)
+  target <- r * p
+
+  wilson_half_width <- function(n, p, z) {
+    n <- ceiling(n)
+    (z * sqrt(p*(1-p)/n + z^2/(4*n^2))) / (1 + z^2/n)
+  }
+
+  vapply(seq_along(p), function(i) {
+    n0 <- max(2, .compute_sample_size_wald(p[i], r[i], conf.level[i], TRUE))
+    n <- n0
+    while (n <= n_upper && wilson_half_width(n, p[i], z[i]) > target[i]) {
+      n <- ceiling(n * 1.05)
+    }
+    if (n > n_upper) NA_real_ else if (ceiling_out) ceiling(n) else n
+  }, numeric(1))
+}
