@@ -217,17 +217,29 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
                                 ceiling_out = TRUE,
                                 n_upper = 1e7) {
   method <- match.arg(method)
-  stopifnot(is.numeric(p), is.numeric(r))
+  stopifnot(is.numeric(p), is.numeric(r), is.numeric(conf.level))
 
-  # Allow scalar recycling for r and conf.level
-  if (!(length(r) %in% c(1L, length(p)))) {
-    stop("`r` must be length 1 or length(p).", call. = FALSE)
+  # Each length must be 1 or the common L
+  lp <- length(p); lr <- length(r); lc <- length(conf.level)
+  max_len <- max(lp, lr, lc)
+
+  ok_len <- function(len) len %in% c(1L, max_len)
+  if (!ok_len(lp) || !ok_len(lr) || !ok_len(lc)) {
+    stop(sprintf(
+      "Length mismatch: lengths(p, r, conf.level) = (%d, %d, %d). Each must be 1 or the common length %d.",
+      lp, lr, lc, max_len
+    ), call. = FALSE)
   }
-  if (!(length(conf.level) %in% c(1L, length(p)))) {
-    stop("`conf.level` must be length 1 or length(p).", call. = FALSE)
-  }
-  if (length(r) == 1L) r <- rep(r, length(p))
-  if (length(conf.level) == 1L) conf.level <- rep(conf.level, length(p))
+
+  # Recycle where needed
+  if (lp == 1L) p <- rep(p, max_len)
+  if (lr == 1L) r <- rep(r, max_len)
+  if (lc == 1L) conf.level <- rep(conf.level, max_len)
+
+  # (Optional) value range checks — vectorized
+  if (any(!(p > 0 & p < 1))) stop("All `p` must be in (0, 1).", call. = FALSE)
+  if (any(!(r > 0 & r < 1))) stop("All `r` must be in (0, 1).", call. = FALSE)
+  if (any(!(conf.level > 0 & conf.level < 1))) stop("All `conf.level` must be in (0, 1).", call. = FALSE)
 
   if (method == "wald") {
     return(.compute_sample_size_wald(
@@ -235,7 +247,6 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
     ))
   }
 
-  # method == "wilson"
   .compute_sample_size_wilson(
     p = p, r = r, conf.level = conf.level,
     n_upper = n_upper, ceiling_out = ceiling_out
