@@ -273,7 +273,7 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
   data.table::set(
     dt, j = "label",
     value = sprintf(
-      "p=%.2f%%, r=%.0f%%, cl=%.0f%%, n=%s",
+      "p=%.3f%%, r=%.0f%%, cl=%.0f%%, n=%s",
       dt$p * 100, dt$r * 100, dt$conf.level * 100, instead::as_comma(dt$n)
     )
   )
