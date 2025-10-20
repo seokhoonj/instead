@@ -185,7 +185,7 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 
 # Compute sample sizes ----------------------------------------------------
 
-#' Compute required sample size for a proportion (vector or data.table form)
+#' Compute required sample size for a proportion (vector or `data.table` form)
 #'
 #' Computes the required sample size for given true proportions (`p`),
 #' relative margins of error (`r`), and confidence levels (`conf.level`)
@@ -209,7 +209,7 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 #'
 #' @return
 #' - If `as_dt = FALSE`: a numeric vector of required sample sizes (same length as `p`).
-#' - If `as_dt = TRUE`: a data.table with columns:
+#' - If `as_dt = TRUE`:  a `data.table` of class `"sample_size"` with columns:
 #'   \describe{
 #'     \item{p, r, conf.level}{Input parameters.}
 #'     \item{n}{Required sample size.}
@@ -222,7 +222,10 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 #'
 #' @details
 #' This function provides a unified interface for sample-size estimation
-#' under relative error constraints.
+#' under *relative error* constraints.
+#' When `as_dt = TRUE`, the returned `"sample_size"` object can be
+#' directly used with visualization helpers such as
+#' `plot_sample_size()` or simulation workflows.
 #'
 #' @examples
 #' # Vector output
@@ -243,7 +246,7 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
                                 method = c("wald", "wilson"),
                                 ceiling_out = TRUE,
                                 n_upper = 1e7,
-                                as_dt = FALSE) {
+                                as_dt = TRUE) {
   method <- match.arg(method)
 
   if (!as_dt) {
@@ -275,7 +278,59 @@ compute_sample_size <- function(p, r, conf.level = 0.95,
     )
   )
 
-  dt
+  instead::prepend_class(dt, "sample_size")
+}
+
+#' Simulate sampling distributions for proportion estimates
+#'
+#' Given a `sample_size` object (created by `compute_sample_size(as_dt = TRUE)`),
+#' this function generates simulated proportion estimates (`phat`)
+#' by repeatedly sampling from the binomial distribution.
+#'
+#' For each unique combination of parameters (`p`, `r`, `conf.level`, `n`, etc.),
+#' it draws `times` random samples of size `n` with success probability `p`
+#' and computes the observed proportions (`phat = X / n`).
+#'
+#' The resulting table can be used to visualize or compare the sampling
+#' distributions under different parameter settings.
+#'
+#' @param x A `sample_size` object returned by `compute_sample_size(as_dt = TRUE)`.
+#' @param times Integer; number of repetitions per parameter combination
+#'   (default: `5000`).
+#'
+#' @return A `data.table` containing:
+#' \describe{
+#'   \item{r, conf.level, n, z, se, ci_lo, ci_hi, band_lo, band_hi, label}{Design parameters inherited from input.}
+#'   \item{phat}{Simulated sample proportions from Binomial draws.}
+#' }
+#'
+#' @details
+#' This function implements a simple Monte Carlo approximation of
+#' the sampling distribution of the estimated proportion:
+#' \deqn{ \hat{p} = \frac{1}{n}\mathrm{Binomial}(n, p) }
+#'
+#' Each parameter combination from the `sample_size` design is simulated independently.
+#'
+#' @seealso [compute_sample_size()]
+#'
+#' @examples
+#' \donttest{
+#' # 1. Design sample-size plan
+#' ss <- compute_sample_size(p = c(0.05, 0.1), r = 0.1, as_dt = TRUE)
+#'
+#' # 2. Simulate sampling variability
+#' simulate_sample_size(ss, times = 5000)
+#' }
+#'
+#' @export
+simulate_sample_size <- function(x, times = 5000) {
+  assert_class(x, "sample_size")
+
+  n <- p <- NULL
+  .by <- c("r", "conf.level", "n", "z", "se", "ci_lo", "ci_hi",
+           "band_lo", "band_hi", "label")
+
+  x[, .(phat = stats::rbinom(times, size = n, prob = p) / n), by = .by]
 }
 
 

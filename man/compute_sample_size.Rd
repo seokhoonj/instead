@@ -2,7 +2,7 @@
 % Please edit documentation in R/sampling.R
 \name{compute_sample_size}
 \alias{compute_sample_size}
-\title{Compute required sample size for a proportion (vector or data.table form)}
+\title{Compute required sample size for a proportion (vector or \code{data.table} form)}
 \usage{
 compute_sample_size(
   p,
@@ -11,7 +11,7 @@ compute_sample_size(
   method = c("wald", "wilson"),
   ceiling_out = TRUE,
   n_upper = 1e+07,
-  as_dt = FALSE
+  as_dt = TRUE
 )
 }
 \arguments{
@@ -38,7 +38,7 @@ combinations and derived quantities.}
 \value{
 \itemize{
 \item If \code{as_dt = FALSE}: a numeric vector of required sample sizes (same length as \code{p}).
-\item If \code{as_dt = TRUE}: a data.table with columns:
+\item If \code{as_dt = TRUE}:  a \code{data.table} of class \code{"sample_size"} with columns:
 \describe{
 \item{p, r, conf.level}{Input parameters.}
 \item{n}{Required sample size.}
@@ -61,7 +61,10 @@ If \code{as_dt = TRUE}, returns a tidy \code{data.table} with additional
 derived statistics such as standard error and confidence bounds.
 
 This function provides a unified interface for sample-size estimation
-under relative error constraints.
+under \emph{relative error} constraints.
+When \code{as_dt = TRUE}, the returned \code{"sample_size"} object can be
+directly used with visualization helpers such as
+\code{plot_sample_size()} or simulation workflows.
 }
 \examples{
 # Vector output
