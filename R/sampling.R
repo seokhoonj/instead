@@ -185,6 +185,102 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 
 # Compute sample sizes ----------------------------------------------------
 
+#' Compute required sample size for a proportion (vector or data.table form)
+#'
+#' Computes the required sample size for given true proportions (`p`),
+#' relative margins of error (`r`), and confidence levels (`conf.level`)
+#' using either the **Wald** (closed-form) or **Wilson** (iterative search) method.
+#'
+#' By default, returns a numeric vector of sample sizes.
+#' If `as_dt = TRUE`, returns a tidy `data.table` with additional
+#' derived statistics such as standard error and confidence bounds.
+#'
+#' @param p Numeric vector of true or expected proportions (0 < `p` < 1).
+#' @param r Numeric vector of target relative margins of error (0 < `r` < 1).
+#' @param conf.level Confidence level (default: 0.95).
+#' @param method One of `c("wald", "wilson")`.
+#'   - `"wald"` uses the closed-form expression
+#'     \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
+#'   - `"wilson"` iteratively increases `n` until the Wilson half-width ≤ \eqn{r \cdot p}.
+#' @param ceiling_out Logical; if `TRUE` (default), rounds sample size up to the nearest integer.
+#' @param n_upper Maximum search bound for the Wilson method (default: `1e7`).
+#' @param as_dt Logical; if `TRUE`, returns a `data.table` with all parameter
+#'   combinations and derived quantities.
+#'
+#' @return
+#' - If `as_dt = FALSE`: a numeric vector of required sample sizes (same length as `p`).
+#' - If `as_dt = TRUE`: a data.table with columns:
+#'   \describe{
+#'     \item{p, r, conf.level}{Input parameters.}
+#'     \item{n}{Required sample size.}
+#'     \item{z}{Critical z-score.}
+#'     \item{se}{Standard error.}
+#'     \item{ci_lo, ci_hi}{Lower and upper confidence interval bounds.}
+#'     \item{band_lo, band_hi}{Relative margin-of-error bands.}
+#'     \item{label}{Formatted summary string.}
+#'   }
+#'
+#' @details
+#' This function provides a unified interface for sample-size estimation
+#' under relative error constraints.
+#'
+#' @examples
+#' # Vector output
+#' compute_sample_size(0.1, 0.05, method = "wald")
+#' compute_sample_size(0.1, 0.05, method = "wilson")
+#' compute_sample_size(p = c(0.1, 0.2, 0.3), r = 0.05, method = "wald")
+#'
+#' # Data-table output with full parameter expansion
+#' compute_sample_size(
+#'   p = c(0.05, 0.1),
+#'   r = c(0.1, 0.2),
+#'   conf.level = c(0.95, 0.99),
+#'   as_dt = TRUE
+#' )
+#'
+#' @export
+compute_sample_size <- function(p, r, conf.level = 0.95,
+                                method = c("wald", "wilson"),
+                                ceiling_out = TRUE,
+                                n_upper = 1e7,
+                                as_dt = FALSE) {
+  method <- match.arg(method)
+
+  if (!as_dt) {
+    return(.compute_sample_size(
+      p = p, r = r, conf.level = conf.level,
+      method = method, ceiling_out = ceiling_out, n_upper = n_upper
+    ))
+  }
+
+  dt <- data.table::as.data.table(expand.grid(p = p, r = r, conf.level = conf.level))
+  data.table::set(
+    dt, j = "n",
+    value = .compute_sample_size(
+      dt$p, dt$r, dt$conf.level,
+      method = method, ceiling_out = ceiling_out, n_upper = n_upper
+    )
+  )
+  data.table::set(dt, j = "z"      , value = stats::qnorm(1 - (1 - dt$conf.level) / 2))
+  data.table::set(dt, j = "se"     , value = sqrt(dt$p * (1 - dt$p) / dt$n))
+  data.table::set(dt, j = "ci_lo"  , value = dt$p - dt$z * dt$se)
+  data.table::set(dt, j = "ci_hi"  , value = dt$p + dt$z * dt$se)
+  data.table::set(dt, j = "band_lo", value = dt$p - dt$r * dt$p)
+  data.table::set(dt, j = "band_hi", value = dt$p + dt$r * dt$p)
+  data.table::set(
+    dt, j = "label",
+    value = sprintf(
+      "p=%.2f%%, r=%.0f%%, cl=%.0f%%, n=%s",
+      dt$p * 100, dt$r * 100, dt$conf.level * 100, instead::as_comma(dt$n)
+    )
+  )
+
+  dt
+}
+
+
+# Intenal helper functions ------------------------------------------------
+
 #' Compute required sample size for a proportion (relative margin)
 #'
 #' Unified front-end that dispatches to either the **Wald** (closed-form)
@@ -199,20 +295,15 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 #'   (Used directly by Wald; passed through to Wilson.)
 #' @param n_upper Maximum search bound for the Wilson method (default \code{1e7}).
 #'
-#' @return Numeric vector of required sample sizes (same length as `p`).
-#'
 #' @details
 #' - Wald uses the closed-form formula \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
 #' - Wilson increases \eqn{n} until the Wilson half-width is no greater than
 #'   \eqn{r \cdot p}. The Wald solution is used as a fast initial guess.
 #'
-#' @examples
-#' compute_sample_size(0.1, 0.05, method = "wald")
-#' compute_sample_size(0.1, 0.05, method = "wilson")
-#' compute_sample_size(p = c(0.1, 0.2, 0.3), r = 0.05, method = "wald")
+#' @return Numeric vector of required sample sizes (same length as `p`).
 #'
-#' @export
-compute_sample_size <- function(p, r, conf.level = 0.95,
+#' @keywords internal
+.compute_sample_size <- function(p, r, conf.level = 0.95,
                                 method = c("wald", "wilson"),
                                 ceiling_out = TRUE,
                                 n_upper = 1e7) {

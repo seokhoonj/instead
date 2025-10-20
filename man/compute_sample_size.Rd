@@ -2,7 +2,7 @@
 % Please edit documentation in R/sampling.R
 \name{compute_sample_size}
 \alias{compute_sample_size}
-\title{Compute required sample size for a proportion (relative margin)}
+\title{Compute required sample size for a proportion (vector or data.table form)}
 \usage{
 compute_sample_size(
   p,
@@ -10,41 +10,71 @@ compute_sample_size(
   conf.level = 0.95,
   method = c("wald", "wilson"),
   ceiling_out = TRUE,
-  n_upper = 1e+07
+  n_upper = 1e+07,
+  as_dt = FALSE
 )
 }
 \arguments{
-\item{p}{Numeric vector of true/expected proportions (0 < \code{p} < 1).}
+\item{p}{Numeric vector of true or expected proportions (0 < \code{p} < 1).}
 
 \item{r}{Numeric vector of target relative margins of error (0 < \code{r} < 1).}
 
-\item{conf.level}{Confidence level (default 0.95).}
+\item{conf.level}{Confidence level (default: 0.95).}
 
-\item{method}{One of \code{c("wald","wilson")}. Defaults to \code{"wald"}.}
+\item{method}{One of \code{c("wald", "wilson")}.
+\itemize{
+\item \code{"wald"} uses the closed-form expression
+\deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
+\item \code{"wilson"} iteratively increases \code{n} until the Wilson half-width ≤ \eqn{r \cdot p}.
+}}
 
-\item{ceiling_out}{Logical; if \code{TRUE} (default), round up to the next integer.
-(Used directly by Wald; passed through to Wilson.)}
+\item{ceiling_out}{Logical; if \code{TRUE} (default), rounds sample size up to the nearest integer.}
 
-\item{n_upper}{Maximum search bound for the Wilson method (default \code{1e7}).}
+\item{n_upper}{Maximum search bound for the Wilson method (default: \code{1e7}).}
+
+\item{as_dt}{Logical; if \code{TRUE}, returns a \code{data.table} with all parameter
+combinations and derived quantities.}
 }
 \value{
-Numeric vector of required sample sizes (same length as \code{p}).
+\itemize{
+\item If \code{as_dt = FALSE}: a numeric vector of required sample sizes (same length as \code{p}).
+\item If \code{as_dt = TRUE}: a data.table with columns:
+\describe{
+\item{p, r, conf.level}{Input parameters.}
+\item{n}{Required sample size.}
+\item{z}{Critical z-score.}
+\item{se}{Standard error.}
+\item{ci_lo, ci_hi}{Lower and upper confidence interval bounds.}
+\item{band_lo, band_hi}{Relative margin-of-error bands.}
+\item{label}{Formatted summary string.}
+}
+}
 }
 \description{
-Unified front-end that dispatches to either the \strong{Wald} (closed-form)
-or \strong{Wilson} (numerical search) method to obtain the sample size
-achieving a target \emph{relative margin of error} at a given confidence level.
+Computes the required sample size for given true proportions (\code{p}),
+relative margins of error (\code{r}), and confidence levels (\code{conf.level})
+using either the \strong{Wald} (closed-form) or \strong{Wilson} (iterative search) method.
 }
 \details{
-\itemize{
-\item Wald uses the closed-form formula \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
-\item Wilson increases \eqn{n} until the Wilson half-width is no greater than
-\eqn{r \cdot p}. The Wald solution is used as a fast initial guess.
-}
+By default, returns a numeric vector of sample sizes.
+If \code{as_dt = TRUE}, returns a tidy \code{data.table} with additional
+derived statistics such as standard error and confidence bounds.
+
+This function provides a unified interface for sample-size estimation
+under relative error constraints.
 }
 \examples{
+# Vector output
 compute_sample_size(0.1, 0.05, method = "wald")
 compute_sample_size(0.1, 0.05, method = "wilson")
 compute_sample_size(p = c(0.1, 0.2, 0.3), r = 0.05, method = "wald")
+
+# Data-table output with full parameter expansion
+compute_sample_size(
+  p = c(0.05, 0.1),
+  r = c(0.1, 0.2),
+  conf.level = c(0.95, 0.99),
+  as_dt = TRUE
+)
 
 }
