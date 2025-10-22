@@ -124,6 +124,55 @@ remove_class <- function(x, classes) {
   x
 }
 
+#' Update class attribute (remove then prepend)
+#'
+#' Convenience wrapper that combines [remove_class()] and [prepend_class()]:
+#' first removes specified class names, then prepends new ones (without
+#' duplication). Works seamlessly with ordinary objects and `data.table`
+#' (no-copy path).
+#'
+#' @param x An R object.
+#' @param remove Character vector of class names to remove. Ignored if `NULL` or length 0.
+#' @param prepend Character vector of class names to prepend. Ignored if `NULL` or length 0.
+#'
+#' @return The input object `x`, with its class attribute updated accordingly.
+#'
+#' @examples
+#' \donttest{
+#' x <- prepend_class(mtcars, c("old", "tag"))
+#' class(x)
+#' # [1] "old" "tag" "data.frame"
+#'
+#' x <- update_class(x, remove = "old", prepend = c("new", "hot"))
+#' class(x)
+#' # [1] "new" "hot" "tag" "data.frame"
+#' }
+#'
+#' @export
+update_class <- function(x, remove = NULL, prepend = NULL) {
+  # Fast path: nothing to do
+  if ((is.null(remove)  || length(remove)  == 0L) &&
+      (is.null(prepend) || length(prepend) == 0L)) {
+    return(x)
+  }
+
+  # Remove first (if requested)
+  if (!is.null(remove)) {
+    if (!is.character(remove) || anyNA(remove))
+      stop("`remove` must be a character vector without NA.", call. = FALSE)
+    x <- remove_class(x, remove)
+  }
+
+  # Then prepend (if requested)
+  if (!is.null(prepend)) {
+    if (!is.character(prepend) || anyNA(prepend))
+      stop("`prepend` must be a character vector without NA.", call. = FALSE)
+    x <- prepend_class(x, prepend)
+  }
+
+  x
+}
+
 #' Index columns by name
 #'
 #' Return column indices for the given column names from a data.frame or matrix.
