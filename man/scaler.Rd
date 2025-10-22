@@ -4,13 +4,13 @@
 \alias{scaler}
 \title{Scaler}
 \usage{
-scaler(x, method = c("minmax", "robust", "standard"))
+scaler(x, method = c("minmax", "standard", "robust"))
 }
 \arguments{
 \item{x}{A numeric vector.}
 
 \item{method}{Character string specifying the scaling method.
-One of \code{"minmax"}, \code{"robust"}, or \code{"standard"}.}
+One of \code{"minmax"}, \code{"standard"}, or \code{"robust"}.}
 }
 \value{
 A numeric vector of the same length as \code{x}, scaled according
@@ -18,8 +18,8 @@ to the chosen method.
 }
 \description{
 Apply common scaling transformations to a numeric vector.
-Supports \strong{min-max scaling}, \strong{robust scaling} (median/IQR),
-and \strong{standard scaling} (z-score).
+Supports \strong{min-max scaling}, \strong{standard scaling} (z-score),
+and \strong{robust scaling} (median/IQR).
 }
 \examples{
 \dontrun{
@@ -30,13 +30,13 @@ set.seed(123)
 x <- rnorm(100)
 df <- rbind(
   data.frame(method = "Min-max" , x = seq_along(x), y = scaler(x, "minmax")),
-  data.frame(method = "Robust"  , x = seq_along(x), y = scaler(x, "robust")),
-  data.frame(method = "Standard", x = seq_along(x), y = scaler(x, "standard"))
+  data.frame(method = "Standard", x = seq_along(x), y = scaler(x, "standard")),
+  data.frame(method = "Robust"  , x = seq_along(x), y = scaler(x, "robust"))
 )
 
 ggplot(df, aes(x = x, y = y, group = method, color = method)) +
   geom_line() +
-  labs(title = "Scaling Method: Min-max vs Robust vs Standard") +
+  labs(title = "Scaling Method: Min-max vs Standard vs Robust") +
   theme_bw()
 
 plotly::ggplotly(g)
