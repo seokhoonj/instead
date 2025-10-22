@@ -52,9 +52,9 @@ set_ptr <- function(df, skip_shiny = TRUE) {
     # legacy code (problems in Shiny):
     n <- sys.nframe()
     df_name <- trace_arg_expr(df)
-    old_class <- class(df)
+    org_class <- class(df)
     data.table::setalloccol(df)
-    data.table::setattr(df, "class", old_class)
+    data.table::setattr(df, "class", org_class)
     assign(df_name, df, envir = parent.frame(n))
   }
 }

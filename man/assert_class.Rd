@@ -4,12 +4,12 @@
 \alias{assert_class}
 \title{Assert object class}
 \usage{
-assert_class(x, class)
+assert_class(x, classes)
 }
 \arguments{
 \item{x}{An R object to check.}
 
-\item{class}{A non-empty character vector of acceptable class names.}
+\item{classes}{A non-empty character vector of acceptable class names.}
 }
 \value{
 Invisibly returns \code{TRUE} on success; otherwise throws an error.
@@ -21,6 +21,7 @@ On failure, throws an error with details about the actual class.
 \examples{
 \dontrun{
 assert_class(mtcars, "data.frame")
+assert_class(mtcars, c("data.frame", "tbl"))
 assert_class(mtcars, "character") # errors
 }
 

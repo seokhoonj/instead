@@ -4,42 +4,49 @@
 #' On failure, throws an error with details about the actual class.
 #'
 #' @param x An R object to check.
-#' @param class A non-empty character vector of acceptable class names.
+#' @param classes A non-empty character vector of acceptable class names.
 #'
 #' @return Invisibly returns `TRUE` on success; otherwise throws an error.
 #'
 #' @examples
 #' \dontrun{
 #' assert_class(mtcars, "data.frame")
+#' assert_class(mtcars, c("data.frame", "tbl"))
 #' assert_class(mtcars, "character") # errors
 #' }
 #'
 #' @export
-assert_class <- function(x, class) {
-  if (!is.character(class) || length(class) < 1L || anyNA(class)) {
+assert_class <- function(x, classes) {
+  # Validate input
+  if (!is.character(classes) || length(classes) < 1L || anyNA(classes)) {
     rlang::abort(
-      message = "`class` must be a non-empty character vector without NA.",
+      message = "`classes` must be a non-empty character vector without NA.",
       class   = c("instead_error_wrong_class", "instead_error", "error"),
-      arg     = "class"
+      arg     = "classes"
     )
   }
 
+  # Try to recover variable name (for better error message)
   x_name <- if (is.character(x) && length(x) == 1L) {
     sprintf('"%s"', x)  # literal string
-  } else {trace_arg_expr(x, verbose = FALSE, skip_shiny = TRUE)
+  } else {
+    trace_arg_expr(x, verbose = FALSE, skip_shiny = TRUE)
   }
 
-  if (inherits(x, class)) return(invisible(TRUE))
+  # Class check
+  if (inherits(x, classes))
+    return(invisible(TRUE))
 
+  # Error if not matched
   rlang::abort(
     message = sprintf("`%s` must be <%s>, not <%s>.",
                       x_name,
-                      paste(class, collapse = " | "),
+                      paste(classes, collapse = " | "),
                       paste(class(x), collapse = " / ")),
     class   = c("instead_error_wrong_class", "instead_error", "error"),
     object  = x_name,
     actual  = class(x),
-    expect  = class
+    expect  = classes
   )
 }
 

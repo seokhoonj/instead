@@ -4,16 +4,16 @@
 \alias{prepend_class}
 \title{Prepend class(es) without duplication}
 \usage{
-prepend_class(x, new_class)
+prepend_class(x, classes)
 }
 \arguments{
 \item{x}{An R object.}
 
-\item{new_class}{A character vector of class names to prepend.}
+\item{classes}{A character vector of class names to prepend.}
 }
 \value{
 The input object \code{x} with its class attribute updated to have
-\code{new_class} at the front, followed by its original classes (excluding
+\code{classes} at the front, followed by its original classes (excluding
 any duplicates).
 }
 \description{
