@@ -36,10 +36,10 @@ normalize_dots <- function(...) {
 #' uses `data.table::setattr()` to avoid copies and preserve selfref.
 #'
 #' @param x An R object.
-#' @param new_class A character vector of class names to prepend.
+#' @param classes A character vector of class names to prepend.
 #'
 #' @return The input object `x` with its class attribute updated to have
-#'   `new_class` at the front, followed by its original classes (excluding
+#'   `classes` at the front, followed by its original classes (excluding
 #'   any duplicates).
 #'
 #' @examples
@@ -54,25 +54,73 @@ normalize_dots <- function(...) {
 #' }
 #'
 #' @export
-prepend_class <- function(x, new_class) {
+prepend_class <- function(x, classes) {
   # Fast returns / validation
-  if (length(new_class) == 0L) return(x)
-  if (!is.character(new_class) || anyNA(new_class))
-    stop("`new_class` must be a non-empty character vector without NA.",
+  if (length(classes) == 0L) return(x)
+  if (!is.character(classes) || anyNA(classes))
+    stop("`classes` must be a non-empty character vector without NA.",
          call. = FALSE)
 
   # Normalize inputs
-  new_class <- unique(new_class)  # avoid duplicates in input
-  old_class <- setdiff(unname(class(x)), new_class)  # keep original order, remove overlaps
+  classes   <- unique(classes)                    # avoid duplicates in input
+  org_class <- setdiff(unname(class(x)), classes) # keep original order, remove overlaps
 
   # Data.table-friendly path: no copy, no selfref warning
   if (inherits(x, "data.table")) {
-    data.table::setattr(x, "class", c(new_class, old_class))
+    data.table::setattr(x, "class", c(classes, org_class))
     return(x[])
   }
 
   # Fallback for non-data.table objects
-  class(x) <- c(new_class, old_class)
+  class(x) <- c(classes, org_class)
+  x
+}
+
+#' Remove one or more classes from an object
+#'
+#' Safely removes specified class name(s) from an object's class vector.
+#' Mirrors the internal logic and style of [prepend_class()], but
+#' removes the specified `classes` instead of prepending them.
+#'
+#' @param x An object with a class attribute.
+#' @param classes Character vector of class names to remove.
+#'
+#' @return The same object `x`, with the specified class(es) removed.
+#'
+#' @examples
+#' x <- prepend_class(mtcars, c("custom", "tag"))
+#' class(x)
+#' # [1] "custom" "tag" "data.frame"
+#'
+#' y <- remove_class(x, "custom")
+#' class(y)
+#' # [1] "tag" "data.frame"
+#'
+#' z <- remove_class(y, c("tag", "data.frame"))
+#' class(z)
+#' # [1] "list"
+#'
+#' @export
+remove_class <- function(x, classes) {
+  # Fast returns / validation
+  if (length(classes) == 0L)
+    return(x)
+  if (!is.character(classes) || anyNA(classes))
+    stop("`classes` must be a non-empty character vector without NA.",
+         call. = FALSE)
+
+  # Normalize inputs
+  classes <- unique(classes)
+  remain  <- setdiff(unname(class(x)), classes)
+
+  # Data.table-friendly path: no copy, no selfref warning
+  if (inherits(x, "data.table")) {
+    data.table::setattr(x, "class", remain)
+    return(x[])
+  }
+
+  # Fallback for non-data.table objects
+  class(x) <- remain
   x
 }
 
@@ -420,7 +468,7 @@ set_dt <- function(df) {
   if (!has_ptr(df)) {
     n <- sys.nframe()
     df_name <- trace_arg_expr(df)
-    old_class <- class(df)
+    org_class <- class(df)
     data.table::setDT(df)
     assign(df_name, df, envir = parent.frame(n))
     invisible(df)
@@ -461,7 +509,7 @@ set_tibble <- function(df) {
   if (!has_ptr(df)) {
     n <- sys.nframe()
     df_name <- trace_arg_expr(df)
-    old_class <- class(df)
+    org_class <- class(df)
     data.table::setDT(df)
     data.table::setattr(df, "class", c("tbl_df", "tbl", "data.frame"))
     assign(df_name, df, envir = parent.frame(n))
