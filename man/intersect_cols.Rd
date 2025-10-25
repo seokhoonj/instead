@@ -2,28 +2,32 @@
 % Please edit documentation in R/utils.R
 \name{intersect_cols}
 \alias{intersect_cols}
-\title{Get Common Column Names Between Two Data Frames}
+\title{Get Common Column Names Across Multiple Data Frames}
 \usage{
-intersect_cols(x, y)
+intersect_cols(...)
 }
 \arguments{
-\item{x}{A data.frame.}
-
-\item{y}{A data.frame.}
+\item{...}{One or more data.frame-like objects, or a single list of them.}
 }
 \value{
-A character vector of column names present in both \code{x} and \code{y}.
+A character vector of column names common to all inputs.
+If only one data frame is supplied, returns its column names as-is.
 }
 \description{
-Returns the names of columns that exist in both data frames.
-Useful for aligning datasets before merging or performing column-wise operations.
+Returns the intersection of column names shared by all provided data frames.
+Accepts either multiple data frames or a single list of them.
+If there is no overlap, returns \code{character(0)}.
 }
 \examples{
-\donttest{
-df1 <- data.frame(a = 1:3, b = 4:6, c = 7:9)
-df2 <- data.frame(b = 10:12, c = 13:15, d = 16:18)
-intersect_cols(df1, df2)
-# [1] "b" "c"
-}
+df1 <- data.frame(a=1, b=2, c=3)
+df2 <- data.frame(b=4, c=5, d=6)
+df3 <- data.frame(c=7, e=8)
 
+intersect_cols(df1, df2, df3)  # "c"
+intersect_cols(list(df1, df2)) # "b" "c"
+intersect_cols(df1)            # "a" "b" "c"
+
+}
+\seealso{
+\code{\link[base:sets]{base::intersect()}}, \code{\link[base:funprog]{base::Reduce()}}, \code{\link[base:names]{base::names()}}
 }

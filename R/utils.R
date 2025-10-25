@@ -333,29 +333,41 @@ anti_cols <- function(df, cols) {
   setdiff(names(df), cols)
 }
 
-#' Get Common Column Names Between Two Data Frames
+#' Get Common Column Names Across Multiple Data Frames
 #'
-#' Returns the names of columns that exist in both data frames.
-#' Useful for aligning datasets before merging or performing column-wise operations.
+#' @description
+#' Returns the intersection of column names shared by all provided data frames.
+#' Accepts either multiple data frames or a single list of them.
+#' If there is no overlap, returns `character(0)`.
 #'
-#' @param x A data.frame.
-#' @param y A data.frame.
+#' @param ... One or more data.frame-like objects, or a single list of them.
 #'
-#' @return A character vector of column names present in both `x` and `y`.
+#' @return
+#' A character vector of column names common to all inputs.
+#' If only one data frame is supplied, returns its column names as-is.
 #'
 #' @examples
-#' \donttest{
-#' df1 <- data.frame(a = 1:3, b = 4:6, c = 7:9)
-#' df2 <- data.frame(b = 10:12, c = 13:15, d = 16:18)
-#' intersect_cols(df1, df2)
-#' # [1] "b" "c"
-#' }
+#' df1 <- data.frame(a=1, b=2, c=3)
+#' df2 <- data.frame(b=4, c=5, d=6)
+#' df3 <- data.frame(c=7, e=8)
 #'
+#' intersect_cols(df1, df2, df3)  # "c"
+#' intersect_cols(list(df1, df2)) # "b" "c"
+#' intersect_cols(df1)            # "a" "b" "c"
+#'
+#' @seealso [base::intersect()], [base::Reduce()], [base::names()]
 #' @export
-intersect_cols <- function(x, y) {
-  assert_class(x, "data.frame")
-  assert_class(y, "data.frame")
-  intersect(names(x), names(y))
+intersect_cols <- function(...) {
+  dfs <- normalize_dots(...)
+  if (length(dfs) == 0L)
+    stop("No inputs provided.", call. = FALSE)
+
+  lapply(dfs, function(x) assert_class(x, "data.frame"))
+
+  nms <- lapply(dfs, names)
+  if (length(nms) == 1L) return(nms[[1L]])
+
+  Reduce(intersect, nms)
 }
 
 #' Find matching attributes
