@@ -333,6 +333,31 @@ anti_cols <- function(df, cols) {
   setdiff(names(df), cols)
 }
 
+#' Get Common Column Names Between Two Data Frames
+#'
+#' Returns the names of columns that exist in both data frames.
+#' Useful for aligning datasets before merging or performing column-wise operations.
+#'
+#' @param x A data.frame.
+#' @param y A data.frame.
+#'
+#' @return A character vector of column names present in both `x` and `y`.
+#'
+#' @examples
+#' \donttest{
+#' df1 <- data.frame(a = 1:3, b = 4:6, c = 7:9)
+#' df2 <- data.frame(b = 10:12, c = 13:15, d = 16:18)
+#' intersect_cols(df1, df2)
+#' # [1] "b" "c"
+#' }
+#'
+#' @export
+intersect_cols <- function(x, y) {
+  assert_class(x, "data.frame")
+  assert_class(y, "data.frame")
+  intersect(names(x), names(y))
+}
+
 #' Find matching attributes
 #'
 #' Returns the names of attributes in `x` that match the specified names.
