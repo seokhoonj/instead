@@ -411,33 +411,117 @@ add_year <- function(date, year) {
   as.Date(date)
 }
 
-#' Beginning and end of the month
+#' Get start or end date of week / month / quarter / half-year / year
 #'
-#' Get the beginning date (first day) or end date (last day) of the month.
+#' Returns the first or last day of a period that contains `x`.
 #'
-#' @param date A Date.
+#' @param x A Date (vectorized OK).
+#' @param week_start Integer 1–7, where 1 = Monday, ..., 7 = Sunday.
+#'   Used only by `get_week_start()` / `get_week_end()`. Default: 1 (ISO).
 #'
-#' @return A Date object representing the beginning (bmonth) or end (emonth)
-#'   of the month
+#' @return A `Date` vector of the same length as `x`.
 #'
 #' @examples
 #' \donttest{
-#' # Beginning of month
-#' bmonth(Sys.Date())
+#' today <- Sys.Date()
 #'
-#' # End of month
-#' emonth(Sys.Date())
+#' get_week_start(today);  get_week_end(today)
+#' get_month_start(today); get_month_end(today)
+#' get_quarter_start(today); get_quarter_end(today)
+#' get_half_start(today);  get_half_end(today)
+#' get_year_start(today);  get_year_end(today)
+#'
+#' # week starts on Sunday
+#' get_week_start(today, week_start = 7)
+#' get_week_end(today,   week_start = 7)
 #' }
 #'
+#' @name date_period_boundaries
+NULL
+
+# ---- week ----
+
+#' @rdname date_period_boundaries
 #' @export
-bmonth <- function(date) {
-  as.Date(format(date, format = "%Y-%m-01"))
+get_week_start <- function(x, week_start = 1L) {
+  x <- as.Date(x)
+  wd <- as.POSIXlt(x)$wday        # 0=Sun, 1=Mon, ..., 6=Sat
+  wd[wd == 0L] <- 7L              # treat Sunday as 7
+  diff <- (wd - week_start) %% 7L
+  x - diff
 }
 
-#' @rdname bmonth
+#' @rdname date_period_boundaries
 #' @export
-emonth <- function(date) {
-  add_mon(date, 1L) - 1L
+get_week_end <- function(x, week_start = 1L) {
+  get_week_start(x, week_start) + 6L
+}
+
+# ---- month ----
+
+#' @rdname date_period_boundaries
+#' @export
+get_month_start <- function(x) {
+  x <- as.Date(x)
+  as.Date(strftime(x, "%Y-%m-01"))
+}
+
+#' @rdname date_period_boundaries
+#' @export
+get_month_end <- function(x) {
+  add_mon(get_month_start(x), 1L) - 1L
+}
+
+# ---- quarter (Q1: Jan, Q2: Apr, Q3: Jul, Q4: Oct) ----
+
+#' @rdname date_period_boundaries
+#' @export
+get_quarter_start <- function(x) {
+  x  <- as.Date(x)
+  y  <- format(x, "%Y")
+  m  <- as.integer(format(x, "%m"))
+  m0 <- ((m - 1L) %/% 3L) * 3L + 1L
+  as.Date(sprintf("%s-%02d-01", y, m0))
+}
+
+#' @rdname date_period_boundaries
+#' @export
+get_quarter_end <- function(x) {
+  add_mon(get_quarter_start(x), 3L) - 1L
+}
+
+# ---- half-year (H1: Jan–Jun, H2: Jul–Dec) ----
+
+#' @rdname date_period_boundaries
+#' @export
+get_half_start <- function(x) {
+  x  <- as.Date(x)
+  y  <- format(x, "%Y")
+  m  <- as.integer(format(x, "%m"))
+  m0 <- ifelse(m <= 6L, 1L, 7L)
+  as.Date(sprintf("%s-%02d-01", y, m0))
+}
+
+#' @rdname date_period_boundaries
+#' @export
+get_half_end <- function(x) {
+  add_mon(get_half_start(x), 6L) - 1L
+}
+
+# ---- year ----
+
+#' @rdname date_period_boundaries
+#' @export
+get_year_start <- function(x) {
+  x <- as.Date(x)
+  as.Date(format(x, "%Y-01-01"))
+}
+
+#' @rdname date_period_boundaries
+#' @export
+get_year_end <- function(x) {
+  # assumes you have add_year(); if not, replace with your own year adder
+  add_year(get_year_start(x), 1L) - 1L
 }
 
 #' Check if input is in a recognizable date format
