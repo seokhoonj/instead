@@ -486,10 +486,10 @@ yearmon <- function(x) {
 #' Compute the number of months between two dates with an optional day
 #' threshold. If the first element of `day_limit` is non-zero, the start date
 #' counts as a full month when its day is `>= day_limit[1]`, and the end date
-#' counts as a full month when its day is `< day_limit[1]`.
+#' counts as a full month when its day is `<  day_limit[1]`.
 #'
-#' @param sdate A start date vector
-#' @param edate An end date vector
+#' @param from A start date vector
+#' @param to An end date vector
 #' @param day_limit Day threshold for counting full months. If the start date's
 #'   day is less than this value, it counts as a full month. If the end date's
 #'   day is greater than or equal to this value, it counts as a full month.
@@ -499,25 +499,25 @@ yearmon <- function(x) {
 #' @examples
 #' \donttest{
 #' # Month difference
-#' sdate <- as.Date("1999-12-31")
-#' edate <- as.Date("2000-01-01")
-#' mondiff(sdate, edate)
+#' from <- as.Date("1999-12-31")
+#' to <- as.Date("2000-01-01")
+#' mondiff(from, to)
 #' }
 #'
 #' @export
-mondiff <- function(sdate, edate, day_limit = c(0:31)) {
-  # if the sdate month day <  day_limit: count
-  # if the edate month day >= day_limit: count
-  assert_class(sdate, "Date")
-  assert_class(edate, "Date")
-  ys <- data.table::year(sdate)
-  ye <- data.table::year(edate)
-  ms <- data.table::month(sdate)
-  me <- data.table::month(edate)
+mondiff <- function(from, to, day_limit = c(0:31)) {
+  # if the from month day <  day_limit: count
+  # if the to   month day >= day_limit: count
+  from <- as_date_safe(from)
+  to   <- as_date_safe(to)
+  ys <- data.table::year(from)
+  ye <- data.table::year(to)
+  ms <- data.table::month(from)
+  me <- data.table::month(to)
   ds <- de <- 0
   if (day_limit[1L]) {
-    ds <- ifelse(data.table::mday(sdate) >= day_limit[1L], 1, 0)
-    de <- ifelse(data.table::mday(edate) <  day_limit[1L], 1, 0)
+    ds <- ifelse(data.table::mday(from) >= day_limit[1L], 1, 0)
+    de <- ifelse(data.table::mday(to)   <  day_limit[1L], 1, 0)
   }
   z <- (ye - ys) * 12 + (me - ms) + 1 - ds - de
 

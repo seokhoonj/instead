@@ -4,12 +4,12 @@
 \alias{mondiff}
 \title{Difference in months between two dates}
 \usage{
-mondiff(sdate, edate, day_limit = c(0:31))
+mondiff(from, to, day_limit = c(0:31))
 }
 \arguments{
-\item{sdate}{A start date vector}
+\item{from}{A start date vector}
 
-\item{edate}{An end date vector}
+\item{to}{An end date vector}
 
 \item{day_limit}{Day threshold for counting full months. If the start date's
 day is less than this value, it counts as a full month. If the end date's
@@ -22,14 +22,14 @@ A numeric vector representing the number of months between the dates
 Compute the number of months between two dates with an optional day
 threshold. If the first element of \code{day_limit} is non-zero, the start date
 counts as a full month when its day is \verb{>= day_limit[1]}, and the end date
-counts as a full month when its day is \verb{< day_limit[1]}.
+counts as a full month when its day is \verb{<  day_limit[1]}.
 }
 \examples{
 \donttest{
 # Month difference
-sdate <- as.Date("1999-12-31")
-edate <- as.Date("2000-01-01")
-mondiff(sdate, edate)
+from <- as.Date("1999-12-31")
+to <- as.Date("2000-01-01")
+mondiff(from, to)
 }
 
 }
