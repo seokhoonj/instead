@@ -146,7 +146,7 @@ limit_stay <- function(df, id_var, group_var, from_var, to_var,
   dm_id <- rep_row(dm[, .SD, .SDcols = id_group_var], times = dm$size)
   z <- data.table::data.table(dm_id, from = from, stay = stay, stay_mod = stay_mod)
   z <- z[!(stay == 0 & stay_mod == 0)]
-  data.table::set(z, j = "month", value = bmonth(z$from))
+  data.table::set(z, j = "month", value = get_month_start(z$from))
 
   if (deduction > 0) {
     z[, rank := rank(from, ties.method = "first"), id_group_var]
