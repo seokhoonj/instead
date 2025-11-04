@@ -839,6 +839,54 @@ numify_i64 <- function(df) {
   numify(df, cols = cols, suppress_warnings = TRUE)
 }
 
+#' In-place update by condition or index (wrapper around [data.table::set()])
+#'
+#' @description
+#' Drop-in wrapper for [data.table::set()] that allows both numeric and logical
+#' indexing in `i`, and automatically subsets `value[i]` if `length(value) == nrow(dt)`.
+#'
+#' @param dt A `data.table`, modified by reference.
+#' @param i Integer or logical vector specifying rows to modify.
+#' @param j Single column name (character) or column index.
+#' @param value Replacement vector or evaluated expression.
+#'
+#' @return Invisibly returns `dt` (modified by reference).
+#'
+#' @examples
+#' \dontrun{
+#' dt <- data.table::as.data.table(iris)
+#'
+#' # Logical indexing (automatic which())
+#' set_where(dt, dt$Species == "setosa", "Sepal.Length", dt$Sepal.Length * 10)
+#'
+#' # Numeric indexing
+#' set_where(dt, 51:100, "Petal.Width", dt$Petal.Width + 0.5)
+#' }
+#'
+#' @export
+set_where <- function(dt, i, j, value) {
+  assert_class(dt, "data.table")
+
+  if (length(j) != 1L)
+    stop("`j` must be a single column name or index.", call. = FALSE)
+
+  if ( is.logical(i)) i <- which(i)
+  if (!is.integer(i)) i <- as.integer(i)
+
+  n <- nrow(dt)
+
+  if (length(value) == n) {
+    value <- value[i]
+  } else if (!(length(value) %in% c(1L, length(i)))) {
+    stop(sprintf("Length of `value` (%d) must be 1, length(i) (%d), or nrow(dt) (%d).",
+                 length(value), length(i), n), call. = FALSE)
+  }
+
+  data.table::set(dt, i = i, j = j, value = value)
+
+  invisible(dt)
+}
+
 
 # Text --------------------------------------------------------------------
 
