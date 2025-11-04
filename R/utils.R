@@ -857,14 +857,14 @@ numify_i64 <- function(df) {
 #' dt <- data.table::as.data.table(iris)
 #'
 #' # Logical indexing (automatic which())
-#' set_where(dt, dt$Species == "setosa", "Sepal.Length", dt$Sepal.Length * 10)
+#' set_ix(dt, dt$Species == "setosa", "Sepal.Length", dt$Sepal.Length * 10)
 #'
 #' # Numeric indexing
-#' set_where(dt, 51:100, "Petal.Width", dt$Petal.Width + 0.5)
+#' set_ix(dt, 51:100, "Petal.Width", dt$Petal.Width + 0.5)
 #' }
 #'
 #' @export
-set_where <- function(dt, i, j, value) {
+set_ix <- function(dt, i, j, value) {
   assert_class(dt, "data.table")
 
   if (length(j) != 1L)
