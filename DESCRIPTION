@@ -37,6 +37,7 @@ Imports:
     usethis (>= 2.1.6),
     utils
 Suggests: 
+    htmltools (>= 0.5.8.1),
     magick (>= 2.8.7),
     reticulate (>= 1.40.0),
     shiny (>= 1.9.1),
