@@ -185,6 +185,196 @@ switch_at_time <- function(before,
   }
 }
 
+#' Cache-aware switching based on a rolling time window
+#'
+#' `cache_in_time_window()` decides whether to reuse existing cached data
+#' or refresh it, based on when the cache was last updated relative to a
+#' daily cutoff time and a rolling time window.
+#'
+#' The function compares a `cache_timestamp` (e.g., file modification time)
+#' with a window around today's cutoff time `at_time`. If the timestamp
+#' lies within the window, `use_cache()` is called; otherwise `refresh()`
+#' is called.
+#'
+#' @param cache_timestamp A POSIXct/POSIXlt timestamp indicating when the
+#'   cache was last updated (e.g., `file.info(path)$mtime`). May be `NA`
+#'   or `NULL`, in which case the cache is treated as missing and
+#'   `refresh()` is executed.
+#' @param at_time Character string `"HH:MM"` (24-hour format) defining the
+#'   daily cutoff time used as the center/anchor of the decision window.
+#' @param window_days Integer number of days used to build the time window
+#'   around (or adjacent to) `at_time`. Defaults to `1L`. See Details.
+#' @param tz Time zone used for `Sys.time()` and to interpret `at_time`.
+#'   Defaults to `"Asia/Seoul"`.
+#' @param use_cache A function to call when `cache_timestamp` falls within
+#'   the computed time window (i.e., cache is considered "fresh").
+#' @param refresh A function to call when the cache is missing or when
+#'   `cache_timestamp` lies outside the time window (i.e., cache is
+#'   considered "stale").
+#' @param use_cache_args A named list of arguments to pass to `use_cache()`
+#'   via `do.call()`. Defaults to an empty list.
+#' @param refresh_args A named list of arguments to pass to `refresh()`
+#'   via `do.call()`. Defaults to an empty list.
+#' @param verbose Logical; if `TRUE`, prints diagnostic information about
+#'   the current time, cutoff time, window bounds, and cache timestamp.
+#'
+#' @details
+#' Let `now` be the current time in `tz`, and `cutoff` be today's date at
+#' `at_time` in the same time zone.
+#'
+#' - If `now >= cutoff`, the window is
+#'   `[cutoff, cutoff + window_days days]`.
+#' - If `now < cutoff`, the window is
+#'   `[cutoff - window_days days, cutoff]`.
+#'
+#' The cache is considered "fresh" when:
+#'
+#' \preformatted{
+#'   cache_timestamp > window_start && cache_timestamp < window_end
+#' }
+#'
+#' (strict inequalities, matching typical "recently updated" checks).
+#'
+#' If `cache_timestamp` is `NULL` or `NA`, the function always falls back
+#' to `refresh()`.
+#'
+#' This helper is useful for patterns such as:
+#'
+#' - "If a file was saved between yesterday 15:30 and today 15:30,
+#'    reuse it; otherwise, download new data and overwrite the file."
+#'
+#' @return
+#' The return value of either `use_cache()` or `refresh()`, depending on
+#' whether the cache is within the time window.
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose you compute some expensive result and want to cache it.
+#' cache_path <- "cache/result.rds"
+#'
+#' # Load previous cache timestamp if it exists
+#' ts <- if (file.exists(cache_path)) file.info(cache_path)$mtime else NA
+#'
+#' result <- cache_in_time_window(
+#'   cache_timestamp = ts,
+#'   at_time         = "09:00",   # daily cutoff at 9 AM
+#'   window_days     = 1L,        # accept cache from the last 24 hours
+#'   tz              = "Asia/Seoul",
+#'
+#'   # Function used when cache is fresh
+#'   use_cache = function() readRDS(cache_path),
+#'
+#'   # Function used when cache is stale or missing
+#'   refresh = function() {
+#'     x <- runif(5)        # pretend this is an expensive computation
+#'     saveRDS(x, cache_path)
+#'     x
+#'   },
+#'
+#'   verbose = TRUE
+#' )
+#' }
+#'
+#' @export
+cache_in_time_window <- function(cache_timestamp,
+                                 at_time,
+                                 window_days   = 1L,
+                                 tz            = "Asia/Seoul",
+                                 use_cache,
+                                 refresh,
+                                 use_cache_args = list(),
+                                 refresh_args   = list(),
+                                 verbose        = FALSE) {
+  #------------------------------------------------------------
+  # Validate at_time format: must be "HH:MM"
+  #------------------------------------------------------------
+  assert_time(at_time)
+
+  #------------------------------------------------------------
+  # Normalize cache_timestamp
+  #------------------------------------------------------------
+  if (is.null(cache_timestamp) || (length(cache_timestamp) == 1L && is.na(cache_timestamp))) {
+    has_cache <- FALSE
+  } else if (inherits(cache_timestamp, c("POSIXct", "POSIXlt"))) {
+    has_cache <- TRUE
+  } else {
+    stop("`cache_timestamp` must be POSIXct/POSIXlt, NA, or NULL.", call. = FALSE)
+  }
+
+  #------------------------------------------------------------
+  # Current time and today's cutoff
+  #------------------------------------------------------------
+  now <- as.POSIXlt(Sys.time(), tz = tz)
+
+  hhmm <- strsplit(at_time, ":", fixed = TRUE)[[1L]]
+  hh   <- as.integer(hhmm[1L])
+  mm   <- as.integer(hhmm[2L])
+
+  cutoff_today <- as.POSIXlt(
+    sprintf("%04d-%02d-%02d %02d:%02d:00",
+            now$year + 1900L,
+            now$mon  + 1L,
+            now$mday,
+            hh, mm),
+    tz = tz
+  )
+
+  #------------------------------------------------------------
+  # Build rolling window around the cutoff, direction depends on `now`
+  # - if now >= cutoff: [cutoff, cutoff + window_days]
+  # - if now  < cutoff: [cutoff - window_days, cutoff]
+  #------------------------------------------------------------
+  if (!is.numeric(window_days) || length(window_days) != 1L || window_days <= 0) {
+    stop("`window_days` must be a positive numeric scalar.", call. = FALSE)
+  }
+
+  offset <- as.integer(window_days)
+
+  cutoff_other <- cutoff_today
+  cutoff_other$mday <- cutoff_other$mday + if (now >= cutoff_today) offset else -offset
+
+  window_bounds <- sort(c(cutoff_today, cutoff_other))
+
+  #------------------------------------------------------------
+  # Decide whether cache_timestamp is within the window
+  #------------------------------------------------------------
+  in_window <- FALSE
+  if (has_cache) {
+    # Coerce to POSIXct in the target timezone for comparison
+    cts <- as.POSIXct(cache_timestamp, tz = tz)
+    in_window <- (cts > window_bounds[1L] && cts < window_bounds[2L])
+  }
+
+  #------------------------------------------------------------
+  # Verbose diagnostics
+  #------------------------------------------------------------
+  if (verbose) {
+    cat(sprintf(
+      paste0(
+        "now          : %s\n",
+        "window_start : %s\n",
+        "window_end   : %s\n",
+        "cached_ts    : %s\n",
+        "in_window    : %s\n"
+      ),
+      format(as.POSIXct(now              ), "%Y-%m-%d %H:%M:%S %Z"),
+      format(as.POSIXct(window_bounds[1L]), "%Y-%m-%d %H:%M:%S %Z"),
+      format(as.POSIXct(window_bounds[2L]), "%Y-%m-%d %H:%M:%S %Z"),
+      if (has_cache) format(as.POSIXct(cache_timestamp), "%Y-%m-%d %H:%M:%S %Z") else "NA",
+      in_window
+    ))
+  }
+
+  #------------------------------------------------------------
+  # Dispatch: use_cache() vs refresh()
+  #------------------------------------------------------------
+  if (in_window) {
+    do.call(use_cache, use_cache_args)
+  } else {
+    do.call(refresh,  refresh_args)
+  }
+}
+
 #' Validate an "HH:MM" 24-hour time string
 #'
 #' Checks that the supplied value is a non-missing character scalar
