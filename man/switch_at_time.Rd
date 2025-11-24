@@ -70,8 +70,8 @@ Otherwise, \code{before()} is executed regardless of time.
 When rules are satisfied, the function compares the current time
 with today's cutoff timestamp constructed from \code{at_time}:
 \itemize{
-\item If current time < cutoff → \code{before()}
-\item Otherwise → \code{after()}
+\item If current time < cutoff -> \code{before()}
+\item Otherwise -> \code{after()}
 }
 }
 }

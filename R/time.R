@@ -86,8 +86,8 @@ sec_to_hms <- function(sec) {
 #'    When rules are satisfied, the function compares the current time
 #'    with today's cutoff timestamp constructed from `at_time`:
 #'
-#'    - If current time < cutoff → `before()`
-#'    - Otherwise → `after()`
+#'    - If current time < cutoff -> `before()`
+#'    - Otherwise -> `after()`
 #'
 #'
 #' @examples
@@ -131,7 +131,7 @@ switch_at_time <- function(before,
   #------------------------------------------------------------
   # Validate cutoff format: must be "HH:MM"
   #------------------------------------------------------------
-  .assert_time(at_time)
+  assert_time(at_time)
 
   #------------------------------------------------------------
   # Get current time (POSIXlt for components)
@@ -185,14 +185,51 @@ switch_at_time <- function(before,
   }
 }
 
-.assert_time <- function(x, arg = "at_time") {
+#' Validate an "HH:MM" 24-hour time string
+#'
+#' Checks that the supplied value is a non-missing character scalar
+#' representing a valid 24-hour time in `"HH:MM"` format. Hours must be
+#' within `00–23` and minutes within `00–59`. The function is intended for
+#' validating user-supplied time specifications used by higher-level
+#' scheduling or switching functions.
+#'
+#' @param x A character scalar expected to represent a time in `"HH:MM"`
+#'   24-hour format.
+#'
+#' @details
+#' The function performs two levels of validation:
+#'
+#' * **Type check** — `x` must be a non-missing character vector of length 1.
+#' * **Format check** — The value must match the regular expression
+#'   `^(?:[01]?\\d|2[0-3]):[0-5]\\d$`, ensuring:
+#'   - hours are `0–23` (accepts `"7:05"`, `"07:05"`, `"23:59"`),
+#'   - minutes are `00–59`,
+#'   - a literal colon separates hours and minutes.
+#'
+#' If validation fails, an informative error is thrown. On success,
+#' the input is returned invisibly.
+#'
+#' @return Invisibly returns `x` when validation succeeds.
+#'
+#' @examples
+#' assert_time("09:30")   # OK
+#' assert_time("7:05")    # OK
+#'
+#' \dontrun{
+#' assert_time("25:10")   # Error: invalid hour
+#' assert_time("09:77")   # Error: invalid minute
+#' assert_time(c("09:30","10:00")) # Error: must be scalar
+#' }
+#'
+#' @export
+assert_time <- function(x) {
 
   #------------------------------------------------------------
   # Validate type and length
   #------------------------------------------------------------
   # Must be a non-missing character scalar such as "HH:MM"
   if (!is.character(x) || length(x) != 1L || is.na(x)) {
-    stop(sprintf("`%s` must be a non-missing character scalar like 'HH:MM'.", arg),
+    stop("`x` must be a non-missing character scalar like 'HH:MM'.",
          call. = FALSE)
   }
 
@@ -208,8 +245,8 @@ switch_at_time <- function(before,
   #   [0-5]\\d             -> minutes 00–59
   if (!grepl("^(?:[01]?\\d|2[0-3]):[0-5]\\d$", x)) {
     stop(sprintf(
-      "`%s` must be valid 'HH:MM' 24-hour format (e.g. '09:30', '15:05'). Got: '%s'",
-      arg, x
+      "`x` must be valid 'HH:MM' 24-hour format (e.g. '09:30', '15:05'). Got: '%s'",
+      x
     ), call. = FALSE)
   }
 
