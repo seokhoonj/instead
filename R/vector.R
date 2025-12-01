@@ -115,3 +115,34 @@ seq_list <- function(from, to, by = 1L) {
   # lapply(seq_along(from), function(x) seq(from[x], to[x], by))
   mapply(seq, from, to, MoreArgs = list(by = by), SIMPLIFY = FALSE)
 }
+
+#' Pin selected values to the front of a vector
+#'
+#' Places the specified values `pin` at the beginning of a vector `x`,
+#' ensuring the result is unique and ordered with pinned values first.
+#'
+#' @param x   A character vector.
+#' @param pin A character vector of values that should appear first.
+#'
+#' @return A unique character vector with pinned values placed first.
+#'
+#' @examples
+#' # Order is preserved: pinned first, then remaining values
+#' pin_first(c("c", "a", "b", "a"), c("c", "b"))
+#' # [1] "c" "b" "a"
+#'
+#' @export
+pin_first <- function(x, pin) {
+
+  # Remove NA values
+  x <- x[!is.na(x)]
+
+  # Extract pinned values that actually exist in x
+  pinned <- pin[pin %in% x]
+
+  # Remaining values
+  rest <- setdiff(x, pinned)
+
+  # Combine and ensure uniqueness
+  unique(c(pinned, rest))
+}
