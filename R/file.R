@@ -30,15 +30,14 @@ create_library.R <- function(path = "library.R") {
   if (ans) {
     libs <- c(
       "aus", "auw", "bslib", "cli", "data.table", "devtools", "dplyr", "DT",
-      "ecos", "forcat", "forecast", "ggplot2", "ggshort", "grid", "gridExtra",
+      "ecos", "forcats", "forecast", "ggplot2", "ggshort", "grid", "gridExtra",
       "igraph", "instead", "kisopenapi", "kosis", "lossratio", "lubridate",
-      "navergmail", "offline", "opendart", "openxlsx", "papagor", "plotly",
-      "purrr", "randomForest", "RColorBrewer", "readr", "readxl", "rintrojs",
-      "rlang", "ROSE", "scales", "shiny", "shinyBS", "shinybusy",
-      "shinycssloaders", "shinydashboard", "shinyFiles", "shinyjs",
-      "shinymodules", "shinyWidgets", "slickR", "smotefamily", "stringr",
-      "statmod", "survival", "testthat", "tibble", "tidyr", "usethis",
-      "visNetwork", "writexl", "xgboost", "zoo"
+      "navergmail", "offline", "openxlsx", "papagor", "plotly", "purrr",
+      "randomForest", "RColorBrewer", "readr", "readxl", "rintrojs", "rlang",
+      "ROSE", "scales", "shiny", "shinyBS", "shinybusy", "shinycssloaders",
+      "shinydashboard", "shinyFiles", "shinyjs", "shinymodules", "shinyWidgets",
+      "slickR", "smotefamily", "stringr", "statmod", "survival", "testthat",
+      "tibble", "tidyr", "usethis", "visNetwork", "writexl", "xgboost", "zoo"
     )
     body <- c(sprintf("  library(%s)", libs), "  options(scipen = 14L)")
     code <- c("suppressPackageStartupMessages({", body, "})")
