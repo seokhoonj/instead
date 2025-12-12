@@ -111,6 +111,84 @@ add_band <- function(df, num_var, breaks, interval = 5, right = FALSE,
   env$restore(dt[])
 }
 
+#' Infer band widths from ordered factor levels
+#'
+#' @description
+#' Parse range-style factor levels and return the *width* (interval length) for
+#' each band. This is useful when your bands are created by `add_band()` and
+#' stored as an ordered factor.
+#'
+#' @details
+#' Supported level formats are **strictly**:
+#' \itemize{
+#'   \item `-9` : open start band, interpreted as \eqn{(-\infty, 9]} → width = `Inf`
+#'   \item `10-19` : closed band, interpreted as \eqn{[10, 19]} → width = `19 - 10 + 1 = 10`
+#'   \item `20-` : open end band, interpreted as \eqn{[20, \infty)} → width = `Inf`
+#' }
+#'
+#' Any other format (including spaces like `"10 - 19"`, non-integers, extra dashes,
+#' etc.) will raise an error.
+#'
+#' @param x An **ordered factor** whose levels encode bands in one of the supported
+#'   formats (`-9`, `10-19`, `20-`).
+#'
+#' @return A named numeric vector of the same length as `levels(x)`, where each
+#'   element is the inferred band width. Open-ended bands return `Inf`.
+#'
+#' @examples
+#' x <- ordered(c("-9", "10-19", "20-"), c("-9", "10-19", "20-"))
+#' infer_band_widths(x)
+#' #   -9 10-19   20-
+#' #  Inf    10   Inf
+#'
+#' @export
+infer_band_widths <- function(x) {
+  if (!is.ordered(x))
+    stop("`x` must be an ordered factor.")
+
+  lvls <- levels(x)
+
+  if (length(lvls) == 0L)
+    return(stats::setNames(numeric(0L), character(0L)))
+
+  ok <- grepl(
+    "^(?:-(?:0|[1-9]\\d*)|(?:0|[1-9]\\d*)-(?:0|[1-9]\\d*)|(?:0|[1-9]\\d*)-)$",
+    lvls
+  )
+  if (any(!ok)) {
+    bad <- paste0("'", lvls[!ok], "'", collapse = ", ")
+    stop(
+      "Invalid level format: ", bad,
+      ". Allowed formats: -9, 10-19, 20-"
+    )
+  }
+
+  widths <- vapply(lvls, function(s) {
+    # Open start
+    if (grepl("^-(?:0|[1-9]\\d*)$", s)) {
+      return(Inf)
+    }
+
+    # Open end
+    if (grepl("^(?:0|[1-9]\\d*)-$", s)) {
+      return(Inf)
+    }
+
+    # Closed range
+    parts <- strsplit(s, "-", fixed = TRUE)[[1L]]
+    start <- as.numeric(parts[1L])
+    end   <- as.numeric(parts[2L])
+
+    if (end < start)
+      stop("Invalid range (end < start): '", s, "'.")
+
+    end - start + 1
+  }, numeric(1L))
+
+  names(widths) <- lvls
+  widths
+}
+
 #' Deprecated: set_band()
 #'
 #' @description
