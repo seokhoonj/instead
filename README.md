@@ -1,6 +1,6 @@
 # instead
 
-![](man/figures/instead-hex.png){width="30%"}
+<img src="man/figures/instead-hex.png" width="200"/>
 
 **`instead`** is a functional toolkit for efficient and reproducible programming. It provides high-performance utilities for vectors and matrices, memory-aware transformations for `data.table`, and advanced metaprogramming tools such as argument capture and call tracing (e.g., `capture_names()`, `trace_arg_expr()`).
 
