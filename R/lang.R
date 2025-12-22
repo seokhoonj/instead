@@ -14,6 +14,7 @@
 #' }
 #'
 #' @export
+#' @noRd
 is_japanese <- function(x) {
   # pattern <- intToUtf8(c(91, 19968, 45, 40879, 12353, 45, 12435, 12449, 45,
   #                        12531, 93))
@@ -53,6 +54,7 @@ is_japanese <- function(x) {
 #'
 #' @name get_japanese_cols
 #' @export
+#' @noRd
 get_japanese_cols <- function(x) {
   japanese_cols <- vapply(x, function(s) any(is_japanese(s)), logical(1L))
   names(japanese_cols)[japanese_cols]
@@ -73,6 +75,7 @@ get_japanese_cols <- function(x) {
 #' }
 #'
 #' @export
+#' @noRd
 zen_to_han <- function(x) {
   if (Encoding(x[1]) != "UTF-8")
     x <- iconv(x, from = "", to = "UTF-8")
@@ -114,6 +117,7 @@ zen_to_han <- function(x) {
 #' }
 #'
 #' @export
+#' @noRd
 replace_zen_to_han <- function(df) {
   assert_class(df, "data.frame")
   env <- ensure_dt_env(df)

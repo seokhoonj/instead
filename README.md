@@ -1,6 +1,6 @@
 # instead
 
-<img src="man/figures/instead-hex.png" width="200"/>
+![](man/figures/instead-hex.png){width="30%"}
 
 **`instead`** is a functional toolkit for efficient and reproducible programming. It provides high-performance utilities for vectors and matrices, memory-aware transformations for `data.table`, and advanced metaprogramming tools such as argument capture and call tracing (e.g., `capture_names()`, `trace_arg_expr()`).
 
@@ -491,7 +491,7 @@ find_in_files("./R", "as.numeric")
 find_in_files("./src", "malloc", ignore_case = FALSE, fixed = TRUE)
 ```
 
-<img src="man/figures/readme-find-in-files.png"/>
+![](man/figures/readme-find-in-files.png)
 
 ### 2) `replace_in_files()`
 
@@ -513,7 +513,7 @@ replace_in_files("./R", "as.integer", "as.numeric", dry_run = TRUE)
 replace_in_files("./R", "as.integer", "as.numeric", dry_run = FALSE)
 ```
 
-<img src="man/figures/readme-replace-in-files.png"/>
+![](man/figures/readme-replace-in-files.png)
 
 ### 3) `ensure_dt_env()`
 

@@ -25,7 +25,7 @@ compute_sample_size(
 \itemize{
 \item \code{"wald"} uses the closed-form expression
 \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
-\item \code{"wilson"} iteratively increases \code{n} until the Wilson half-width ≤ \eqn{r \cdot p}.
+\item \code{"wilson"} iteratively increases \code{n} until the Wilson half-width <= \eqn{r \cdot p}.
 }}
 
 \item{ceiling_out}{Logical; if \code{TRUE} (default), rounds sample size up to the nearest integer.}

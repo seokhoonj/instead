@@ -201,7 +201,7 @@ random_sampling <- function(x, size, replace = TRUE, prob = NULL, seed = NULL) {
 #' @param method One of `c("wald", "wilson")`.
 #'   - `"wald"` uses the closed-form expression
 #'     \deqn{n = \frac{z^2 (1 - p)}{r^2 p}}
-#'   - `"wilson"` iteratively increases `n` until the Wilson half-width ≤ \eqn{r \cdot p}.
+#'   - `"wilson"` iteratively increases `n` until the Wilson half-width <= \eqn{r \cdot p}.
 #' @param ceiling_out Logical; if `TRUE` (default), rounds sample size up to the nearest integer.
 #' @param n_upper Maximum search bound for the Wilson method (default: `1e7`).
 #' @param as_dt Logical; if `TRUE`, returns a `data.table` with all parameter
