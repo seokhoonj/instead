@@ -57,7 +57,9 @@ count_stay <- function(df, id_var, group_var, from_var, to_var) {
   id   <- dt[, .SD, .SDcols = id_group_var]
   from <- dt[[from_var]]
   to   <- dt[[to_var]]
-  if (any(to - from < 0))
+
+  invalid <- !is.na(from) & !is.na(to) & (to < from)
+  if (any(invalid))
     stop("Some `from_var` are greater than `to_var`.")
 
   stay <- .Call(CountStay, id, from, to)
