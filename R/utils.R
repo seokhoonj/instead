@@ -29,6 +29,33 @@ normalize_dots <- function(...) {
   dots
 }
 
+#' Drop NULL elements from a list
+#'
+#' Removes all `NULL` elements from a list while preserving
+#' the order and names of the remaining elements.
+#'
+#' This is useful for cleaning normalized `...` arguments
+#' before forwarding them (e.g., with `!!!`).
+#'
+#' @param x A list.
+#'
+#' @return A list with all `NULL` elements removed.
+#'
+#' @examples
+#' \donttest{
+#' drop_null(list(a = 1, b = NULL, c = 3))
+#'
+#' # Typical usage with normalize_dots()
+#' dots <- normalize_dots(a = 1, b = NULL, c = 3)
+#' drop_null(dots)
+#' }
+#'
+#' @export
+drop_null <- function(x) {
+  stopifnot(is.list(x))
+  x[!vapply(x, is.null, logical(1L))]
+}
+
 #' Prepend class(es) without duplication
 #'
 #' Ensure one or more class names appear at the front of an object's class
