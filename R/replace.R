@@ -481,6 +481,84 @@ rm_cols <- function(DT, cols) {
   invisible(DT[])
 }
 
+#' Apply a Function to Selected Columns (by Reference)
+#'
+#' Applies a function to selected columns of a `data.table`
+#' by reference.
+#'
+#' @param dt A `data.table`.
+#' @param cols Columns to transform. Supports tidy-style unquoted
+#'   column selection handled by `instead::capture_names()`.
+#' @param fun A function (or function name as character) to apply
+#'   to each selected column.
+#'
+#' @return The modified `data.table` (modified by reference).
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' dt <- as.data.table(iris)
+#'
+#' set_col_map(dt, c(Sepal.Length, Sepal.Width), as.character)
+#' set_col_map(dt, Species, "as.character")
+#' }
+#'
+#' @export
+set_col_map <- function(dt, cols, fun) {
+  instead::assert_class(dt, "data.table")
+
+  if (is.character(fun)) fun <- match.fun(fun)
+  if (!is.function(fun))
+    stop("`fun` must be a function (or a function name).", call. = FALSE)
+
+  cols <- instead::capture_names(dt, !!rlang::enquo(cols))
+
+  dt[, (cols) := lapply(.SD, fun), .SDcols = cols]
+  dt
+}
+
+#' Apply a Function to Columns Matching a Condition
+#'
+#' Applies a function to all columns of a `data.table`
+#' that satisfy a given condition function.
+#'
+#' @param dt A `data.table`.
+#' @param where A function returning TRUE/FALSE when applied to a column
+#'   (e.g., `is.character`, `is.numeric`).
+#' @param fun A function (or function name as character) to apply
+#'   to selected columns.
+#'
+#' @return The modified `data.table` (modified by reference).
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#' dt <- as.data.table(iris)
+#'
+#' set_col_if(dt, where = is.character, fun = factor)
+#' set_col_if(dt, where = is.numeric, fun = log)
+#' }
+#'
+#' @export
+set_col_if <- function(dt, where, fun) {
+  instead::assert_class(dt, "data.table")
+
+  if (!is.function(where))
+    stop("`where` must be a function.", call. = FALSE)
+
+  if (is.character(fun)) fun <- match.fun(fun)
+  if (!is.function(fun))
+    stop("`fun` must be a function (or a function name).", call. = FALSE)
+
+  cols <- names(dt)[vapply(dt, where, logical(1L))]
+
+  if (!length(cols))
+    return(dt)
+
+  dt[, (cols) := lapply(.SD, fun), .SDcols = cols]
+  dt
+}
+
 
 # Internal helper functions -----------------------------------------------
 
