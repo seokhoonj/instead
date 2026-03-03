@@ -7,32 +7,32 @@
 ensure_dt_env(x)
 }
 \arguments{
-\item{x}{A data.table, data.frame, or tibble.}
+\item{x}{A data.frame-like object: data.table, data.frame, or tibble.}
 }
 \value{
-A list with three components (an "execution environment"):
-\item{dt}{A data.table object (safe to modify).}
-\item{restore}{A function that restores \code{dt} to the original input class.}
-\item{inplace}{Logical flag: \code{TRUE} if input was already a data.table
-(modified in place), \code{FALSE} otherwise.}
+A list with three components:
+\item{dt}{A data.table (safe to modify).}
+\item{restore}{A function that restores a data.table result (typically \code{dt})
+to the original input class and re-attaches any extra S3 classes.}
+\item{inplace}{Logical: \code{TRUE} if input was already a data.table (modified in place),
+\code{FALSE} otherwise.}
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
-Provides a lightweight "environment object" for safely using
-data.table operations, regardless of whether the input is a
-base data.frame, a tibble, or already a data.table.
+Provides a lightweight execution-environment \strong{list} for safely using
+data.table operations, regardless of whether the input is a base
+data.frame, a tibble, or already a data.table.
 \itemize{
-\item If the input is a data.table, it is returned as-is and can
-be modified in place.
-\item If the input is a data.frame or tibble, a \strong{copy} is made,
-converted to a data.table, and returned. A \code{restore()} function
-is provided to convert the result back to the original class.
+\item If the input is a data.table, it is returned as-is and can be modified
+in place.
+\item If the input is a data.frame or tibble, a \strong{copy} is made, converted to
+a data.table, and returned. A \code{restore()} function is provided to convert
+a result back to the original class (and to re-attach any extra S3 classes).
 }
 
-This helper is intended for package functions that rely on
-in-place data.table semantics while respecting the user's
-original data type.
+This helper is intended for package functions that rely on in-place
+data.table semantics while respecting the user's original data type.
 }
 \examples{
 \donttest{
