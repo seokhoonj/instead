@@ -264,6 +264,7 @@ save_data_wb <- function(data,
     # -> For each table, calculate the required column widths,
     #    and then take the maximum across all tables that start at the same column.
     #    This ensures a consistent width across stacked tables aligned to the same starting col.
+
     for (i in seq_along(data)) {
       start_col <- starts[[i]][2L]
       cw <- .get_col_widths(data[[i]], row_names = row_names)
@@ -325,6 +326,26 @@ save_data_wb <- function(data,
       widths        = widths,
       num_fmt       = num_fmt
     )
+
+    # record written range
+    ncol_written <- ncol(data[[i]]) + if (row_names) 1L else 0L
+    end_row <- start_row + nrow(data[[i]])
+    end_col <- start_col + ncol_written - 1L
+
+    range <- list(
+      sheet      = sheet,
+      start_cell = c(start_row, start_col),
+      end_cell   = c(end_row, end_col)
+    )
+
+    # store last range
+    attr(wb, "instead.last_range") <- range
+
+    # append to range history
+    ranges <- attr(wb, "instead.ranges")
+    if (is.null(ranges)) ranges <- list()
+    ranges[[length(ranges) + 1L]] <- range
+    attr(wb, "instead.ranges") <- ranges
 
     # auto width
     if (auto_width) {
@@ -469,7 +490,17 @@ save_data_wb_split <- function(data,
   if (!is.numeric(rc) || length(rc) != 2L)
     stop("`rc` must be numeric length-2: c(row, col).", call. = FALSE)
   rc <- as.integer(rc)
-  start_row0 <- rc[1L]; start_col0 <- rc[2L]
+  start_row0 <- rc[1L]
+  start_col0 <- rc[2L]
+
+  # range history (attributes)
+  ranges <- attr(wb, "instead.ranges")
+  if (is.null(ranges))
+    ranges <- list()
+
+  last_by_sheet <- attr(wb, "instead.last_range_by_sheet")
+  if (is.null(last_by_sheet) || !is.list(last_by_sheet))
+    last_by_sheet <- list()
 
   # styles
   # titles are written via write_cell(); write_data() handles table styling
@@ -508,6 +539,24 @@ save_data_wb_split <- function(data,
       widths        = widths,
       num_fmt       = num_fmt
     )
+
+    # record range
+    ncol_written <- ncol(data[[i]]) + if (row_names) 1L else 0L
+    end_row <- start_row + nrow(data[[i]])
+    end_col <- start_col + ncol_written - 1L
+
+    range <- list(
+      sheet      = sheet,
+      start_cell = c(start_row, start_col),
+      end_cell   = c(end_row, end_col)
+    )
+
+    attr(wb, "instead.last_range") <- range
+    last_by_sheet[[sheet]] <- range
+    ranges[[length(ranges) + 1L]] <- range
+
+    attr(wb, "instead.last_range_by_sheet") <- last_by_sheet
+    attr(wb, "instead.ranges") <- ranges
 
     # auto width (data columns only)
     if (auto_width) {
@@ -2073,6 +2122,79 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
     }
   }
   # openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
+}
+
+#' Get the next cell below the last written table
+#'
+#' Computes the next top-left cell position **below** the most recently written
+#' table recorded by [save_data_wb()]. The function reads layout metadata stored
+#' in `attr(wb, "instead.last_range")`.
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param row_spacer Integer (>= 0). Number of blank rows to leave between the
+#'   previous table and the next table. Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @details
+#' The function uses the `end_cell` recorded in
+#' `attr(wb, "instead.last_range")` and returns:
+#'
+#' `c(end_row + 1 + row_spacer, start_col)`
+#'
+#' This is typically used to stack tables vertically.
+#'
+#' @seealso [save_data_wb()], [get_next_cell_right()]
+#'
+#' @export
+get_next_cell_down <- function(wb, row_spacer = 2L) {
+  r <- attr(wb, "instead.last_range")
+
+  if (is.null(r))
+    stop(
+      "No layout range recorded. ",
+      "Write a table using `save_data_wb()` first.",
+      call. = FALSE
+    )
+
+  c(r$end_cell[1L] + 1L + row_spacer, r$start_cell[2L])
+}
+
+#' Get the next cell to the right of the last written table
+#'
+#' Computes the next top-left cell position **to the right** of the most
+#' recently written table recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param col_spacer Integer (>= 0). Number of blank columns between tables.
+#'   Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @details
+#' The function uses the `end_cell` recorded in
+#' `attr(wb, "instead.last_range")` and returns:
+#'
+#' `c(start_row, end_col + 1 + col_spacer)`
+#'
+#' This is typically used to place tables horizontally.
+#'
+#' @seealso [save_data_wb()], [get_next_cell_down()]
+#'
+#' @export
+get_next_cell_right <- function(wb, col_spacer = 2L) {
+  r <- attr(wb, "instead.last_range")
+
+  if (is.null(r))
+    stop(
+      "No layout range recorded. ",
+      "Write a table using `save_data_wb()` first.",
+      call. = FALSE
+    )
+
+  c(r$start_cell[1L], r$end_cell[2L] + 1L + col_spacer)
 }
 
 # Internal helper functions -----------------------------------------------
