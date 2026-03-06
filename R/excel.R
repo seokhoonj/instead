@@ -1323,6 +1323,7 @@ save_data_xlsx <- function(data, file, sheet = "Data",
   )
 
   # save to disk
+  check_sheet_names(openxlsx::sheets(wb))
   openxlsx::saveWorkbook(wb, file = file, overwrite = overwrite)
   invisible(file)
 }
@@ -1770,11 +1771,11 @@ save_image_xlsx_split <- function(image, file,
 
 # Helper functions --------------------------------------------------------
 
-#' Validate Excel sheet names
+#' Check Excel sheet names
 #'
 #' Checks whether sheet names are valid for Excel workbooks.
 #'
-#' Rules checked:
+#' The following rules are enforced:
 #' - each name must be a character string
 #' - names must not be `NA`
 #' - names must not be empty
@@ -1788,15 +1789,15 @@ save_image_xlsx_split <- function(image, file,
 #' @return Invisibly returns `x` if all sheet names are valid.
 #'
 #' @examples
-#' validate_sheet_names(c("Plans", "Sheet1"))
+#' check_sheet_names(c("Plans", "Sheet1"))
 #'
 #' \dontrun{
-#' validate_sheet_names(c("Plans", "Bad[Name"))
-#' validate_sheet_names(c("Plans", "Plans"))
+#' check_sheet_names(c("Plans", "Bad[Name"))
+#' check_sheet_names(c("Plans", "Plans"))
 #' }
 #'
 #' @export
-validate_sheet_names <- function(x) {
+check_sheet_names <- function(x) {
 
   if (!is.character(x))
     stop("`x` must be a character vector.", call. = FALSE)
