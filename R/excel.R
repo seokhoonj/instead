@@ -1770,6 +1770,22 @@ save_image_xlsx_split <- function(image, file,
 
 # Helper functions --------------------------------------------------------
 
+#' Check that a file does not already exist
+#'
+#' Stops if `file` already exists and `overwrite = FALSE`.
+#'
+#' @param file File path.
+#' @param overwrite Logical; if `TRUE`, existing files are allowed.
+#'
+#' @return Invisibly returns `file`.
+#' @keywords internal
+check_file_overwrite <- function(file, overwrite = FALSE) {
+  if (!overwrite && file.exists(file)) {
+    stop("File already exists!", call. = FALSE)
+  }
+  invisible(file)
+}
+
 #' Write a value into a single cell of an Excel worksheet
 #'
 #' A thin wrapper around [openxlsx::writeData()] with styling support.
