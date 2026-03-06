@@ -17,4 +17,3 @@ Invisibly returns \code{file}.
 \description{
 Stops if \code{file} already exists and \code{overwrite = FALSE}.
 }
-\keyword{internal}

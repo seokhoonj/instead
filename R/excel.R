@@ -1778,7 +1778,8 @@ save_image_xlsx_split <- function(image, file,
 #' @param overwrite Logical; if `TRUE`, existing files are allowed.
 #'
 #' @return Invisibly returns `file`.
-#' @keywords internal
+#'
+#' @export
 check_file_overwrite <- function(file, overwrite = FALSE) {
   if (!overwrite && file.exists(file)) {
     stop("File already exists!", call. = FALSE)
