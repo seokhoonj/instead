@@ -1770,6 +1770,115 @@ save_image_xlsx_split <- function(image, file,
 
 # Helper functions --------------------------------------------------------
 
+#' Validate Excel sheet names
+#'
+#' Checks whether sheet names are valid for Excel workbooks.
+#'
+#' Rules checked:
+#' - each name must be a character string
+#' - names must not be `NA`
+#' - names must not be empty
+#' - names must not exceed 31 characters
+#' - names must not contain any of `:`, `\\`, `/`, `?`, `*`, `[`, `]`
+#' - names must not start or end with an apostrophe (`'`)
+#' - names must be unique
+#'
+#' @param x A character vector of sheet names.
+#'
+#' @return Invisibly returns `x` if all sheet names are valid.
+#'
+#' @examples
+#' validate_sheet_names(c("Plans", "Sheet1"))
+#'
+#' \dontrun{
+#' validate_sheet_names(c("Plans", "Bad[Name"))
+#' validate_sheet_names(c("Plans", "Plans"))
+#' }
+#'
+#' @export
+validate_sheet_names <- function(x) {
+
+  if (!is.character(x))
+    stop("`x` must be a character vector.", call. = FALSE)
+
+  problems <- character()
+
+  bad_na    <- is.na(x)
+  bad_empty <- !bad_na & x == ""
+  bad_len   <- !bad_na & nchar(x) > 31L
+  bad_char  <- !bad_na & grepl("[:/\\\\?*\\[\\]]", x, perl = TRUE)
+  bad_quote <- !bad_na & grepl("^'|'$", x, perl = TRUE)
+  bad_dup   <- duplicated(x) | duplicated(x, fromLast = TRUE)
+
+  if (any(bad_na)) {
+    problems <- c(
+      problems,
+      sprintf("NA sheet name(s) at position(s): %s",
+              paste(which(bad_na), collapse = ", "))
+    )
+  }
+
+  if (any(bad_empty)) {
+    problems <- c(
+      problems,
+      sprintf("Empty sheet name(s) at position(s): %s",
+              paste(which(bad_empty), collapse = ", "))
+    )
+  }
+
+  if (any(bad_len)) {
+    problems <- c(
+      problems,
+      paste0(
+        "Sheet name(s) longer than 31 characters: ",
+        paste(sprintf("'%s'", unique(x[bad_len])), collapse = ", ")
+      )
+    )
+  }
+
+  if (any(bad_char)) {
+    problems <- c(
+      problems,
+      paste0(
+        "Sheet name(s) containing invalid character(s) (: \\ / ? * [ ]): ",
+        paste(sprintf("'%s'", unique(x[bad_char])), collapse = ", ")
+      )
+    )
+  }
+
+  if (any(bad_quote)) {
+    problems <- c(
+      problems,
+      paste0(
+        "Sheet name(s) starting or ending with apostrophe: ",
+        paste(sprintf("'%s'", unique(x[bad_quote])), collapse = ", ")
+      )
+    )
+  }
+
+  if (any(bad_dup)) {
+    problems <- c(
+      problems,
+      paste0(
+        "Duplicated sheet name(s): ",
+        paste(sprintf("'%s'", unique(x[bad_dup])), collapse = ", ")
+      )
+    )
+  }
+
+  if (length(problems)) {
+    stop(
+      paste(
+        c("Invalid Excel sheet name(s):", paste0("- ", problems)),
+        collapse = "\n"
+      ),
+      call. = FALSE
+    )
+  }
+
+  invisible(x)
+}
+
 #' Check that a file does not already exist
 #'
 #' Stops if `file` already exists and `overwrite = FALSE`.
