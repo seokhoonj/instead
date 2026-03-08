@@ -1769,7 +1769,7 @@ save_image_xlsx_split <- function(image, file,
   invisible(file)
 }
 
-# Save navigation ---------------------------------------------------------
+# Save navigation sheet ---------------------------------------------------
 
 #' Create an index sheet with hyperlinks to workbook sheets
 #'
@@ -1795,7 +1795,7 @@ save_image_xlsx_split <- function(image, file,
 #'   cell for the index table written on `index_sheet`.
 #' @param rc_target Integer vector `c(row, col)` specifying the cell where
 #'   the back-link to the index sheet will be written on each target sheet.
-#' @param tab_colour Colour used for the index sheet tab. Default `"#FFD966"`.
+#' @param tab_colour Colour used for the index sheet tab. Default `"#FFFF00"`.
 #'
 #' @return Invisibly returns the modified `Workbook`.
 #'
@@ -1857,7 +1857,7 @@ save_index_sheet_wb <- function(wb,
   for (i in seq_along(target_sheets)) {
     target_sheet <- target_sheets[i]
     flink <- sprintf('HYPERLINK("#\'%s\'!A1","%s")', target_sheet, target_sheet)
-    blink <- sprintf('HYPERLINK("#\'%s\'!A1","← %s")', index_sheet, index_sheet)
+    blink <- sprintf('HYPERLINK("#\'%s\'!A1","\u2190 %s")', index_sheet, index_sheet)
 
     # forward link
     instead::write_formula(
@@ -1871,7 +1871,7 @@ save_index_sheet_wb <- function(wb,
     instead::write_formula(
       wb = wb,
       sheet = target_sheet,
-      x = sprintf('HYPERLINK("#\'%s\'!A1","← %s")', index_sheet, index_sheet),
+      x = sprintf('HYPERLINK("#\'%s\'!A1","\u2190 %s")', index_sheet, index_sheet),
       rc = rc_target
     )
   }

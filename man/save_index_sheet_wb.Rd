@@ -27,7 +27,7 @@ cell for the index table written on \code{index_sheet}.}
 \item{rc_target}{Integer vector \code{c(row, col)} specifying the cell where
 the back-link to the index sheet will be written on each target sheet.}
 
-\item{tab_colour}{Colour used for the index sheet tab. Default \code{"#FFD966"}.}
+\item{tab_colour}{Colour used for the index sheet tab. Default \code{"#FFFF00"}.}
 }
 \value{
 Invisibly returns the modified \code{Workbook}.
