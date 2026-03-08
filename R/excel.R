@@ -1774,7 +1774,7 @@ save_image_xlsx_split <- function(image, file,
 #' Reorder workbook sheets
 #'
 #' Reorders sheets in an `openxlsx` workbook using the current visible
-#' sheet order (`wb$sheet_names[wb$sheetOrder]`).
+#' sheet order.
 #'
 #' Sheet names in `sheets` are moved together:
 #' - before `before`, or
@@ -1790,7 +1790,20 @@ save_image_xlsx_split <- function(image, file,
 #' @param verbose Logical. If `TRUE`, print the final visible sheet order.
 #'
 #' @return Invisibly returns the modified workbook.
-#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' wb <- openxlsx::createWorkbook()
+#' openxlsx::addWorksheet(wb, "A")
+#' openxlsx::addWorksheet(wb, "B")
+#' openxlsx::addWorksheet(wb, "C")
+#'
+#' reorder_sheets(wb, "C")
+#' reorder_sheets(wb, "A", after = "C")
+#' reorder_sheets(wb, c("A", "B"), before = 1)
+#' }
+#'
+#' @export
 reorder_sheets <- function(wb, sheets, before = NULL, after = NULL,
                            verbose = FALSE) {
   if (!inherits(wb, "Workbook")) {
@@ -1979,6 +1992,33 @@ check_file_overwrite <- function(file, overwrite = FALSE) {
   if (!overwrite && file.exists(file)) {
     stop("File already exists!", call. = FALSE)
   }
+  invisible(file)
+}
+
+#' Recreate a file if it already exists
+#'
+#' If `file` exists, asks for confirmation before deleting it.
+#'
+#' @param file File path.
+#'
+#' @return Invisibly returns `file`.
+#'
+#' @export
+check_file_recreate <- function(file) {
+  if (!file.exists(file)) {
+    return(invisible(file))
+  }
+
+  ans <- readline(
+    sprintf("File '%s' already exists. Delete and recreate? [y/N]: ", file)
+  )
+
+  if (tolower(ans) %in% c("y", "yes")) {
+    file.remove(file)
+  } else {
+    stop("File recreation cancelled.", call. = FALSE)
+  }
+
   invisible(file)
 }
 

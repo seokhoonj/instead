@@ -24,7 +24,7 @@ Invisibly returns the modified workbook.
 }
 \description{
 Reorders sheets in an \code{openxlsx} workbook using the current visible
-sheet order (\code{wb$sheet_names[wb$sheetOrder]}).
+sheet order.
 }
 \details{
 Sheet names in \code{sheets} are moved together:
@@ -34,4 +34,16 @@ Sheet names in \code{sheets} are moved together:
 \item to the front if neither is supplied.
 }
 }
-\keyword{internal}
+\examples{
+\dontrun{
+wb <- openxlsx::createWorkbook()
+openxlsx::addWorksheet(wb, "A")
+openxlsx::addWorksheet(wb, "B")
+openxlsx::addWorksheet(wb, "C")
+
+reorder_sheets(wb, "C")
+reorder_sheets(wb, "A", after = "C")
+reorder_sheets(wb, c("A", "B"), before = 1)
+}
+
+}
