@@ -4,14 +4,26 @@
 \alias{check_file_recreate}
 \title{Recreate a file if it already exists}
 \usage{
-check_file_recreate(file)
+check_file_recreate(file, recreate = FALSE)
 }
 \arguments{
-\item{file}{File path.}
+\item{file}{Character; file path.}
+
+\item{recreate}{Logical; if \code{TRUE}, an existing file may be deleted
+and recreated after user confirmation.}
 }
 \value{
 Invisibly returns \code{file}.
 }
 \description{
-If \code{file} exists, asks for confirmation before deleting it.
+Checks whether a file already exists and optionally recreates it.
+If \code{recreate = TRUE} and the file exists, the user is asked for
+confirmation before the file is deleted. If the user declines,
+an error is thrown.
+}
+\examples{
+\dontrun{
+check_file_recreate("output.xlsx", recreate = TRUE)
+}
+
 }

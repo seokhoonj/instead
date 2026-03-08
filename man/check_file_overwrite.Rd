@@ -2,18 +2,25 @@
 % Please edit documentation in R/excel.R
 \name{check_file_overwrite}
 \alias{check_file_overwrite}
-\title{Check that a file does not already exist}
+\title{Check whether a file may be overwritten}
 \usage{
 check_file_overwrite(file, overwrite = FALSE)
 }
 \arguments{
-\item{file}{File path.}
+\item{file}{Character; file path.}
 
-\item{overwrite}{Logical; if \code{TRUE}, existing files are allowed.}
+\item{overwrite}{Logical; if \code{TRUE}, existing files may be overwritten.}
 }
 \value{
 Invisibly returns \code{file}.
 }
 \description{
-Stops if \code{file} already exists and \code{overwrite = FALSE}.
+Checks whether a file already exists and whether overwriting is allowed.
+If \code{overwrite = FALSE} and the file exists, an error is thrown.
+}
+\examples{
+\dontrun{
+check_file_overwrite("output.xlsx", overwrite = TRUE)
+}
+
 }

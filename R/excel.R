@@ -2089,14 +2089,20 @@ check_sheet_names <- function(x) {
   invisible(x)
 }
 
-#' Check that a file does not already exist
+#' Check whether a file may be overwritten
 #'
-#' Stops if `file` already exists and `overwrite = FALSE`.
+#' Checks whether a file already exists and whether overwriting is allowed.
+#' If `overwrite = FALSE` and the file exists, an error is thrown.
 #'
-#' @param file File path.
-#' @param overwrite Logical; if `TRUE`, existing files are allowed.
+#' @param file Character; file path.
+#' @param overwrite Logical; if `TRUE`, existing files may be overwritten.
 #'
 #' @return Invisibly returns `file`.
+#'
+#' @examples
+#' \dontrun{
+#' check_file_overwrite("output.xlsx", overwrite = TRUE)
+#' }
 #'
 #' @export
 check_file_overwrite <- function(file, overwrite = FALSE) {
@@ -2108,27 +2114,41 @@ check_file_overwrite <- function(file, overwrite = FALSE) {
 
 #' Recreate a file if it already exists
 #'
-#' If `file` exists, asks for confirmation before deleting it.
+#' Checks whether a file already exists and optionally recreates it.
+#' If `recreate = TRUE` and the file exists, the user is asked for
+#' confirmation before the file is deleted. If the user declines,
+#' an error is thrown.
 #'
-#' @param file File path.
+#' @param file Character; file path.
+#' @param recreate Logical; if `TRUE`, an existing file may be deleted
+#'   and recreated after user confirmation.
 #'
 #' @return Invisibly returns `file`.
 #'
+#' @examples
+#' \dontrun{
+#' check_file_recreate("output.xlsx", recreate = TRUE)
+#' }
+#'
 #' @export
-check_file_recreate <- function(file) {
-  if (!file.exists(file)) {
+check_file_recreate <- function(file, recreate = FALSE) {
+  if (!recreate)
     return(invisible(file))
-  }
+
+  if (!file.exists(file))
+    return(invisible(file))
 
   ans <- readline(
-    sprintf("File '%s' already exists. Delete and recreate? [y/N]: ", file)
+    sprintf(
+      "File '%s' already exists and will be permanently deleted. Continue? [y/N]: ",
+      file
+    )
   )
 
-  if (tolower(ans) %in% c("y", "yes")) {
-    file.remove(file)
-  } else {
+  if (!tolower(ans) %in% c("y", "yes"))
     stop("File recreation cancelled.", call. = FALSE)
-  }
+
+  file.remove(file)
 
   invisible(file)
 }
