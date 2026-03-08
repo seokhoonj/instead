@@ -1771,6 +1771,91 @@ save_image_xlsx_split <- function(image, file,
 
 # Helper functions --------------------------------------------------------
 
+#' Reorder workbook sheets
+#'
+#' Reorders sheets in an `openxlsx` workbook using the current visible
+#' sheet order (`wb$sheet_names[wb$sheetOrder]`).
+#'
+#' Sheet names in `sheets` are moved together:
+#' - before `before`, or
+#' - after `after`, or
+#' - to the front if neither is supplied.
+#'
+#' @param wb An `openxlsx` `Workbook`.
+#' @param sheets Character vector of sheet names to move.
+#' @param before Optional single sheet name or visible position.
+#'   Move `sheets` before this sheet.
+#' @param after Optional single sheet name or visible position.
+#'   Move `sheets` after this sheet.
+#' @param verbose Logical. If `TRUE`, print the final visible sheet order.
+#'
+#' @return Invisibly returns the modified workbook.
+#' @keywords internal
+reorder_sheets <- function(wb, sheets, before = NULL, after = NULL,
+                           verbose = FALSE) {
+  if (!inherits(wb, "Workbook")) {
+    stop("`wb` must be an openxlsx Workbook.", call. = FALSE)
+  }
+
+  if (!is.character(sheets) || !length(sheets)) {
+    stop("`sheets` must be a non-empty character vector.", call. = FALSE)
+  }
+
+  if (anyDuplicated(sheets)) {
+    stop("`sheets` must not contain duplicates.", call. = FALSE)
+  }
+
+  if (!is.null(before) && !is.null(after)) {
+    stop("Provide either `before` or `after`, not both.", call. = FALSE)
+  }
+
+  if (length(before) > 1L || length(after) > 1L) {
+    stop("`before` / `after` must be a single sheet name or position.",
+         call. = FALSE)
+  }
+
+  sheet_ids <- wb$sheet_names
+  current   <- sheet_ids[wb$sheetOrder]
+
+  if (!all(sheets %in% sheet_ids)) {
+    bad <- sheets[!sheets %in% sheet_ids]
+    stop(
+      sprintf("Unknown sheet name(s): %s", paste(bad, collapse = ", ")),
+      call. = FALSE
+    )
+  }
+
+  before <- .resolve_sheet(before, current, "before")
+  after  <- .resolve_sheet(after , current, "after")
+
+  if (!is.null(before) && before %in% sheets) {
+    stop("`before` must not be one of `sheets`.", call. = FALSE)
+  }
+
+  if (!is.null(after) && after %in% sheets) {
+    stop("`after` must not be one of `sheets`.", call. = FALSE)
+  }
+
+  rest <- setdiff(current, sheets)
+
+  new_current <- if (!is.null(before)) {
+    append(rest, sheets, after = match(before, rest) - 1L)
+  } else if (!is.null(after)) {
+    append(rest, sheets, after = match(after, rest))
+  } else {
+    c(sheets, rest)
+  }
+
+  wb$sheetOrder <- match(new_current, sheet_ids)
+
+  if (isTRUE(verbose)) {
+    cli::cli_rule("Sheet order")
+    cli::cli_ol(new_current)
+  }
+
+  invisible(wb)
+}
+
 #' Check Excel sheet names
 #'
 #' Checks whether sheet names are valid for Excel workbooks.
@@ -2325,6 +2410,47 @@ get_next_cell_right <- function(wb, col_spacer = 2L) {
 }
 
 # Internal helper functions -----------------------------------------------
+
+#' Resolve a sheet reference to a sheet name (internal)
+#'
+#' Converts a sheet reference (name or visible position) to a sheet name
+#' using the current visible sheet order.
+#'
+#' @param x A sheet name, a visible sheet position, or `NULL`.
+#' @param current Character vector of sheet names in current visible order.
+#' @param arg Argument name used in error messages.
+#'
+#' @return A sheet name or `NULL`.
+#'
+#' @keywords internal
+.resolve_sheet <- function(x, current, arg) {
+  if (is.null(x)) return(NULL)
+
+  if (is.character(x)) {
+    if (!x %in% current) {
+      stop(sprintf("Unknown `%s` sheet: %s", arg, x), call. = FALSE)
+    }
+    return(x)
+  }
+
+  if (is.numeric(x)) {
+    x <- as.integer(x)
+
+    if (is.na(x) || x < 1L || x > length(current)) {
+      stop(
+        sprintf("`%s` must be between 1 and %d.", arg, length(current)),
+        call. = FALSE
+      )
+    }
+
+    return(current[x])
+  }
+
+  stop(
+    sprintf("`%s` must be a sheet name or position.", arg),
+    call. = FALSE
+  )
+}
 
 #' @keywords internal
 #' @noRd
