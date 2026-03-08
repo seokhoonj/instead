@@ -295,8 +295,8 @@ save_data_wb <- function(data,
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x         = titles[[i]],
         rc        = c(start_row, start_col),
-        value     = titles[[i]],
         bold      = TRUE,
         italic    = FALSE,
         underline = FALSE,
@@ -514,8 +514,8 @@ save_data_wb_split <- function(data,
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x          = titles[[i]],
         rc         = c(start_row, start_col),
-        value      = titles[[i]],
         bold       = TRUE,
         font_name  = font_name,
         font_size  = title_size,
@@ -721,8 +721,8 @@ save_plot_wb <- function(plot, wb, sheet = "Plots",
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x          = titles[[i]],
         rc         = c(start_row, start_col),
-        value      = titles[[i]],
         bold       = TRUE,
         italic     = FALSE,
         underline  = FALSE,
@@ -866,8 +866,8 @@ save_plot_wb_split <- function(plot, wb,
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x          = titles[[i]],
         rc         = c(start_row, start_col),
-        value      = titles[[i]],
         bold       = TRUE,
         italic     = FALSE,
         underline  = FALSE,
@@ -993,8 +993,8 @@ save_image_wb <- function(image, wb, sheet = "Images",
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x          = titles[[i]],
         rc         = c(start_row, start_col),
-        value      = titles[[i]],
         bold       = TRUE,
         italic     = FALSE,
         underline  = FALSE,
@@ -1146,8 +1146,8 @@ save_image_wb_split <- function(image, wb,
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
+        x          = titles[[i]],
         rc         = c(start_row, start_col),
-        value      = titles[[i]],
         bold       = TRUE,
         italic     = FALSE,
         underline  = FALSE,
