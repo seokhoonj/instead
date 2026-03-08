@@ -1769,6 +1769,117 @@ save_image_xlsx_split <- function(image, file,
   invisible(file)
 }
 
+# Save navigation ---------------------------------------------------------
+
+#' Create an index sheet with hyperlinks to workbook sheets
+#'
+#' Creates (or updates) an index sheet that provides navigation links to
+#' selected sheets in an Excel workbook. The index sheet contains a table
+#' with two columns:
+#'
+#' - `sheet`: the name of each target sheet
+#' - `link`: a hyperlink pointing to cell `A1` of that sheet
+#'
+#' In addition, a back-link is written on each target sheet so users can
+#' return to the index sheet.
+#'
+#' If the index sheet does not exist, it is created automatically with
+#' grid lines disabled and the specified tab colour. The index sheet is
+#' then moved to the first position in the workbook.
+#'
+#' @param wb An `openxlsx` `Workbook` object.
+#' @param index_sheet Name of the index sheet. Default `"INDEX"`.
+#' @param target_sheets Character vector of sheet names that will appear
+#'   in the index table and receive back-links.
+#' @param rc_index Integer vector `c(row, col)` specifying the starting
+#'   cell for the index table written on `index_sheet`.
+#' @param rc_target Integer vector `c(row, col)` specifying the cell where
+#'   the back-link to the index sheet will be written on each target sheet.
+#' @param tab_colour Colour used for the index sheet tab. Default `"#FFD966"`.
+#'
+#' @return Invisibly returns the modified `Workbook`.
+#'
+#' @examples
+#' \dontrun{
+#' wb <- openxlsx::createWorkbook()
+#'
+#' openxlsx::addWorksheet(wb, "Sheet1")
+#' openxlsx::addWorksheet(wb, "Sheet2")
+#'
+#' save_index_sheet_wb(
+#'   wb,
+#'   index_sheet = "INDEX",
+#'   target_sheets = c("Sheet1", "Sheet2")
+#' )
+#'
+#' openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+#' }
+#'
+#' @export
+save_index_sheet_wb <- function(wb,
+                                index_sheet = "Index",
+                                target_sheets,
+                                rc_index  = c(1, 1),
+                                rc_target = c(1, 1),
+                                tab_colour = "#FFFF00") {
+  if (!inherits(wb, "Workbook"))
+    stop("`wb` must be an openxlsx Workbook.", call. = FALSE)
+
+  instead::check_sheet_names(c(index_sheet, target_sheets))
+
+  wb_sheets <- openxlsx::sheets(wb)
+
+  missing <- setdiff(target_sheets, wb_sheets)
+  if (length(missing)) {
+    stop(
+      sprintf(
+        "Sheet(s) not found in workbook: %s",
+        paste(missing, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  # create index sheet if needed
+  if (!index_sheet %in% wb_sheets) {
+    openxlsx::addWorksheet(
+      wb = wb,
+      sheetName = index_sheet,
+      gridLines = FALSE,
+      tabColour = tab_colour
+    )
+  }
+
+  data <- data.frame(sheet = target_sheets, link = target_sheets)
+
+  instead::save_data_wb(data, wb, sheet = index_sheet, rc = rc_index)
+
+  for (i in seq_along(target_sheets)) {
+    target_sheet <- target_sheets[i]
+    flink <- sprintf('HYPERLINK("#\'%s\'!A1","%s")', target_sheet, target_sheet)
+    blink <- sprintf('HYPERLINK("#\'%s\'!A1","← %s")', index_sheet, index_sheet)
+
+    # forward link
+    instead::write_formula(
+      wb = wb,
+      sheet = index_sheet,
+      x = sprintf('HYPERLINK("#\'%s\'!A1","%s")', target_sheet, target_sheet),
+      rc = rc_index + c(i, 1)
+    )
+
+    # back link
+    instead::write_formula(
+      wb = wb,
+      sheet = target_sheet,
+      x = sprintf('HYPERLINK("#\'%s\'!A1","← %s")', index_sheet, index_sheet),
+      rc = rc_target
+    )
+  }
+  instead::reorder_sheets(wb, index_sheet)
+
+  invisible(wb)
+}
+
 # Helper functions --------------------------------------------------------
 
 #' Reorder workbook sheets
