@@ -7,8 +7,8 @@
 write_cell(
   wb,
   sheet,
+  x,
   rc = c(1L, 1L),
-  value,
   bold = FALSE,
   italic = FALSE,
   underline = FALSE,
@@ -28,9 +28,9 @@ loaded with \code{\link[openxlsx:loadWorkbook]{openxlsx::loadWorkbook()}}.}
 
 \item{sheet}{Sheet name or index to write into.}
 
-\item{rc}{A length-2 integer vector \code{c(row, col)} giving the target cell.}
+\item{x}{A scalar value to write (character, numeric, logical, etc.).}
 
-\item{value}{A scalar value to write (character, numeric, logical, etc.).}
+\item{rc}{A length-2 integer vector \code{c(row, col)} giving the target cell.}
 
 \item{bold, italic, underline, strikeout}{Logical; text decorations to apply.}
 
@@ -62,17 +62,17 @@ font/border/align styles.
 library(openxlsx)
 
 wb <- openxlsx::createWorkbook()
-addWorksheet(wb, "Sheet1")
+openxlsx::addWorksheet(wb, "Sheet1")
 
 # Write "Hello" into cell B2 with bold styling
 write_cell(
   wb, sheet = "Sheet1",
+  x     = "Hello",
   rc    = c(2L, 2L),
-  value = "Hello",
   bold  = TRUE
 )
 
-saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
 }
 
 }

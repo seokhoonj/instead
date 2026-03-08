@@ -2032,8 +2032,8 @@ check_file_recreate <- function(file) {
 #' @param wb A `Workbook` object created by [openxlsx::createWorkbook()] or
 #'   loaded with [openxlsx::loadWorkbook()].
 #' @param sheet Sheet name or index to write into.
+#' @param x A scalar value to write (character, numeric, logical, etc.).
 #' @param rc A length-2 integer vector `c(row, col)` giving the target cell.
-#' @param value A scalar value to write (character, numeric, logical, etc.).
 #' @param bold,italic,underline,strikeout Logical; text decorations to apply.
 #' @param font_name Character; font family. Default: `getOption("instead.font")`.
 #' @param font_size Numeric; font size in points. Default `11`.
@@ -2051,23 +2051,23 @@ check_file_recreate <- function(file) {
 #' library(openxlsx)
 #'
 #' wb <- openxlsx::createWorkbook()
-#' addWorksheet(wb, "Sheet1")
+#' openxlsx::addWorksheet(wb, "Sheet1")
 #'
 #' # Write "Hello" into cell B2 with bold styling
 #' write_cell(
 #'   wb, sheet = "Sheet1",
+#'   x     = "Hello",
 #'   rc    = c(2L, 2L),
-#'   value = "Hello",
 #'   bold  = TRUE
 #' )
 #'
-#' saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+#' openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
 #' }
 #'
 #' @seealso [openxlsx::writeData()], [openxlsx::createStyle()]
 #'
 #' @export
-write_cell <- function(wb, sheet, rc = c(1L, 1L), value,
+write_cell <- function(wb, sheet, x, rc = c(1L, 1L),
                        bold = FALSE, italic = FALSE,
                        underline = FALSE, strikeout = FALSE,
                        font_name = getOption("instead.font"),
@@ -2081,9 +2081,9 @@ write_cell <- function(wb, sheet, rc = c(1L, 1L), value,
 
   # write value
   openxlsx::writeData(
-    wb      = wb,
-    sheet   = sheet,
-    x       = value,
+    wb       = wb,
+    sheet    = sheet,
+    x        = x,
     startRow = row,
     startCol = col,
     colNames = FALSE,
@@ -2130,8 +2130,8 @@ write_cell <- function(wb, sheet, rc = c(1L, 1L), value,
 #' @param wb A `Workbook` object created by [openxlsx::createWorkbook()] or
 #'   loaded with [openxlsx::loadWorkbook()].
 #' @param sheet Sheet name or index to write into.
+#' @param x A formula string to write.
 #' @param rc A length-2 integer vector `c(row, col)` giving the target cell.
-#' @param value A formula string to write.
 #' @param bold,italic,underline,strikeout Logical; text decorations to apply.
 #' @param font_name Character; font family. Default: `getOption("instead.font")`.
 #' @param font_size Numeric; font size in points. Default `11`.
@@ -2149,24 +2149,24 @@ write_cell <- function(wb, sheet, rc = c(1L, 1L), value,
 #' library(openxlsx)
 #'
 #' wb <- openxlsx::createWorkbook()
-#' addWorksheet(wb, "Sheet1")
+#' openxlsx::addWorksheet(wb, "Sheet1")
 #'
 #' # Write a hyperlink formula into cell B2
 #' write_formula(
 #'   wb, sheet = "Sheet1",
+#'   x = 'HYPERLINK("#''Sheet1''!A1","Go to A1")',
 #'   rc    = c(2L, 2L),
-#'   value = 'HYPERLINK("#''Sheet1''!A1","Go to A1")',
 #'   font_color = "#0563C1",
 #'   underline  = TRUE
 #' )
 #'
-#' saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+#' openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
 #' }
 #'
 #' @seealso [openxlsx::writeFormula()], [openxlsx::createStyle()]
 #'
 #' @export
-write_formula <- function(wb, sheet, rc = c(1L, 1L), value,
+write_formula <- function(wb, sheet, x, rc = c(1L, 1L),
                           bold = FALSE, italic = FALSE,
                           underline = FALSE, strikeout = FALSE,
                           font_name = getOption("instead.font"),
@@ -2182,7 +2182,7 @@ write_formula <- function(wb, sheet, rc = c(1L, 1L), value,
   openxlsx::writeFormula(
     wb       = wb,
     sheet    = sheet,
-    x        = value,
+    x        = x,
     startRow = row,
     startCol = col,
     ...

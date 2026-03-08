@@ -7,8 +7,8 @@
 write_formula(
   wb,
   sheet,
+  x,
   rc = c(1L, 1L),
-  value,
   bold = FALSE,
   italic = FALSE,
   underline = FALSE,
@@ -28,9 +28,9 @@ loaded with \code{\link[openxlsx:loadWorkbook]{openxlsx::loadWorkbook()}}.}
 
 \item{sheet}{Sheet name or index to write into.}
 
-\item{rc}{A length-2 integer vector \code{c(row, col)} giving the target cell.}
+\item{x}{A formula string to write.}
 
-\item{value}{A formula string to write.}
+\item{rc}{A length-2 integer vector \code{c(row, col)} giving the target cell.}
 
 \item{bold, italic, underline, strikeout}{Logical; text decorations to apply.}
 
@@ -61,18 +61,18 @@ of a worksheet and applies optional font/border/align styles.
 library(openxlsx)
 
 wb <- openxlsx::createWorkbook()
-addWorksheet(wb, "Sheet1")
+openxlsx::addWorksheet(wb, "Sheet1")
 
 # Write a hyperlink formula into cell B2
 write_formula(
   wb, sheet = "Sheet1",
+  x = 'HYPERLINK("#''Sheet1''!A1","Go to A1")',
   rc    = c(2L, 2L),
-  value = 'HYPERLINK("#''Sheet1''!A1","Go to A1")',
   font_color = "#0563C1",
   underline  = TRUE
 )
 
-saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
 }
 
 }
