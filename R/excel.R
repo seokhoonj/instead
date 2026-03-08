@@ -2121,6 +2121,103 @@ write_cell <- function(wb, sheet, rc = c(1L, 1L), value,
   invisible(wb)
 }
 
+#' Write a formula into a single cell of an Excel worksheet
+#'
+#' A thin wrapper around [openxlsx::writeFormula()] with styling support.
+#' This function writes a formula string into a specific `(row, col)` position
+#' of a worksheet and applies optional font/border/align styles.
+#'
+#' @param wb A `Workbook` object created by [openxlsx::createWorkbook()] or
+#'   loaded with [openxlsx::loadWorkbook()].
+#' @param sheet Sheet name or index to write into.
+#' @param rc A length-2 integer vector `c(row, col)` giving the target cell.
+#' @param value A formula string to write.
+#' @param bold,italic,underline,strikeout Logical; text decorations to apply.
+#' @param font_name Character; font family. Default: `getOption("instead.font")`.
+#' @param font_size Numeric; font size in points. Default `11`.
+#' @param font_color Character; text color (hex string or named color). Default `NULL`.
+#' @param fg_fill Character; background fill color. Default `NULL`.
+#' @param h_align,v_align Character; horizontal and vertical alignment
+#'   (`"left"`, `"center"`, `"right"` / `"top"`, `"center"`, `"bottom"`).
+#'   Passed to [openxlsx::createStyle()].
+#' @param ... Additional arguments forwarded to [openxlsx::writeFormula()].
+#'
+#' @return The modified `Workbook` (invisibly), allowing for chaining.
+#'
+#' @examples
+#' \dontrun{
+#' library(openxlsx)
+#'
+#' wb <- openxlsx::createWorkbook()
+#' addWorksheet(wb, "Sheet1")
+#'
+#' # Write a hyperlink formula into cell B2
+#' write_formula(
+#'   wb, sheet = "Sheet1",
+#'   rc    = c(2L, 2L),
+#'   value = 'HYPERLINK("#''Sheet1''!A1","Go to A1")',
+#'   font_color = "#0563C1",
+#'   underline  = TRUE
+#' )
+#'
+#' saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+#' }
+#'
+#' @seealso [openxlsx::writeFormula()], [openxlsx::createStyle()]
+#'
+#' @export
+write_formula <- function(wb, sheet, rc = c(1L, 1L), value,
+                          bold = FALSE, italic = FALSE,
+                          underline = FALSE, strikeout = FALSE,
+                          font_name = getOption("instead.font"),
+                          font_size = 11, font_color = NULL, fg_fill = NULL,
+                          h_align = NULL, v_align = NULL, ...) {
+  assert_class(wb, "Workbook")
+  stopifnot(length(rc) == 2L)
+
+  row <- rc[1L]
+  col <- rc[2L]
+
+  # write formula
+  openxlsx::writeFormula(
+    wb       = wb,
+    sheet    = sheet,
+    x        = value,
+    startRow = row,
+    startCol = col,
+    ...
+  )
+
+  # build textDecoration vector
+  text_decoration <- c(
+    if (bold) "bold",
+    if (italic) "italic",
+    if (underline) "underline",
+    if (strikeout) "strikeout"
+  )
+  if (!length(text_decoration))
+    text_decoration <- NULL
+
+  # create and apply style
+  style <- openxlsx::createStyle(
+    fontName       = font_name,
+    fontSize       = font_size,
+    fontColour     = font_color,
+    textDecoration = text_decoration,
+    fgFill         = fg_fill,
+    halign         = h_align,
+    valign         = v_align
+  )
+
+  openxlsx::addStyle(
+    wb, sheet, style,
+    rows = row, cols = col,
+    gridExpand = FALSE, stack = TRUE
+  )
+
+  invisible(wb)
+}
+
 #' Write a styled data.frame to an Excel worksheet
 #'
 #' Low-level helper for writing tabular data into an Excel sheet with
