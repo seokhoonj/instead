@@ -30,7 +30,10 @@ assert_class <- function(x, classes) {
   x_name <- if (is.character(x) && length(x) == 1L) {
     sprintf('"%s"', x)  # literal string
   } else {
-    trace_arg_expr(x, verbose = FALSE, skip_shiny = TRUE)
+    tryCatch(
+      trace_arg_expr(x, verbose = FALSE, skip_shiny = TRUE),
+      error = function(e) "x"
+    )
   }
 
   # Class check
