@@ -4,7 +4,7 @@
 \alias{split_suffix_tables}
 \title{Split a table into suffix tables}
 \usage{
-split_suffix_tables(x, by, split_by = NULL)
+split_suffix_tables(x, by, split_by = NULL, min_nrow = 1L)
 }
 \arguments{
 \item{x}{A data.frame or data.table.}
@@ -13,6 +13,9 @@ split_suffix_tables(x, by, split_by = NULL)
 
 \item{split_by}{Optional character vector of column names used to split
 \code{x} before generating suffix tables.}
+
+\item{min_nrow}{Integer; minimum number of rows required to keep a
+generated table. Default \code{1L}.}
 }
 \value{
 A list of data.tables.
@@ -42,5 +45,8 @@ split_suffix_tables(x, by = "age_band")
 
 # suffix tables computed separately by gender
 split_suffix_tables(x, by = "age_band", split_by = "gender")
+
+# keep only tables with at least 2 rows
+split_suffix_tables(x, by = "age_band", min_nrow = 2L)
 
 }

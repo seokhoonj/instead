@@ -4,7 +4,7 @@
 \alias{split_prefix_tables}
 \title{Split a table into prefix tables}
 \usage{
-split_prefix_tables(x, by, split_by = NULL)
+split_prefix_tables(x, by, split_by = NULL, min_nrow = 1L)
 }
 \arguments{
 \item{x}{A data.frame or data.table.}
@@ -13,6 +13,9 @@ split_prefix_tables(x, by, split_by = NULL)
 
 \item{split_by}{Optional character vector of column names used to split
 \code{x} before generating suffix tables.}
+
+\item{min_nrow}{Integer; minimum number of rows required to keep a
+generated table. Default \code{1L}.}
 }
 \value{
 A list of data.tables.

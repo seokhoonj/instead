@@ -4,7 +4,13 @@
 \alias{.split_ordered_tables}
 \title{Split a table into ordered prefix/suffix tables (internal)}
 \usage{
-.split_ordered_tables(x, by, split_by = NULL, type = c("suffix", "prefix"))
+.split_ordered_tables(
+  x,
+  by,
+  split_by = NULL,
+  type = c("suffix", "prefix"),
+  min_nrow = 1L
+)
 }
 \description{
 Split a table into ordered prefix/suffix tables (internal)

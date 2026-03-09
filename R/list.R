@@ -25,12 +25,13 @@
 #' split_prefix_tables(x, by = "age_band", split_by = "gender")
 #'
 #' @export
-split_prefix_tables <- function(x, by, split_by = NULL) {
+split_prefix_tables <- function(x, by, split_by = NULL, min_nrow = 1L) {
   .split_ordered_tables(
     x = x,
     by = by,
     split_by = split_by,
-    type = "prefix"
+    type = "prefix",
+    min_nrow = min_nrow
   )
 }
 
@@ -47,6 +48,8 @@ split_prefix_tables <- function(x, by, split_by = NULL) {
 #' @param by Character vector of column names defining ordered blocks.
 #' @param split_by Optional character vector of column names used to split
 #'   `x` before generating suffix tables.
+#' @param min_nrow Integer; minimum number of rows required to keep a
+#'   generated table. Default `1L`.
 #'
 #' @return A list of data.tables.
 #'
@@ -67,13 +70,17 @@ split_prefix_tables <- function(x, by, split_by = NULL) {
 #' # suffix tables computed separately by gender
 #' split_suffix_tables(x, by = "age_band", split_by = "gender")
 #'
+#' # keep only tables with at least 2 rows
+#' split_suffix_tables(x, by = "age_band", min_nrow = 2L)
+#'
 #' @export
-split_suffix_tables <- function(x, by, split_by = NULL) {
+split_suffix_tables <- function(x, by, split_by = NULL, min_nrow = 1L) {
   .split_ordered_tables(
     x = x,
     by = by,
     split_by = split_by,
-    type = "suffix"
+    type = "suffix",
+    min_nrow = min_nrow
   )
 }
 
@@ -81,7 +88,8 @@ split_suffix_tables <- function(x, by, split_by = NULL) {
 #'
 #' @keywords internal
 .split_ordered_tables <- function(x, by, split_by = NULL,
-                                  type = c("suffix", "prefix")) {
+                                  type = c("suffix", "prefix"),
+                                  min_nrow = 1L) {
   type <- match.arg(type)
 
   x <- data.table::as.data.table(x)
@@ -105,6 +113,14 @@ split_suffix_tables <- function(x, by, split_by = NULL) {
     )
   }
 
+  if (!is.numeric(min_nrow) || length(min_nrow) != 1L || is.na(min_nrow)) {
+    stop("`min_nrow` must be a single non-missing number.", call. = FALSE)
+  }
+  min_nrow <- as.integer(min_nrow)
+  if (min_nrow < 0L) {
+    stop("`min_nrow` must be >= 0.", call. = FALSE)
+  }
+
   groups <- if (is.null(split_by)) {
     list(x)
   } else {
@@ -115,9 +131,12 @@ split_suffix_tables <- function(x, by, split_by = NULL) {
     data.table::setorderv(dt, by)
 
     blocks <- split(dt, by = by)
-    n <- length(blocks)
+    blocks <- Filter(function(z) nrow(z) > 0L, blocks)
 
-    if (type == "suffix") {
+    n <- length(blocks)
+    if (n == 0L) return(list())
+
+    res <- if (type == "suffix") {
       lapply(seq_len(n), function(i) {
         data.table::rbindlist(blocks[i:n], use.names = TRUE)
       })
@@ -126,6 +145,8 @@ split_suffix_tables <- function(x, by, split_by = NULL) {
         data.table::rbindlist(blocks[1:i], use.names = TRUE)
       })
     }
+
+    Filter(function(z) nrow(z) >= min_nrow, res)
   })
 
   unlist(out, recursive = FALSE)
