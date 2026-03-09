@@ -56,6 +56,10 @@ drop_null <- function(x) {
   x[!vapply(x, is.null, logical(1L))]
 }
 
+# ____________________________________ ------------------------------------
+
+# Class -------------------------------------------------------------------
+
 #' Prepend class(es) without duplication
 #'
 #' Ensure one or more class names appear at the front of an object's class
