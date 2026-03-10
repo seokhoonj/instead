@@ -105,6 +105,14 @@ to_a1_col <- function(x) {
 #'   excluded). Either a single character (applied to all numeric columns),
 #'   or a named character vector/list mapping column names to formats
 #'   (unknown names are ignored).
+#' @param style_rules Optional list of styling rules applied after each table is
+#'   written. Each rule is a list containing:
+#'   \itemize{
+#'   \item `cols`: character column names or numeric column indices
+#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
+#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `style`: a style object created by [create_style()]
+#'   }
 #'
 #' @details
 #' - Titles are written via `write_cell()` (bold, left-aligned by default).
@@ -148,6 +156,31 @@ to_a1_col <- function(x) {
 #'   width_scope = "per_table"
 #' )
 #' openxlsx::saveWorkbook(wb2, "placed.xlsx", overwrite = TRUE)
+#'
+#' # Apply conditional styles
+#' wb3 <- openxlsx::createWorkbook()
+#'
+#' style_hi <- create_style(fg_fill = "#FF9999")
+#' style_lo <- create_style(fg_fill = "#DDEBF7")
+#'
+#' save_data_wb(
+#'   data  = iris,
+#'   wb    = wb3,
+#'   sheet = "Styled",
+#'   style_rules = list(
+#'     list(
+#'       cols = "Sepal.Length",
+#'       condition = function(x) x > 6,
+#'       style = style_hi
+#'     ),
+#'     list(
+#'       cols = "Petal.Width",
+#'       condition = function(x) x < 0.3,
+#'       style = style_lo
+#'     )
+#'   )
+#' )
+#' openxlsx::saveWorkbook(wb3, "styled.xlsx", overwrite = TRUE)
 #' }
 #'
 #' @seealso [save_data_xlsx()], [write_data()], [write_cell()]
@@ -168,7 +201,8 @@ save_data_wb <- function(data,
                          widths = 8.43,
                          auto_width = TRUE,
                          width_scope = c("global_max", "per_table"),
-                         num_fmt = NULL) {
+                         num_fmt = NULL,
+                         style_rules = NULL) {
   if (!inherits(wb, "Workbook"))
     stop("`wb` must be an openxlsx Workbook.", call. = FALSE)
 
@@ -295,14 +329,14 @@ save_data_wb <- function(data,
     if (!is.na(titles[[i]])) {
       write_cell(
         wb, sheet,
-        x         = titles[[i]],
-        rc        = c(start_row, start_col),
-        bold      = TRUE,
-        italic    = FALSE,
-        underline = FALSE,
-        strikeout = FALSE,
-        font_name = font_name,
-        font_size = title_size,
+        x          = titles[[i]],
+        rc         = c(start_row, start_col),
+        bold       = TRUE,
+        italic     = FALSE,
+        underline  = FALSE,
+        strikeout  = FALSE,
+        font_name  = font_name,
+        font_size  = title_size,
         font_color = NULL,
         fg_fill    = NULL,
         h_align    = "left",
@@ -346,6 +380,16 @@ save_data_wb <- function(data,
     if (is.null(ranges)) ranges <- list()
     ranges[[length(ranges) + 1L]] <- range
     attr(wb, "instead.ranges") <- ranges
+
+    # apply styles
+    .apply_style_wb(
+      wb          = wb,
+      sheet       = sheet,
+      data        = data[[i]],
+      range       = range,
+      style_rules = style_rules,
+      row_names   = row_names
+    )
 
     # auto width
     if (auto_width) {
@@ -402,6 +446,14 @@ save_data_wb <- function(data,
 #'   excluded). Either a single character (applied to all numeric columns)
 #'   or a named character vector/list mapping column names to formats
 #'   (unknown names are ignored).
+#' @param style_rules Optional list of styling rules applied after each table is
+#'   written. Each rule is a list containing:
+#'   \itemize{
+#'   \item `cols`: character column names or numeric column indices
+#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
+#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `style`: a style object created by [create_style()]
+#'   }
 #'
 #' @details
 #' - Titles are written via `write_cell()` (bold, left-aligned).
@@ -414,6 +466,7 @@ save_data_wb <- function(data,
 #'
 #' @examples
 #' \dontrun{
+#' # Write tables to separate sheets
 #' wb <- openxlsx::createWorkbook()
 #' save_data_wb_split(
 #'   data        = list(iris_tab = head(iris), mtcars_tab = head(mtcars)),
@@ -423,6 +476,23 @@ save_data_wb <- function(data,
 #'   auto_width  = TRUE
 #' )
 #' openxlsx::saveWorkbook(wb, "by_sheet.xlsx", overwrite = TRUE)
+#'
+#' # Apply cell styles on separate sheets
+#' wb2 <- openxlsx::createWorkbook()
+#' style_hi <- create_style(fg_fill = "#FF9999")
+#'
+#' save_data_wb_split(
+#'   data = list(iris_tab = head(iris), mtcars_tab = head(mtcars)),
+#'   wb = wb2,
+#'   style_rules = list(
+#'     list(
+#'       cols = 1,
+#'       condition = function(x) x > 6,
+#'       style = style_hi
+#'     )
+#'   )
+#' )
+#' openxlsx::saveWorkbook(wb2, "by_sheet_styled.xlsx", overwrite = TRUE)
 #' }
 #'
 #' @seealso [save_data_xlsx_split()], [write_data()], [write_cell()]
@@ -441,7 +511,8 @@ save_data_wb_split <- function(data,
                                border_color = "#000000",
                                widths = 8.43,
                                auto_width = TRUE,
-                               num_fmt = NULL) {
+                               num_fmt = NULL,
+                               style_rules = NULL) {
   if (!inherits(wb, "Workbook"))
     stop("`wb` must be an openxlsx Workbook.", call. = FALSE)
 
@@ -557,6 +628,16 @@ save_data_wb_split <- function(data,
 
     attr(wb, "instead.last_range_by_sheet") <- last_by_sheet
     attr(wb, "instead.ranges") <- ranges
+
+    # apply styles
+    .apply_style_wb(
+      wb          = wb,
+      sheet       = sheet,
+      data        = data[[i]],
+      range       = range,
+      style_rules = style_rules,
+      row_names = row_names
+    )
 
     # auto width (data columns only)
     if (auto_width) {
@@ -1234,6 +1315,14 @@ save_image_wb_split <- function(image, wb,
 #'   - A **named character vector or list** mapping column names to formats,
 #'     e.g. `c(value = "#,##0", rate = "0.0%")`. Columns not listed are left
 #'     unchanged. Unknown column names are silently ignored.
+#' @param style_rules Optional list of styling rules applied after each table is
+#'   written. Each rule is a list containing:
+#'   \itemize{
+#'   \item `cols`: character column names or numeric column indices
+#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
+#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `style`: a style object created by [create_style()]
+#'   }
 #' @param overwrite Logical; passed to `openxlsx::saveWorkbook()`. Default `FALSE`.
 #'
 #' @return (Invisibly) the path to `file`. Side-effects: creates/updates an Excel file.
@@ -1273,6 +1362,23 @@ save_image_wb_split <- function(image, wb,
 #'   width_scope = "per_table",
 #'   overwrite   = TRUE
 #' )
+#'
+#' # Apply cell styles
+#' style_hi <- create_style(fg_fill = "#FF9999")
+#'
+#' save_data_xlsx(
+#'   data  = iris,
+#'   file  = "styled.xlsx",
+#'   sheet = "Styled",
+#'   style_rules = list(
+#'     list(
+#'       cols = "Sepal.Length",
+#'       condition = function(x) x > 6,
+#'       style = style_hi
+#'     )
+#'   ),
+#'   overwrite = TRUE
+#' )
 #' }
 #'
 #' @seealso [save_data_xlsx_split()], [write_data()]
@@ -1292,6 +1398,7 @@ save_data_xlsx <- function(data, file, sheet = "Data",
                            auto_width = TRUE,
                            width_scope = c("global_max", "per_table"),
                            num_fmt = NULL,
+                           style_rules = NULL,
                            overwrite = FALSE) {
   width_scope <- match.arg(width_scope)
 
@@ -1304,22 +1411,23 @@ save_data_xlsx <- function(data, file, sheet = "Data",
 
   # delegate to the external `save_data_wb()`
   wb <- save_data_wb(
-    data          = data,
-    wb            = wb,
-    sheet         = sheet,
-    rc            = rc,
-    row_spacer    = row_spacer,
-    data_titles   = data_titles,
-    title_size    = title_size,
-    row_names     = row_names,
-    font_name     = font_name,
-    font_size     = font_size,
-    fg_fill       = fg_fill,
-    border_color  = border_color,
-    widths        = widths,
-    auto_width    = auto_width,
-    width_scope   = width_scope,
-    num_fmt       = num_fmt
+    data             = data,
+    wb               = wb,
+    sheet            = sheet,
+    rc               = rc,
+    row_spacer       = row_spacer,
+    data_titles      = data_titles,
+    title_size       = title_size,
+    row_names        = row_names,
+    font_name        = font_name,
+    font_size        = font_size,
+    fg_fill          = fg_fill,
+    border_color     = border_color,
+    widths           = widths,
+    auto_width       = auto_width,
+    width_scope      = width_scope,
+    num_fmt          = num_fmt,
+    style_rules      = style_rules
   )
 
   # save to disk
@@ -1327,7 +1435,6 @@ save_data_xlsx <- function(data, file, sheet = "Data",
   openxlsx::saveWorkbook(wb, file = file, overwrite = overwrite)
   invisible(file)
 }
-
 
 #' Save a list of data.frames to an Excel workbook (one sheet per table)
 #'
@@ -1363,6 +1470,14 @@ save_data_xlsx <- function(data, file, sheet = "Data",
 #'   - A **named character vector or list** mapping column names to formats,
 #'     e.g. `c(value = "#,##0", rate = "0.0%")`. Columns not listed are left
 #'     unchanged. Unknown column names are silently ignored.
+#' @param style_rules Optional list of styling rules applied after each table is
+#'   written. Each rule is a list containing:
+#'   \itemize{
+#'   \item `cols`: character column names or numeric column indices
+#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
+#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `style`: a style object created by [create_style()]
+#'   }
 #' @param overwrite Logical; if `TRUE`, overwrite an existing workbook. Default `FALSE`.
 #'
 #' @return (Invisibly) the path to `file`. Side-effects: creates/updates an Excel file.
@@ -1394,7 +1509,24 @@ save_data_xlsx <- function(data, file, sheet = "Data",
 #'   file       = "sheets_auto.xlsx",
 #'   overwrite  = TRUE
 #' )
+#'
+#' # Case 4: apply cell styles on separate sheets
+#' style_hi <- create_style(fg_fill = "#FF9999")
+#'
+#' save_data_xlsx_split(
+#'   data = list(iris_tab = d1, mtcars_tab = d2),
+#'   file = "sheets_styled.xlsx",
+#'   style_rules = list(
+#'     list(
+#'       cols = 1,
+#'       condition = function(x) x > 6,
+#'       style = style_hi
+#'     )
+#'   ),
+#'   overwrite = TRUE
+#' )
 #' }
+#'
 #' @export
 save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
                                  row_names = FALSE,
@@ -1408,6 +1540,7 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
                                  widths = 8.43,
                                  auto_width = TRUE,
                                  num_fmt = NULL,
+                                 style_rules = NULL,
                                  overwrite = FALSE) {
   # open or create workbook
   wb <- if (file.exists(file)) {
@@ -1418,20 +1551,21 @@ save_data_xlsx_split <- function(data, file, rc = c(1L, 1L),
 
   # delegate the writing work
   wb <- save_data_wb_split(
-    data         = data,
-    wb           = wb,
-    rc           = rc,
-    row_names    = row_names,
-    sheet_names  = sheet_names,
-    data_titles  = data_titles,
-    title_size   = title_size,
-    font_name    = font_name,
-    font_size    = font_size,
-    fg_fill      = fg_fill,
-    border_color = border_color,
-    widths       = widths,
-    auto_width   = auto_width,
-    num_fmt      = num_fmt
+    data             = data,
+    wb               = wb,
+    rc               = rc,
+    row_names        = row_names,
+    sheet_names      = sheet_names,
+    data_titles      = data_titles,
+    title_size       = title_size,
+    font_name        = font_name,
+    font_size        = font_size,
+    fg_fill          = fg_fill,
+    border_color     = border_color,
+    widths           = widths,
+    auto_width       = auto_width,
+    num_fmt          = num_fmt,
+    style_rules      = style_rules
   )
 
   # save to disk
@@ -2677,6 +2811,64 @@ get_next_cell_right <- function(wb, col_spacer = 2L) {
   c(r$start_cell[1L], r$end_cell[2L] + 1L + col_spacer)
 }
 
+#' Create an Excel cell style
+#'
+#' Convenience wrapper around [openxlsx::createStyle()] that uses
+#' snake_case argument names.
+#'
+#' @param font_name Font family.
+#' @param font_size Font size.
+#' @param font_color Font color.
+#' @param bold,italic,underline,strikeout Logical text decorations.
+#' @param fg_fill Cell background fill color.
+#' @param border Border specification.
+#' @param border_color Border color.
+#' @param h_align,v_align Horizontal and vertical alignment.
+#' @param wrap_text Logical; whether text should wrap.
+#' @param num_fmt Excel number format.
+#'
+#' @return An `openxlsx` style object.
+#' @export
+create_style <- function(font_name = getOption("instead.font"),
+                         font_size = 11,
+                         font_color = NULL,
+                         bold = FALSE,
+                         italic = FALSE,
+                         underline = FALSE,
+                         strikeout = FALSE,
+                         fg_fill = NULL,
+                         border = NULL,
+                         border_color = NULL,
+                         h_align = NULL,
+                         v_align = NULL,
+                         wrap_text = FALSE,
+                         num_fmt = NULL) {
+
+  text_decoration <- c(
+    if (bold) "bold",
+    if (italic) "italic",
+    if (underline) "underline",
+    if (strikeout) "strikeout"
+  )
+
+  if (!length(text_decoration))
+    text_decoration <- NULL
+
+  openxlsx::createStyle(
+    fontName = font_name,
+    fontSize = font_size,
+    fontColour = font_color,
+    textDecoration = text_decoration,
+    fgFill = fg_fill,
+    border = border,
+    borderColour = border_color,
+    halign = h_align,
+    valign = v_align,
+    wrapText = wrap_text,
+    numFmt = num_fmt
+  )
+}
+
 # Internal helper functions -----------------------------------------------
 
 #' Resolve a sheet reference to a sheet name (internal)
@@ -2734,6 +2926,85 @@ get_next_cell_right <- function(wb, col_spacer = 2L) {
     w <- max(nchar(c(header, body), type = "width"), na.rm = TRUE)
     max(min_width, w + pad)
   }, numeric(1L))
+}
+
+#' @keywords internal
+#' @noRd
+.apply_style_wb <- function(wb, sheet, data, range,
+                            style_rules = NULL,
+                            row_names = FALSE) {
+  if (is.null(style_rules) || !length(style_rules))
+    return(invisible(wb))
+
+  for (rule in style_rules) {
+    if (is.null(rule$cols) || is.null(rule$condition) || is.null(rule$style)) {
+      stop(
+        "Each `style_rules` rule must contain `cols`, `condition`, and `style`.",
+        call. = FALSE
+      )
+    }
+
+    cols <- rule$cols
+    rows <- rule$rows
+
+    if (is.character(cols)) {
+      col_idx <- match(cols, names(data))
+      if (anyNA(col_idx)) {
+        stop(
+          sprintf(
+            "Unknown column(s) in `style_rules`: %s",
+            paste(cols[is.na(col_idx)], collapse = ", ")
+          ),
+          call. = FALSE
+        )
+      }
+    } else if (is.numeric(cols)) {
+      col_idx <- as.integer(cols)
+      if (any(col_idx < 1L | col_idx > ncol(data))) {
+        stop("`cols` in `style_rules` are out of bounds.", call. = FALSE)
+      }
+    } else {
+      stop("`cols` in `style_rules` must be character or numeric.", call. = FALSE)
+    }
+
+    if (is.null(rows)) {
+      rows <- seq_len(nrow(data))
+    } else if (is.numeric(rows)) {
+      rows <- as.integer(rows)
+      rows <- rows[rows >= 1L & rows <= nrow(data)]
+    } else {
+      stop("`rows` in `style_rules` must be NULL or numeric.", call. = FALSE)
+    }
+
+    if (!length(rows))
+      next
+
+    for (j in col_idx) {
+      x <- data[[j]][rows]
+      idx <- which(rule$condition(x))
+
+      if (!length(idx))
+        next
+
+      excel_col <- range$start_cell[2L] +
+        if (row_names) 1L else 0L +
+        j - 1L
+
+      excel_rows <- range$start_cell[1L] + rows[idx]
+
+      openxlsx::addStyle(
+        wb = wb,
+        sheet = sheet,
+        style = rule$style,
+        rows = excel_rows,
+        cols = excel_col,
+        gridExpand = FALSE,
+        stack = TRUE
+      )
+    }
+  }
+
+  invisible(wb)
 }
 
 #' @keywords internal

@@ -19,6 +19,7 @@ save_data_xlsx_split(
   widths = 8.43,
   auto_width = TRUE,
   num_fmt = NULL,
+  style_rules = NULL,
   overwrite = FALSE
 )
 }
@@ -55,6 +56,15 @@ excluded). Accepts either:
 \item A \strong{named character vector or list} mapping column names to formats,
 e.g. \code{c(value = "#,##0", rate = "0.0\%")}. Columns not listed are left
 unchanged. Unknown column names are silently ignored.
+}}
+
+\item{style_rules}{Optional list of styling rules applied after each table is
+written. Each rule is a list containing:
+\itemize{
+\item \code{cols}: character column names or numeric column indices
+\item \code{rows}: optional numeric row indices restricting the rule (default: all rows)
+\item \code{condition}: a function returning a logical vector for the target column
+\item \code{style}: a style object created by \code{\link[=create_style]{create_style()}}
 }}
 
 \item{overwrite}{Logical; if \code{TRUE}, overwrite an existing workbook. Default \code{FALSE}.}
@@ -103,5 +113,22 @@ save_data_xlsx_split(
   file       = "sheets_auto.xlsx",
   overwrite  = TRUE
 )
+
+# Case 4: apply cell styles on separate sheets
+style_hi <- create_style(fg_fill = "#FF9999")
+
+save_data_xlsx_split(
+  data = list(iris_tab = d1, mtcars_tab = d2),
+  file = "sheets_styled.xlsx",
+  style_rules = list(
+    list(
+      cols = 1,
+      condition = function(x) x > 6,
+      style = style_hi
+    )
+  ),
+  overwrite = TRUE
+)
 }
+
 }

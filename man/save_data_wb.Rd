@@ -20,7 +20,8 @@ save_data_wb(
   widths = 8.43,
   auto_width = TRUE,
   width_scope = c("global_max", "per_table"),
-  num_fmt = NULL
+  num_fmt = NULL,
+  style_rules = NULL
 )
 }
 \arguments{
@@ -69,6 +70,15 @@ Default \code{"global_max"}.
 excluded). Either a single character (applied to all numeric columns),
 or a named character vector/list mapping column names to formats
 (unknown names are ignored).}
+
+\item{style_rules}{Optional list of styling rules applied after each table is
+written. Each rule is a list containing:
+\itemize{
+\item \code{cols}: character column names or numeric column indices
+\item \code{rows}: optional numeric row indices restricting the rule (default: all rows)
+\item \code{condition}: a function returning a logical vector for the target column
+\item \code{style}: a style object created by \code{\link[=create_style]{create_style()}}
+}}
 }
 \value{
 The modified \code{Workbook} (invisibly), suitable for chaining and for
@@ -126,6 +136,31 @@ save_data_wb(
   width_scope = "per_table"
 )
 openxlsx::saveWorkbook(wb2, "placed.xlsx", overwrite = TRUE)
+
+# Apply conditional styles
+wb3 <- openxlsx::createWorkbook()
+
+style_hi <- create_style(fg_fill = "#FF9999")
+style_lo <- create_style(fg_fill = "#DDEBF7")
+
+save_data_wb(
+  data  = iris,
+  wb    = wb3,
+  sheet = "Styled",
+  style_rules = list(
+    list(
+      cols = "Sepal.Length",
+      condition = function(x) x > 6,
+      style = style_hi
+    ),
+    list(
+      cols = "Petal.Width",
+      condition = function(x) x < 0.3,
+      style = style_lo
+    )
+  )
+)
+openxlsx::saveWorkbook(wb3, "styled.xlsx", overwrite = TRUE)
 }
 
 }

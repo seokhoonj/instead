@@ -18,7 +18,8 @@ save_data_wb_split(
   border_color = "#000000",
   widths = 8.43,
   auto_width = TRUE,
-  num_fmt = NULL
+  num_fmt = NULL,
+  style_rules = NULL
 )
 }
 \arguments{
@@ -55,6 +56,15 @@ via \code{openxlsx::setColWidths()} for \strong{data columns only}. Default \cod
 excluded). Either a single character (applied to all numeric columns)
 or a named character vector/list mapping column names to formats
 (unknown names are ignored).}
+
+\item{style_rules}{Optional list of styling rules applied after each table is
+written. Each rule is a list containing:
+\itemize{
+\item \code{cols}: character column names or numeric column indices
+\item \code{rows}: optional numeric row indices restricting the rule (default: all rows)
+\item \code{condition}: a function returning a logical vector for the target column
+\item \code{style}: a style object created by \code{\link[=create_style]{create_style()}}
+}}
 }
 \value{
 The modified \code{Workbook} (invisibly).
@@ -83,6 +93,7 @@ include the optional title row.
 }
 \examples{
 \dontrun{
+# Write tables to separate sheets
 wb <- openxlsx::createWorkbook()
 save_data_wb_split(
   data        = list(iris_tab = head(iris), mtcars_tab = head(mtcars)),
@@ -92,6 +103,23 @@ save_data_wb_split(
   auto_width  = TRUE
 )
 openxlsx::saveWorkbook(wb, "by_sheet.xlsx", overwrite = TRUE)
+
+# Apply cell styles on separate sheets
+wb2 <- openxlsx::createWorkbook()
+style_hi <- create_style(fg_fill = "#FF9999")
+
+save_data_wb_split(
+  data = list(iris_tab = head(iris), mtcars_tab = head(mtcars)),
+  wb = wb2,
+  style_rules = list(
+    list(
+      cols = 1,
+      condition = function(x) x > 6,
+      style = style_hi
+    )
+  )
+)
+openxlsx::saveWorkbook(wb2, "by_sheet_styled.xlsx", overwrite = TRUE)
 }
 
 }
