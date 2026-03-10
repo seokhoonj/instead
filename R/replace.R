@@ -129,6 +129,75 @@ replace_zero_with_na <- function(DT, cols) {
   invisible(DT[])
 }
 
+#' Replace non-finite values with NA (in place, type-preserving)
+#'
+#' Replaces non-finite values (`NaN`, `Inf`, `-Inf`) with `NA` in selected
+#' **numeric** columns of a data.table. Uses [data.table::set()] to modify
+#' only affected rows *in place*.
+#'
+#' @param DT A data.table (modified in place).
+#' @param cols Columns to target, passed to [capture_names()].
+#'   Can be specified as unquoted names (e.g., `c(x, y)`),
+#'   a character vector (e.g., `c("x","y")`), or integer indices (e.g., `c(1,2)`).
+#'   If missing, all numeric columns are used.
+#'
+#' @return The modified data.table, returned invisibly.
+#'
+#' @details
+#' - Only **numeric** columns are targeted by default.
+#' - Non-finite values (`NaN`, `Inf`, `-Inf`) are replaced with `NA` **in place**.
+#' - Columns are updated **in place** only at the affected row indices.
+#' - If `cols` includes non-numeric columns, they are rejected with an error.
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#'
+#' dt <- data.table::data.table(
+#'   x = c(1, NaN, Inf, -Inf, 5),
+#'   y = c(NA, 2, 3, 4, 5),
+#'   z = c("a", "b", "c", "d", "e")
+#' )
+#'
+#' replace_nonfinite_with_na(dt)
+#' print(dt)
+#'
+#' replace_nonfinite_with_na(dt, cols = c("x"))
+#' print(dt)
+#' }
+#'
+#' @export
+replace_nonfinite_with_na <- function(DT, cols) {
+  assert_class(DT, "data.table")
+
+  if (missing(cols)) {
+    cols <- .get_numeric_cols(DT)
+  } else {
+    cols_captured <- capture_names(DT, !!rlang::enquo(cols))
+    cols_numeric  <- .get_numeric_cols(DT)
+    cols_non_numeric <- setdiff(cols_captured, cols_numeric)
+
+    if (length(cols_non_numeric)) {
+      stop(sprintf(
+        "Non-numeric column(s) not allowed: %s",
+        paste(cols_non_numeric, collapse = ", ")
+      ), call. = FALSE)
+    }
+    cols <- cols_captured
+  }
+
+  if (!length(cols))
+    return(invisible(DT[]))
+
+  for (j in cols) {
+    i <- which(!is.finite(DT[[j]]))
+    if (length(i))
+      data.table::set(DT, i = i, j = j, value = NA_real_)
+  }
+
+  invisible(DT[])
+}
+
 #' Replace empty strings with NA (in place)
 #'
 #' Replaces `""` with `NA_character_` in selected **character** columns.
