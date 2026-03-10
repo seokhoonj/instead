@@ -2811,23 +2811,24 @@ get_next_cell_right <- function(wb, col_spacer = 2L) {
   c(r$start_cell[1L], r$end_cell[2L] + 1L + col_spacer)
 }
 
-#' Create an Excel cell style
+#' Create an Excel style
 #'
-#' Convenience wrapper around [openxlsx::createStyle()] that uses
-#' snake_case argument names.
+#' Convenience wrapper around [openxlsx::createStyle()] using snake_case
+#' argument names.
 #'
-#' @param font_name Font family.
-#' @param font_size Font size.
+#' @param font_name Font family. Default `getOption("instead.font")`.
+#' @param font_size Font size. Default `11`.
 #' @param font_color Font color.
 #' @param bold,italic,underline,strikeout Logical text decorations.
 #' @param fg_fill Cell background fill color.
-#' @param border Border specification.
+#' @param border Border specification passed to [openxlsx::createStyle()].
 #' @param border_color Border color.
 #' @param h_align,v_align Horizontal and vertical alignment.
 #' @param wrap_text Logical; whether text should wrap.
-#' @param num_fmt Excel number format.
+#' @param num_fmt Optional Excel number format.
 #'
 #' @return An `openxlsx` style object.
+#'
 #' @export
 create_style <- function(font_name = getOption("instead.font"),
                          font_size = 11,
@@ -2843,7 +2844,6 @@ create_style <- function(font_name = getOption("instead.font"),
                          v_align = NULL,
                          wrap_text = FALSE,
                          num_fmt = NULL) {
-
   text_decoration <- c(
     if (bold) "bold",
     if (italic) "italic",
@@ -2854,19 +2854,23 @@ create_style <- function(font_name = getOption("instead.font"),
   if (!length(text_decoration))
     text_decoration <- NULL
 
-  openxlsx::createStyle(
-    fontName = font_name,
-    fontSize = font_size,
-    fontColour = font_color,
+  args <- list(
+    fontName       = font_name,
+    fontSize       = font_size,
+    fontColour     = font_color,
     textDecoration = text_decoration,
-    fgFill = fg_fill,
-    border = border,
-    borderColour = border_color,
-    halign = h_align,
-    valign = v_align,
-    wrapText = wrap_text,
-    numFmt = num_fmt
+    fgFill         = fg_fill,
+    border         = border,
+    borderColour   = border_color,
+    halign         = h_align,
+    valign         = v_align,
+    wrapText       = wrap_text,
+    numFmt         = num_fmt
   )
+
+  args <- args[!vapply(args, is.null, logical(1))]
+
+  do.call(openxlsx::createStyle, args)
 }
 
 # Internal helper functions -----------------------------------------------

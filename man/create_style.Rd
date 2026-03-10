@@ -2,7 +2,7 @@
 % Please edit documentation in R/excel.R
 \name{create_style}
 \alias{create_style}
-\title{Create an Excel cell style}
+\title{Create an Excel style}
 \usage{
 create_style(
   font_name = getOption("instead.font"),
@@ -22,9 +22,9 @@ create_style(
 )
 }
 \arguments{
-\item{font_name}{Font family.}
+\item{font_name}{Font family. Default \code{getOption("instead.font")}.}
 
-\item{font_size}{Font size.}
+\item{font_size}{Font size. Default \code{11}.}
 
 \item{font_color}{Font color.}
 
@@ -32,7 +32,7 @@ create_style(
 
 \item{fg_fill}{Cell background fill color.}
 
-\item{border}{Border specification.}
+\item{border}{Border specification passed to \code{\link[openxlsx:createStyle]{openxlsx::createStyle()}}.}
 
 \item{border_color}{Border color.}
 
@@ -40,12 +40,12 @@ create_style(
 
 \item{wrap_text}{Logical; whether text should wrap.}
 
-\item{num_fmt}{Excel number format.}
+\item{num_fmt}{Optional Excel number format.}
 }
 \value{
 An \code{openxlsx} style object.
 }
 \description{
-Convenience wrapper around \code{\link[openxlsx:createStyle]{openxlsx::createStyle()}} that uses
-snake_case argument names.
+Convenience wrapper around \code{\link[openxlsx:createStyle]{openxlsx::createStyle()}} using snake_case
+argument names.
 }
