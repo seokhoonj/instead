@@ -60,9 +60,16 @@ or a named character vector/list mapping column names to formats
 \item{style_rules}{Optional list of styling rules applied after each table is
 written. Each rule is a list containing:
 \itemize{
-\item \code{cols}: character column names or numeric column indices
-\item \code{rows}: optional numeric row indices restricting the rule (default: all rows)
-\item \code{condition}: a function returning a logical vector for the target column
+\item \code{cols}: character column names or numeric column indices in the
+saved table where styles should be applied
+\item \code{rows}: optional numeric row indices restricting the rule
+(default: all rows)
+\item \code{data}: optional reference data used to evaluate the rule; must have
+the same dimensions as the saved table. If omitted, the saved table
+itself is used
+\item \code{condition}: a function returning a logical vector. It may be of the
+form \verb{function(x)} or \verb{function(x, data)}, where \code{x} is the reference
+column vector and \code{data} is the reference data restricted to the selected rows
 \item \code{style}: a style object created by \code{\link[=create_style]{create_style()}}
 }}
 }

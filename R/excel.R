@@ -108,9 +108,16 @@ to_a1_col <- function(x) {
 #' @param style_rules Optional list of styling rules applied after each table is
 #'   written. Each rule is a list containing:
 #'   \itemize{
-#'   \item `cols`: character column names or numeric column indices
-#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
-#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `cols`: character column names or numeric column indices in the
+#'     saved table where styles should be applied
+#'   \item `rows`: optional numeric row indices restricting the rule
+#'     (default: all rows)
+#'   \item `data`: optional reference data used to evaluate the rule; must have
+#'     the same dimensions as the saved table. If omitted, the saved table
+#'     itself is used
+#'   \item `condition`: a function returning a logical vector. It may be of the
+#'     form `function(x)` or `function(x, data)`, where `x` is the reference
+#'     column vector and `data` is the reference data restricted to the selected rows
 #'   \item `style`: a style object created by [create_style()]
 #'   }
 #'
@@ -449,9 +456,16 @@ save_data_wb <- function(data,
 #' @param style_rules Optional list of styling rules applied after each table is
 #'   written. Each rule is a list containing:
 #'   \itemize{
-#'   \item `cols`: character column names or numeric column indices
-#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
-#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `cols`: character column names or numeric column indices in the
+#'     saved table where styles should be applied
+#'   \item `rows`: optional numeric row indices restricting the rule
+#'     (default: all rows)
+#'   \item `data`: optional reference data used to evaluate the rule; must have
+#'     the same dimensions as the saved table. If omitted, the saved table
+#'     itself is used
+#'   \item `condition`: a function returning a logical vector. It may be of the
+#'     form `function(x)` or `function(x, data)`, where `x` is the reference
+#'     column vector and `data` is the reference data restricted to the selected rows
 #'   \item `style`: a style object created by [create_style()]
 #'   }
 #'
@@ -1318,9 +1332,16 @@ save_image_wb_split <- function(image, wb,
 #' @param style_rules Optional list of styling rules applied after each table is
 #'   written. Each rule is a list containing:
 #'   \itemize{
-#'   \item `cols`: character column names or numeric column indices
-#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
-#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `cols`: character column names or numeric column indices in the
+#'     saved table where styles should be applied
+#'   \item `rows`: optional numeric row indices restricting the rule
+#'     (default: all rows)
+#'   \item `data`: optional reference data used to evaluate the rule; must have
+#'     the same dimensions as the saved table. If omitted, the saved table
+#'     itself is used
+#'   \item `condition`: a function returning a logical vector. It may be of the
+#'     form `function(x)` or `function(x, data)`, where `x` is the reference
+#'     column vector and `data` is the reference data restricted to the selected rows
 #'   \item `style`: a style object created by [create_style()]
 #'   }
 #' @param overwrite Logical; passed to `openxlsx::saveWorkbook()`. Default `FALSE`.
@@ -1473,9 +1494,16 @@ save_data_xlsx <- function(data, file, sheet = "Data",
 #' @param style_rules Optional list of styling rules applied after each table is
 #'   written. Each rule is a list containing:
 #'   \itemize{
-#'   \item `cols`: character column names or numeric column indices
-#'   \item `rows`: optional numeric row indices restricting the rule (default: all rows)
-#'   \item `condition`: a function returning a logical vector for the target column
+#'   \item `cols`: character column names or numeric column indices in the
+#'     saved table where styles should be applied
+#'   \item `rows`: optional numeric row indices restricting the rule
+#'     (default: all rows)
+#'   \item `data`: optional reference data used to evaluate the rule; must have
+#'     the same dimensions as the saved table. If omitted, the saved table
+#'     itself is used
+#'   \item `condition`: a function returning a logical vector. It may be of the
+#'     form `function(x)` or `function(x, data)`, where `x` is the reference
+#'     column vector and `data` is the reference data restricted to the selected rows
 #'   \item `style`: a style object created by [create_style()]
 #'   }
 #' @param overwrite Logical; if `TRUE`, overwrite an existing workbook. Default `FALSE`.
@@ -1984,7 +2012,7 @@ save_index_sheet_wb <- function(wb,
     )
   }
 
-  data <- data.frame(sheet = target_sheets, link = target_sheets)
+  data <- data.frame(link = target_sheets)
 
   instead::save_data_wb(data, wb, sheet = index_sheet, rc = rc_index)
 
@@ -2934,13 +2962,130 @@ create_style <- function(font_name = getOption("instead.font"),
 
 #' @keywords internal
 #' @noRd
+.insert_plot <- function(wb, sheet, plot, rc = c(1L, 1L), width = 12, height = 6,
+                         dpi = 300) {
+  print(plot)
+  openxlsx::insertPlot(wb, sheet = sheet, width = width, height = height,
+                       startRow = rc[1L], startCol = rc[2L], dpi = dpi)
+}
+
+#' Apply style rules to a written Excel table (internal)
+#'
+#' Applies one or more cell styles to an already written table in an
+#' `openxlsx` workbook. Styling is applied by position using the written table
+#' `range`, and may be based either on the saved table itself or on a separate
+#' reference table of the same dimensions.
+#'
+#' Each rule in `style_rules` must be a list containing:
+#' \itemize{
+#' \item `cols`: character column names or numeric column indices in the saved table
+#' \item optional `rows`: numeric row indices restricting the rule (default: all rows)
+#' \item optional `data`: reference data used to evaluate the rule; if omitted,
+#'   the saved table itself is used
+#' \item `condition`: a function returning a logical vector; may be of the form
+#'   `function(x)` or `function(x, data)`
+#' \item `style`: a style object created by [create_style()]
+#' }
+#'
+#' @param wb An `openxlsx` `Workbook`.
+#' @param sheet Worksheet name.
+#' @param data The saved table as a data.frame or data.table.
+#' @param range A list with elements `start_cell` and `end_cell`, giving the
+#'   written table range in the worksheet.
+#' @param style_rules Optional list of styling rules.
+#' @param row_names Logical; whether a row-name column is present in the saved table.
+#'
+#' @return The modified workbook, invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' # Example 1: style based on the saved data itself
+#' wb <- openxlsx::createWorkbook()
+#' openxlsx::addWorksheet(wb, "iris")
+#' dt <- head(iris)
+#'
+#' wb <- write_data(wb, "iris", dt, rc = c(1, 1))
+#' rng <- list(start_cell = c(1, 1), end_cell = c(nrow(dt) + 1, ncol(dt)))
+#'
+#' .apply_style_wb(
+#'   wb = wb,
+#'   sheet = "iris",
+#'   data = dt,
+#'   range = rng,
+#'   style_rules = list(
+#'     list(
+#'       cols = "Sepal.Length",
+#'       condition = function(x) x > 6,
+#'       style = create_style(fg_fill = "#FF9999")
+#'     )
+#'   )
+#' )
+#'
+#' # Example 2: style one column based on another column in the same data
+#' dt2 <- data.frame(
+#'   loading = c(1.2, 0.8, NA),
+#'   decision = c("reject", "fail", "fail")
+#' )
+#'
+#' .apply_style_wb(
+#'   wb = wb,
+#'   sheet = "iris",
+#'   data = dt2,
+#'   range = list(start_cell = c(1, 1), end_cell = c(nrow(dt2) + 1, ncol(dt2))),
+#'   style_rules = list(
+#'     list(
+#'       cols = "loading",
+#'       condition = function(x, data) data$decision == "reject",
+#'       style = create_style(fg_fill = "#DDEBF7")
+#'     )
+#'   )
+#' )
+#'
+#' # Example 3: style saved data using a separate reference table
+#' value_dt <- data.frame(
+#'   plan = c("A", "B"),
+#'   `20-29` = c(1.2, 0.8),
+#'   `30-39` = c(0.7, 1.5)
+#' )
+#'
+#' ref_dt <- data.frame(
+#'   plan = c("A", "B"),
+#'   `20-29` = c("reject", "fail"),
+#'   `30-39` = c("fail", "reject")
+#' )
+#'
+#' .apply_style_wb(
+#'   wb = wb,
+#'   sheet = "iris",
+#'   data = value_dt,
+#'   range = list(start_cell = c(1, 1), end_cell = c(nrow(value_dt) + 1, ncol(value_dt))),
+#'   style_rules = list(
+#'     list(
+#'       cols = c("20-29", "30-39"),
+#'       data = ref_dt,
+#'       condition = function(x) x == "reject",
+#'       style = create_style(fg_fill = "#DDEBF7")
+#'     )
+#'   )
+#' )
+#' }
+#'
+#' @keywords internal
 .apply_style_wb <- function(wb, sheet, data, range,
                             style_rules = NULL,
                             row_names = FALSE) {
   if (is.null(style_rules) || !length(style_rules))
     return(invisible(wb))
 
+  # normalize once
+  data <- data.table::as.data.table(data)
+
   for (rule in style_rules) {
+
+    # each rule must define:
+    # - cols      : target columns to style in the saved table
+    # - condition : logical condition function
+    # - style     : openxlsx style object
     if (is.null(rule$cols) || is.null(rule$condition) || is.null(rule$style)) {
       stop(
         "Each `style_rules` rule must contain `cols`, `condition`, and `style`.",
@@ -2951,6 +3096,17 @@ create_style <- function(font_name = getOption("instead.font"),
     cols <- rule$cols
     rows <- rule$rows
 
+    # reference data used to decide where styles should be applied:
+    # - if rule$data is supplied, use it
+    # - otherwise use the saved data itself
+    ref_data <- if (is.null(rule$data)) data else data.table::as.data.table(rule$data)
+
+    # styling is position-based, so reference data must have the same shape
+    if (!identical(dim(ref_data), dim(data))) {
+      stop("`rule$data` must have the same dimensions as `data`.", call. = FALSE)
+    }
+
+    # resolve target columns in the saved table
     if (is.character(cols)) {
       col_idx <- match(cols, names(data))
       if (anyNA(col_idx)) {
@@ -2971,6 +3127,7 @@ create_style <- function(font_name = getOption("instead.font"),
       stop("`cols` in `style_rules` must be character or numeric.", call. = FALSE)
     }
 
+    # rows can optionally restrict where the rule is evaluated/applied
     if (is.null(rows)) {
       rows <- seq_len(nrow(data))
     } else if (is.numeric(rows)) {
@@ -2984,16 +3141,30 @@ create_style <- function(font_name = getOption("instead.font"),
       next
 
     for (j in col_idx) {
-      x <- data[[j]][rows]
-      idx <- which(rule$condition(x))
+
+      # x is the reference vector used by the rule condition
+      # from the selected rows and current column
+      x <- ref_data[[j]][rows]
+
+      # support both:
+      # - function(x)
+      # - function(x, data)
+      idx <- if (length(formals(rule$condition)) >= 2L) {
+        which(rule$condition(x, ref_data[rows, , drop = FALSE]))
+      } else {
+        which(rule$condition(x))
+      }
 
       if (!length(idx))
         next
 
+      # convert data-table column position to actual Excel column index
       excel_col <- range$start_cell[2L] +
         if (row_names) 1L else 0L +
         j - 1L
 
+      # Excel row positions:
+      # start_cell is the header row, so data row 1 starts at start_row + 1
       excel_rows <- range$start_cell[1L] + rows[idx]
 
       openxlsx::addStyle(
@@ -3009,13 +3180,4 @@ create_style <- function(font_name = getOption("instead.font"),
   }
 
   invisible(wb)
-}
-
-#' @keywords internal
-#' @noRd
-.insert_plot <- function(wb, sheet, plot, rc = c(1L, 1L), width = 12, height = 6,
-                         dpi = 300) {
-  print(plot)
-  openxlsx::insertPlot(wb, sheet = sheet, width = width, height = height,
-                       startRow = rc[1L], startCol = rc[2L], dpi = dpi)
 }
