@@ -308,7 +308,7 @@ save_data_wb <- function(data,
 
     for (i in seq_along(data)) {
       start_col <- starts[[i]][2L]
-      cw <- .get_col_widths(data[[i]], row_names = row_names)
+      cw <- .get_col_widths(data[[i]], row_names = row_names, num_fmt = num_fmt)
       key <- as.character(start_col)
       if (!length(global_widths[[key]])) {
         # first table at this start_col -> store widths directly
@@ -403,7 +403,7 @@ save_data_wb <- function(data,
       cw <- if (identical(width_scope, "global_max")) {
         global_widths[[as.character(start_col)]]
       } else {
-        .get_col_widths(data[[i]], row_names = row_names)
+        .get_col_widths(data[[i]], row_names = row_names, num_fmt = num_fmt)
       }
       openxlsx::setColWidths(
         wb, sheet = sheet,
@@ -655,7 +655,7 @@ save_data_wb_split <- function(data,
 
     # auto width (data columns only)
     if (auto_width) {
-      cw <- .get_col_widths(data[[i]], row_names = row_names)
+      cw <- .get_col_widths(data[[i]], row_names = row_names, num_fmt = num_fmt)
       openxlsx::setColWidths(
         wb, sheet = sheet,
         cols   = start_col + seq_along(cw) - 1L,
@@ -3004,15 +3004,117 @@ create_style <- function(font_name = getOption("instead.font"),
 
 #' @keywords internal
 #' @noRd
-.get_col_widths <- function(df, row_names = FALSE, min_width = 8.43, pad = 3) {
+.apply_num_fmt <- function(x, fmt = NULL) {
+  if (is.factor(x))
+    x <- as.character(x)
+
+  if (inherits(x, "Date")) {
+    return(ifelse(is.na(x), "", as.character(x)))
+  }
+
+  if (!is.numeric(x) || is.null(fmt)) {
+    return(ifelse(is.na(x), "", as.character(x)))
+  }
+
+  out <- rep("", length(x))
+  ok  <- !is.na(x)
+
+  if (!any(ok))
+    return(out)
+
+  # 0.00 / 0.000 / ...
+  if (grepl("^0\\.[0]+$", fmt)) {
+    digits <- nchar(sub("^0\\.", "", fmt))
+    out[ok] <- formatC(x[ok], format = "f", digits = digits)
+    return(out)
+  }
+
+  # 0
+  if (identical(fmt, "0")) {
+    out[ok] <- formatC(x[ok], format = "f", digits = 0)
+    return(out)
+  }
+
+  # #,##0
+  if (identical(fmt, "#,##0")) {
+    out[ok] <- prettyNum(
+      formatC(x[ok], format = "f", digits = 0),
+      big.mark = ",",
+      preserve.width = "none"
+    )
+    return(out)
+  }
+
+  # #,##0.00 / #,##0.000 ...
+  if (grepl("^#,##0\\.[0]+$", fmt)) {
+    digits <- nchar(sub("^#,##0\\.", "", fmt))
+    out[ok] <- prettyNum(
+      formatC(x[ok], format = "f", digits = digits),
+      big.mark = ",",
+      preserve.width = "none"
+    )
+    return(out)
+  }
+
+  # 0.00%
+  if (grepl("^0\\.[0]+%$", fmt)) {
+    digits <- nchar(sub("^0\\.", "", sub("%$", "", fmt)))
+    out[ok] <- paste0(formatC(100 * x[ok], format = "f", digits = digits), "%")
+    return(out)
+  }
+
+  # fallback: plain character conversion
+  out[ok] <- as.character(x[ok])
+  out
+}
+
+#' @keywords internal
+#' @noRd
+.resolve_num_fmt_map <- function(data, num_fmt = NULL) {
+  nms <- names(data)
+  out <- stats::setNames(as.list(rep(NA_character_, length(nms))), nms)
+
+  if (is.null(num_fmt))
+    return(out)
+
+  if (is.character(num_fmt) && length(num_fmt) == 1L) {
+    num_cols <- names(data)[vapply(data, is.numeric, logical(1))]
+    out[num_cols] <- list(num_fmt)
+    return(out)
+  }
+
+  if (is.list(num_fmt) || (is.character(num_fmt) && !is.null(names(num_fmt)))) {
+    num_fmt <- unlist(num_fmt)
+    idx <- intersect(names(num_fmt), nms)
+    out[idx] <- as.list(num_fmt[idx])
+    return(out)
+  }
+
+  out
+}
+
+#' @keywords internal
+#' @noRd
+.get_col_widths <- function(df,
+                            row_names = FALSE,
+                            num_fmt = NULL,
+                            min_width = 8.43,
+                            pad = 3) {
   stopifnot(is.data.frame(df))
+
+  fmt_map <- .resolve_num_fmt_map(df, num_fmt = num_fmt)
+
   if (row_names) {
     df <- cbind(.row = rownames(df), df, stringsAsFactors = FALSE)
+    fmt_map <- c(list(.row = NA_character_), fmt_map)
   }
+
   cols <- seq_along(df)
+
   vapply(cols, function(j) {
     header <- colnames(df)[j]
-    body   <- as.character(df[[j]])
+    body   <- .apply_num_fmt(df[[j]], fmt = fmt_map[[j]])
+
     w <- max(nchar(c(header, body), type = "width"), na.rm = TRUE)
     max(min_width, w + pad)
   }, numeric(1L))
