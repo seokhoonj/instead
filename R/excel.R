@@ -384,12 +384,19 @@ save_data_wb <- function(data,
 
     # append to range history
     ranges <- attr(wb, "instead.ranges")
-    if (is.null(ranges)) ranges <- list()
+    if (is.null(ranges))
+      ranges <- list()
     ranges[[length(ranges) + 1L]] <- range
     attr(wb, "instead.ranges") <- ranges
 
+    last_by_sheet <- attr(wb, "instead.last_range_by_sheet")
+    if (is.null(last_by_sheet) || !is.list(last_by_sheet))
+      last_by_sheet <- list()
+    last_by_sheet[[sheet]] <- range
+    attr(wb, "instead.last_range_by_sheet") <- last_by_sheet
+
     # apply styles
-    .apply_style_wb(
+    wb <- .apply_style_wb(
       wb          = wb,
       sheet       = sheet,
       data        = data[[i]],
