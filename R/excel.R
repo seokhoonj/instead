@@ -2026,7 +2026,7 @@ save_index_sheet_wb <- function(wb,
       wb = wb,
       sheet = index_sheet,
       x = sprintf('HYPERLINK("#\'%s\'!A1","%s")', target_sheet, target_sheet),
-      rc = rc_index + c(i, 1)
+      rc = rc_index + c(i, 0)
     )
 
     # back link
