@@ -2062,12 +2062,12 @@ save_index_sheet_wb <- function(wb,
 
   # save index table
   wb <- instead::save_data_wb(
-    data  = data,
-    wb    = wb,
-    sheet = index_sheet,
-    rc    = rc_index,
-    title = title,
-    title_size = title_size
+    data        = data,
+    wb          = wb,
+    sheet       = index_sheet,
+    rc          = rc_index,
+    data_titles = title,
+    title_size  = title_size
   )
 
   # write hyperlinks in the last column (`link`)
