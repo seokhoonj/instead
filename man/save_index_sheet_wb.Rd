@@ -8,6 +8,9 @@ save_index_sheet_wb(
   wb,
   index_sheet = "Index",
   target_sheets,
+  index_table = NULL,
+  title = "Index Table",
+  title_size = 16,
   rc_index = c(1, 1),
   rc_target = c(1, 1),
   tab_colour = "#FFFF00"
@@ -16,10 +19,19 @@ save_index_sheet_wb(
 \arguments{
 \item{wb}{An \code{openxlsx} \code{Workbook} object.}
 
-\item{index_sheet}{Name of the index sheet. Default \code{"INDEX"}.}
+\item{index_sheet}{Name of the index sheet. Default \code{"Index"}.}
 
 \item{target_sheets}{Character vector of sheet names that will appear
 in the index table and receive back-links.}
+
+\item{index_table}{Optional data.frame or data.table to be written on the
+index sheet before the \code{link} column is appended. If supplied, it must
+have the same number of rows as \code{target_sheets}.}
+
+\item{title}{Optional title written above the index table. Default
+\code{"Index Table"}. Use \code{NULL} to omit the title.}
+
+\item{title_size}{Numeric font size for \code{title}. Default \code{16}.}
 
 \item{rc_index}{Integer vector \code{c(row, col)} specifying the starting
 cell for the index table written on \code{index_sheet}.}
@@ -34,17 +46,16 @@ Invisibly returns the modified \code{Workbook}.
 }
 \description{
 Creates (or updates) an index sheet that provides navigation links to
-selected sheets in an Excel workbook. The index sheet contains a table
-with two columns:
+selected sheets in an Excel workbook.
 }
 \details{
-\itemize{
-\item \code{sheet}: the name of each target sheet
-\item \code{link}: a hyperlink pointing to cell \code{A1} of that sheet
-}
+If \code{index_table} is supplied, it is written to the index sheet and a
+\code{link} column is appended on the right. Otherwise, a default index table
+with columns \code{no}, \code{sheet}, and \code{link} is created automatically.
 
-In addition, a back-link is written on each target sheet so users can
-return to the index sheet.
+The \code{link} column is then replaced with hyperlinks pointing to cell \code{A1}
+of each target sheet. In addition, a back-link is written on each target
+sheet so users can return to the index sheet.
 
 If the index sheet does not exist, it is created automatically with
 grid lines disabled and the specified tab colour. The index sheet is
@@ -58,12 +69,32 @@ openxlsx::addWorksheet(wb, "Sheet1")
 openxlsx::addWorksheet(wb, "Sheet2")
 
 save_index_sheet_wb(
-  wb,
+  wb = wb,
   index_sheet = "INDEX",
   target_sheets = c("Sheet1", "Sheet2")
 )
 
 openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+
+# With an explicit index table
+wb2 <- openxlsx::createWorkbook()
+openxlsx::addWorksheet(wb2, "Sheet1")
+openxlsx::addWorksheet(wb2, "Sheet2")
+
+idx <- data.frame(
+  no = 1:2,
+  label = c("First sheet", "Second sheet")
+)
+
+save_index_sheet_wb(
+  wb = wb2,
+  index_sheet = "INDEX",
+  target_sheets = c("Sheet1", "Sheet2"),
+  index_table = idx,
+  title = "Index Table"
+)
+
+openxlsx::saveWorkbook(wb2, "example_index.xlsx", overwrite = TRUE)
 }
 
 }

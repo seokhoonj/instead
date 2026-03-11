@@ -1931,28 +1931,35 @@ save_image_xlsx_split <- function(image, file,
   invisible(file)
 }
 
-# Save navigation sheet ---------------------------------------------------
+# Save index sheet --------------------------------------------------------
 
 #' Create an index sheet with hyperlinks to workbook sheets
 #'
 #' Creates (or updates) an index sheet that provides navigation links to
-#' selected sheets in an Excel workbook. The index sheet contains a table
-#' with two columns:
+#' selected sheets in an Excel workbook.
 #'
-#' - `sheet`: the name of each target sheet
-#' - `link`: a hyperlink pointing to cell `A1` of that sheet
+#' If `index_table` is supplied, it is written to the index sheet and a
+#' `link` column is appended on the right. Otherwise, a default index table
+#' with columns `no`, `sheet`, and `link` is created automatically.
 #'
-#' In addition, a back-link is written on each target sheet so users can
-#' return to the index sheet.
+#' The `link` column is then replaced with hyperlinks pointing to cell `A1`
+#' of each target sheet. In addition, a back-link is written on each target
+#' sheet so users can return to the index sheet.
 #'
 #' If the index sheet does not exist, it is created automatically with
 #' grid lines disabled and the specified tab colour. The index sheet is
 #' then moved to the first position in the workbook.
 #'
 #' @param wb An `openxlsx` `Workbook` object.
-#' @param index_sheet Name of the index sheet. Default `"INDEX"`.
+#' @param index_sheet Name of the index sheet. Default `"Index"`.
 #' @param target_sheets Character vector of sheet names that will appear
 #'   in the index table and receive back-links.
+#' @param index_table Optional data.frame or data.table to be written on the
+#'   index sheet before the `link` column is appended. If supplied, it must
+#'   have the same number of rows as `target_sheets`.
+#' @param title Optional title written above the index table. Default
+#'   `"Index Table"`. Use `NULL` to omit the title.
+#' @param title_size Numeric font size for `title`. Default `16`.
 #' @param rc_index Integer vector `c(row, col)` specifying the starting
 #'   cell for the index table written on `index_sheet`.
 #' @param rc_target Integer vector `c(row, col)` specifying the cell where
@@ -1969,21 +1976,45 @@ save_image_xlsx_split <- function(image, file,
 #' openxlsx::addWorksheet(wb, "Sheet2")
 #'
 #' save_index_sheet_wb(
-#'   wb,
+#'   wb = wb,
 #'   index_sheet = "INDEX",
 #'   target_sheets = c("Sheet1", "Sheet2")
 #' )
 #'
 #' openxlsx::saveWorkbook(wb, "example.xlsx", overwrite = TRUE)
+#'
+#' # With an explicit index table
+#' wb2 <- openxlsx::createWorkbook()
+#' openxlsx::addWorksheet(wb2, "Sheet1")
+#' openxlsx::addWorksheet(wb2, "Sheet2")
+#'
+#' idx <- data.frame(
+#'   no = 1:2,
+#'   label = c("First sheet", "Second sheet")
+#' )
+#'
+#' save_index_sheet_wb(
+#'   wb = wb2,
+#'   index_sheet = "INDEX",
+#'   target_sheets = c("Sheet1", "Sheet2"),
+#'   index_table = idx,
+#'   title = "Index Table"
+#' )
+#'
+#' openxlsx::saveWorkbook(wb2, "example_index.xlsx", overwrite = TRUE)
 #' }
 #'
 #' @export
 save_index_sheet_wb <- function(wb,
                                 index_sheet = "Index",
                                 target_sheets,
+                                index_table = NULL,
+                                title = "Index Table",
+                                title_size = 16,
                                 rc_index  = c(1, 1),
                                 rc_target = c(1, 1),
-                                tab_colour = "#FFFF00") {
+                                tab_colour = "#FFFF00"
+                                ) {
   if (!inherits(wb, "Workbook"))
     stop("`wb` must be an openxlsx Workbook.", call. = FALSE)
 
@@ -2012,9 +2043,36 @@ save_index_sheet_wb <- function(wb,
     )
   }
 
-  data <- data.frame(link = target_sheets)
+  if (!is.null(index_table)) {
+    if (nrow(index_table) != length(target_sheets)) {
+      stop(
+        "`index_table` must have the same number of rows as `target_sheets`.",
+        call. = FALSE
+      )
+    }
+    data <- as.data.frame(index_table)
+    data[["link"]] <- target_sheets
+  } else {
+    data <- data.frame(
+      no    = seq_along(target_sheets),
+      sheet = target_sheets,
+      link  = target_sheets
+    )
+  }
 
-  instead::save_data_wb(data, wb, sheet = index_sheet, rc = rc_index)
+  # save index table
+  wb <- instead::save_data_wb(
+    data  = data,
+    wb    = wb,
+    sheet = index_sheet,
+    rc    = rc_index,
+    title = title,
+    title_size = title_size
+  )
+
+  # write hyperlinks in the last column (`link`)
+  row_offset <- if (is.null(title)) 0L else 1L
+  col_offset <- ncol(data) - 1L
 
   for (i in seq_along(target_sheets)) {
     target_sheet <- target_sheets[i]
@@ -2022,19 +2080,19 @@ save_index_sheet_wb <- function(wb,
     blink <- sprintf('HYPERLINK("#\'%s\'!A1","\u2190 %s")', index_sheet, index_sheet)
 
     # forward link
-    instead::write_formula(
-      wb = wb,
+    wb <- instead::write_formula(
+      wb    = wb,
       sheet = index_sheet,
-      x = sprintf('HYPERLINK("#\'%s\'!A1","%s")', target_sheet, target_sheet),
-      rc = rc_index + c(i, 0)
+      x     = flink,
+      rc    = rc_index + c(i + row_offset, col_offset)
     )
 
     # back link
-    instead::write_formula(
-      wb = wb,
+    wb <- instead::write_formula(
+      wb    = wb,
       sheet = target_sheet,
-      x = sprintf('HYPERLINK("#\'%s\'!A1","\u2190 %s")', index_sheet, index_sheet),
-      rc = rc_target
+      x     = blink,
+      rc    = rc_target
     )
   }
   instead::reorder_sheets(wb, index_sheet)
