@@ -19,6 +19,7 @@ write_cell(
   fg_fill = NULL,
   h_align = NULL,
   v_align = NULL,
+  num_fmt = NULL,
   ...
 )
 }

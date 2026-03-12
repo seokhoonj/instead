@@ -2430,7 +2430,8 @@ write_cell <- function(wb, sheet, x, rc = c(1L, 1L),
                        underline = FALSE, strikeout = FALSE,
                        font_name = getOption("instead.font"),
                        font_size = 11, font_color = NULL, fg_fill = NULL,
-                       h_align = NULL, v_align = NULL, ...) {
+                       h_align = NULL, v_align = NULL, num_fmt = NULL,
+                       ...) {
   assert_class(wb, "Workbook")
   stopifnot(length(rc) == 2L)
 
@@ -2467,7 +2468,8 @@ write_cell <- function(wb, sheet, x, rc = c(1L, 1L),
     textDecoration = text_decoration,
     fgFill         = fg_fill,
     halign         = h_align,
-    valign         = v_align
+    valign         = v_align,
+    numFmt         = num_fmt
   )
 
   openxlsx::addStyle(
