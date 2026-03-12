@@ -29,5 +29,5 @@ The function uses the \code{end_cell} recorded in
 This is typically used to place tables horizontally.
 }
 \seealso{
-\code{\link[=save_data_wb]{save_data_wb()}}, \code{\link[=get_next_cell_down]{get_next_cell_down()}}
+\code{\link[=save_data_wb]{save_data_wb()}}, \code{\link[=get_next_cell_down]{get_next_cell_down()}}, \code{\link[=get_last_range]{get_last_range()}}
 }

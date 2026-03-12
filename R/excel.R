@@ -2840,6 +2840,62 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
   # openxlsx::setColWidths(wb, sheet, cols = header_cols, widths = widths)
 }
 
+#' Get the last written table range
+#'
+#' Returns the most recently recorded table range stored in
+#' `attr(wb, "instead.last_range")`.
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#'
+#' @return A list with components `sheet`, `start_cell`, and `end_cell`.
+#'
+#' @seealso [save_data_wb()], [get_last_range_by_sheet()]
+#'
+#' @export
+get_last_range <- function(wb) {
+  r <- attr(wb, "instead.last_range")
+
+  if (is.null(r))
+    stop(
+      "No layout range recorded. ",
+      "Write a table using `save_data_wb()` first.",
+      call. = FALSE
+    )
+
+  r
+}
+
+#' Get the next cell above the last written table
+#'
+#' Computes the next top-left cell position **above** the most recently written
+#' table recorded by [save_data_wb()]. The function reads layout metadata stored
+#' in `attr(wb, "instead.last_range")`.
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param row_spacer Integer (>= 0). Number of blank rows to leave between the
+#'   previous table and the next table. Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @details
+#' The function uses the `start_cell` recorded in
+#' `attr(wb, "instead.last_range")` and returns:
+#'
+#' `c(start_row - 1 - row_spacer, start_col)`
+#'
+#' This is typically used to place a table above the previous one.
+#'
+#' @seealso [save_data_wb()], [get_next_cell_down()], [get_next_cell_left()],
+#'   [get_last_range()]
+#'
+#' @export
+get_next_cell_up <- function(wb, row_spacer = 2L) {
+  r <- get_last_range(wb)
+  c(r$start_cell[1L] - 1L - row_spacer, r$start_cell[2L])
+}
+
 #' Get the next cell below the last written table
 #'
 #' Computes the next top-left cell position **below** the most recently written
@@ -2861,20 +2917,41 @@ write_data <- function(wb, sheet, data, rc = c(1L, 1L), row_names = TRUE,
 #'
 #' This is typically used to stack tables vertically.
 #'
-#' @seealso [save_data_wb()], [get_next_cell_right()]
+#' @seealso [save_data_wb()], [get_next_cell_right()], [get_last_range()]
 #'
 #' @export
 get_next_cell_down <- function(wb, row_spacer = 2L) {
-  r <- attr(wb, "instead.last_range")
-
-  if (is.null(r))
-    stop(
-      "No layout range recorded. ",
-      "Write a table using `save_data_wb()` first.",
-      call. = FALSE
-    )
-
+  r <- get_last_range(wb)
   c(r$end_cell[1L] + 1L + row_spacer, r$start_cell[2L])
+}
+
+#' Get the next cell to the left of the last written table
+#'
+#' Computes the next top-left cell position **to the left** of the most
+#' recently written table recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param col_spacer Integer (>= 0). Number of blank columns between tables.
+#'   Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @details
+#' The function uses the `start_cell` recorded in
+#' `attr(wb, "instead.last_range")` and returns:
+#'
+#' `c(start_row, start_col - 1 - col_spacer)`
+#'
+#' This is typically used to place a table to the left of the previous one.
+#'
+#' @seealso [save_data_wb()], [get_next_cell_right()], [get_next_cell_up()],
+#'   [get_last_range()]
+#'
+#' @export
+get_next_cell_left <- function(wb, col_spacer = 2L) {
+  r <- get_last_range(wb)
+  c(r$start_cell[1L], r$start_cell[2L] - 1L - col_spacer)
 }
 
 #' Get the next cell to the right of the last written table
@@ -2897,19 +2974,133 @@ get_next_cell_down <- function(wb, row_spacer = 2L) {
 #'
 #' This is typically used to place tables horizontally.
 #'
-#' @seealso [save_data_wb()], [get_next_cell_down()]
+#' @seealso [save_data_wb()], [get_next_cell_down()], [get_last_range()]
 #'
 #' @export
 get_next_cell_right <- function(wb, col_spacer = 2L) {
-  r <- attr(wb, "instead.last_range")
+  r <- get_last_range(wb)
+  c(r$start_cell[1L], r$end_cell[2L] + 1L + col_spacer)
+}
 
-  if (is.null(r))
+#' Get the last written table range for a worksheet
+#'
+#' Returns the most recently recorded table range for a given worksheet stored
+#' in `attr(wb, "instead.last_range_by_sheet")`.
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param sheet A single worksheet name.
+#'
+#' @return A list with components `sheet`, `start_cell`, and `end_cell`.
+#'
+#' @seealso [save_data_wb()], [get_last_range()]
+#'
+#' @export
+get_last_range_by_sheet <- function(wb, sheet) {
+  ranges <- attr(wb, "instead.last_range_by_sheet")
+
+  if (is.null(ranges) || !is.list(ranges))
     stop(
-      "No layout range recorded. ",
+      "No per-sheet layout ranges recorded. ",
       "Write a table using `save_data_wb()` first.",
       call. = FALSE
     )
 
+  if (!is.character(sheet) || length(sheet) != 1L || is.na(sheet))
+    stop("`sheet` must be a single sheet name.", call. = FALSE)
+
+  r <- ranges[[sheet]]
+
+  if (is.null(r))
+    stop(
+      sprintf("No layout range recorded for sheet: %s", sheet),
+      call. = FALSE
+    )
+
+  r
+}
+
+#' Get the next cell above the last written table on a worksheet
+#'
+#' Computes the next top-left cell position **above** the most recently written
+#' table on a given worksheet recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param sheet A single worksheet name.
+#' @param row_spacer Integer (>= 0). Number of blank rows to leave between the
+#'   previous table and the next table. Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @seealso [get_last_range_by_sheet()], [get_next_cell_up()]
+#'
+#' @export
+get_next_cell_up_by_sheet <- function(wb, sheet, row_spacer = 2L) {
+  r <- get_last_range_by_sheet(wb, sheet)
+  c(r$start_cell[1L] - 1L - row_spacer, r$start_cell[2L])
+}
+
+#' Get the next cell below the last written table on a worksheet
+#'
+#' Computes the next top-left cell position **below** the most recently written
+#' table on a given worksheet recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param sheet A single worksheet name.
+#' @param row_spacer Integer (>= 0). Number of blank rows to leave between the
+#'   previous table and the next table. Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @seealso [get_last_range_by_sheet()], [get_next_cell_down()]
+#'
+#' @export
+get_next_cell_down_by_sheet <- function(wb, sheet, row_spacer = 2L) {
+  r <- get_last_range_by_sheet(wb, sheet)
+  c(r$end_cell[1L] + 1L + row_spacer, r$start_cell[2L])
+}
+
+#' Get the next cell to the left of the last written table on a worksheet
+#'
+#' Computes the next top-left cell position **to the left** of the most recently
+#' written table on a given worksheet recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param sheet A single worksheet name.
+#' @param col_spacer Integer (>= 0). Number of blank columns between tables.
+#'   Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @seealso [get_last_range_by_sheet()], [get_next_cell_left()]
+#'
+#' @export
+get_next_cell_left_by_sheet <- function(wb, sheet, col_spacer = 2L) {
+  r <- get_last_range_by_sheet(wb, sheet)
+  c(r$start_cell[1L], r$start_cell[2L] - 1L - col_spacer)
+}
+
+#' Get the next cell to the right of the last written table on a worksheet
+#'
+#' Computes the next top-left cell position **to the right** of the most
+#' recently written table on a given worksheet recorded by [save_data_wb()].
+#'
+#' @param wb An openxlsx `Workbook` object that has been written using
+#'   [save_data_wb()].
+#' @param sheet A single worksheet name.
+#' @param col_spacer Integer (>= 0). Number of blank columns between tables.
+#'   Default `2L`.
+#'
+#' @return A numeric vector `c(row, col)` representing the next cell position.
+#'
+#' @seealso [get_last_range_by_sheet()], [get_next_cell_right()]
+#'
+#' @export
+get_next_cell_right_by_sheet <- function(wb, sheet, col_spacer = 2L) {
+  r <- get_last_range_by_sheet(wb, sheet)
   c(r$start_cell[1L], r$end_cell[2L] + 1L + col_spacer)
 }
 
