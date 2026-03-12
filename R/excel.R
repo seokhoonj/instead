@@ -2400,6 +2400,13 @@ check_file_recreate <- function(file, recreate = FALSE) {
 #' @param h_align,v_align Character; horizontal and vertical alignment
 #'   (`"left"`, `"center"`, `"right"` / `"top"`, `"center"`, `"bottom"`).
 #'   Passed to [openxlsx::createStyle()].
+#' @param num_fmt Optional Excel number format applied to the cell value.
+#'   Examples include:
+#'   - `"0"` for integers
+#'   - `"0.00"` for 2 decimals
+#'   - `"#,##0"` for thousands separators
+#'   - `"0.00%"` for percentages
+#'   - `"0.00;[Red]-0.00"` for red negative values
 #' @param ... Additional arguments forwarded to [openxlsx::writeData()].
 #'
 #' @return The modified `Workbook` (invisibly), allowing for chaining.

@@ -47,6 +47,16 @@ loaded with \code{\link[openxlsx:loadWorkbook]{openxlsx::loadWorkbook()}}.}
 (\code{"left"}, \code{"center"}, \code{"right"} / \code{"top"}, \code{"center"}, \code{"bottom"}).
 Passed to \code{\link[openxlsx:createStyle]{openxlsx::createStyle()}}.}
 
+\item{num_fmt}{Optional Excel number format applied to the cell value.
+Examples include:
+\itemize{
+\item \code{"0"} for integers
+\item \code{"0.00"} for 2 decimals
+\item \code{"#,##0"} for thousands separators
+\item \code{"0.00\%"} for percentages
+\item \code{"0.00;[Red]-0.00"} for red negative values
+}}
+
 \item{...}{Additional arguments forwarded to \code{\link[openxlsx:writeData]{openxlsx::writeData()}}.}
 }
 \value{
