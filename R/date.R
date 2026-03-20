@@ -524,6 +524,88 @@ get_year_end <- function(x) {
   add_year(get_year_start(x), 1L) - 1L
 }
 
+#' Format Date values as period labels
+#'
+#' Convert a `Date` vector into formatted labels by month, quarter,
+#' half-year, year, or day.
+#'
+#' @param x A `Date` vector (or an object coercible to `Date`).
+#' @param type Period unit to format. One of `"month"`, `"quarter"`,
+#'   `"half"`, `"year"`, or `"day"`.
+#' @param sep Separator placed between year and period components.
+#'   Default is `"."`.
+#' @param abb Logical. If `TRUE`, use a 2-digit year (for example, `"24.Q1"`).
+#'   If `FALSE`, use a 4-digit year (for example, `"2024.Q1"`).
+#'
+#' @return A character vector of the same length as `x`.
+#'
+#' @details
+#' Output formats are:
+#' \itemize{
+#'   \item `"month"`: `"2024.02"` or `"24.02"`
+#'   \item `"quarter"`: `"2024.Q1"` or `"24.Q1"`
+#'   \item `"half"`: `"2024.H1"` or `"24.H1"`
+#'   \item `"year"`: `"2024"` or `"24"`
+#'   \item `"day"`: `"2024.02.01"` or `"24.02.01"`
+#' }
+#'
+#' @examples
+#' \donttest{
+#' d <- as.Date(c("2024-02-01", "2024-07-01"))
+#'
+#' format_period(d, "month")
+#' format_period(d, "quarter")
+#' format_period(d, "half")
+#' format_period(d, "year")
+#' format_period(d, "day")
+#'
+#' format_period(d, "quarter", abb = TRUE)
+#' format_period(d, "month", sep = "-")
+#' }
+#'
+#' @export
+format_period <- function(x,
+                          type = c("month", "quarter", "half", "year", "day"),
+                          sep  = ".",
+                          abb  = FALSE) {
+
+  x <- as.Date(x)
+  type <- match.arg(type)
+
+  yr <- if (abb) format(x, "%y") else format(x, "%Y")
+
+  if (type == "year") {
+    return(yr)
+  }
+
+  m <- as.integer(format(x, "%m"))
+
+  if (type == "month") {
+    return(paste0(yr, sep, sprintf("%02d", m)))
+  }
+
+  if (type == "quarter") {
+    q <- (m - 1L) %/% 3L + 1L
+    return(paste0(yr, sep, "Q", q))
+  }
+
+  if (type == "half") {
+    h <- (m > 6L) + 1L
+    return(paste0(yr, sep, "H", h))
+  }
+
+  if (type == "day") {
+    d <- as.integer(format(x, "%d"))
+    return(paste0(
+      yr, sep,
+      sprintf("%02d", m), sep,
+      sprintf("%02d", d)
+    ))
+  }
+
+  stop("Invalid `type`.", call. = FALSE)
+}
+
 #' Check if input is in a recognizable date format
 #'
 #' Test whether an object is a date or can be interpreted as a date according to
