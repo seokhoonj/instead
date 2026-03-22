@@ -99,7 +99,7 @@ prepend_class <- function(x, classes) {
   # Data.table-friendly path: no copy, no selfref warning
   if (inherits(x, "data.table")) {
     data.table::setattr(x, "class", c(classes, org_class))
-    return(x)
+    return(x[])
   }
 
   # Fallback for non-data.table objects
@@ -147,7 +147,7 @@ remove_class <- function(x, classes) {
   # Data.table-friendly path: no copy, no selfref warning
   if (inherits(x, "data.table")) {
     data.table::setattr(x, "class", remain)
-    return(x)
+    return(x[])
   }
 
   # Fallback for non-data.table objects
