@@ -48,14 +48,10 @@ loaded with \code{\link[openxlsx:loadWorkbook]{openxlsx::loadWorkbook()}}.}
 Passed to \code{\link[openxlsx:createStyle]{openxlsx::createStyle()}}.}
 
 \item{num_fmt}{Optional Excel number format applied to the cell value.
-Examples include:
-\itemize{
-\item \code{"0"} for integers
-\item \code{"0.00"} for 2 decimals
-\item \code{"#,##0"} for thousands separators
-\item \code{"0.00\%"} for percentages
-\item \code{"0.00;[Red]-0.00"} for red negative values
-}}
+This is passed directly to \code{openxlsx::createStyle()}, so both
+predefined format keywords (e.g., \code{"number"}, \code{"date"}, \code{"percentage"})
+and custom Excel format codes (e.g., \code{"0.00"}, \code{"#,##0"}, \code{"0.00\%"}) are supported.
+If \code{NULL}, no explicit number format is applied.}
 
 \item{...}{Additional arguments forwarded to \code{\link[openxlsx:writeData]{openxlsx::writeData()}}.}
 }

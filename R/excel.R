@@ -2401,12 +2401,10 @@ check_file_recreate <- function(file, recreate = FALSE) {
 #'   (`"left"`, `"center"`, `"right"` / `"top"`, `"center"`, `"bottom"`).
 #'   Passed to [openxlsx::createStyle()].
 #' @param num_fmt Optional Excel number format applied to the cell value.
-#'   Examples include:
-#'   - `"0"` for integers
-#'   - `"0.00"` for 2 decimals
-#'   - `"#,##0"` for thousands separators
-#'   - `"0.00%"` for percentages
-#'   - `"0.00;[Red]-0.00"` for red negative values
+#'   This is passed directly to `openxlsx::createStyle()`, so both
+#'   predefined format keywords (e.g., `"number"`, `"date"`, `"percentage"`)
+#'   and custom Excel format codes (e.g., `"0.00"`, `"#,##0"`, `"0.00%"`) are supported.
+#'   If `NULL`, no explicit number format is applied.
 #' @param ... Additional arguments forwarded to [openxlsx::writeData()].
 #'
 #' @return The modified `Workbook` (invisibly), allowing for chaining.
@@ -2468,16 +2466,28 @@ write_cell <- function(wb, sheet, x, rc = c(1L, 1L),
     text_decoration <- NULL
 
   # create and apply style
-  style <- openxlsx::createStyle(
-    fontName       = font_name,
-    fontSize       = font_size,
-    fontColour     = font_color,
-    textDecoration = text_decoration,
-    fgFill         = fg_fill,
-    halign         = h_align,
-    valign         = v_align,
-    numFmt         = num_fmt
-  )
+  if (is.null(num_fmt)) {
+    style <- openxlsx::createStyle(
+      fontName       = font_name,
+      fontSize       = font_size,
+      fontColour     = font_color,
+      textDecoration = text_decoration,
+      fgFill         = fg_fill,
+      halign         = h_align,
+      valign         = v_align
+    )
+  } else {
+    style <- openxlsx::createStyle(
+      fontName       = font_name,
+      fontSize       = font_size,
+      fontColour     = font_color,
+      textDecoration = text_decoration,
+      fgFill         = fg_fill,
+      halign         = h_align,
+      valign         = v_align,
+      numFmt         = num_fmt
+    )
+  }
 
   openxlsx::addStyle(
     wb, sheet, style,
