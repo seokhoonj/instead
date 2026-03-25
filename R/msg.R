@@ -62,7 +62,7 @@ msg_rule <- function(x, line = 2, color = c("cyan", "blue", "red", "green",
 msg_step <- function(i, n, x, newline = FALSE) {
   width <- nchar(as.character(n))
   msg <- sprintf(
-    "[%0*d/%0*d] %s:",
+    "[%0*d/%0*d] %s",
     width, i,
     width, n,
     x
@@ -74,7 +74,7 @@ msg_step <- function(i, n, x, newline = FALSE) {
   if (newline) {
     cli::cli_alert_info("{msg}")
   } else {
-    cat(cli::col_blue(cli::symbol$info), " ", msg, " ")
+    cat(cli::col_blue(cli::symbol$info), " ", msg)
   }
 
   invisible(x)
