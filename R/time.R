@@ -37,6 +37,16 @@ sec_to_hms <- function(sec) {
   sprintf("%02d:%02d:%02d.%s", hh, mm, int, frac_str)
 }
 
+format_elapsed_time <- function(secs) {
+  if (secs < 60) return(sprintf("%.1fs", secs))
+  if (secs < 3600) {
+    m <- floor(secs / 60)
+    return(sprintf("%dm %.0fs", m, secs %% 60))
+  }
+  h <- floor(secs / 3600)
+  sprintf("%dh %02dm", h, floor((secs %% 3600) / 60))
+}
+
 #' Conditionally execute functions depending on the current time
 #'
 #' `switch_at_time()` evaluates the current date and time and chooses

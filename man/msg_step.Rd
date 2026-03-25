@@ -4,7 +4,7 @@
 \alias{msg_step}
 \title{Print a step message}
 \usage{
-msg_step(i, n, x, newline = FALSE)
+msg_step(i, n, x, key = "step", newline = FALSE)
 }
 \arguments{
 \item{i}{Current step index.}
@@ -13,8 +13,10 @@ msg_step(i, n, x, newline = FALSE)
 
 \item{x}{Message text.}
 
+\item{key}{Character scalar identifying the timer slot. Default \code{"step"}.}
+
 \item{newline}{Logical; if \code{FALSE} (default), keep the cursor on the same
-line so that \code{\link[=msg_elapsed_time]{msg_elapsed_time()}} can be appended after the message.
+line so that \code{\link[=msg_step_elapsed_time]{msg_step_elapsed_time()}} can be appended after the message.
 If \code{TRUE}, print a normal line break.}
 }
 \value{
@@ -22,7 +24,7 @@ Invisibly returns \code{x}.
 }
 \description{
 Prints a progress message of the form \code{"[i/n] x"} and records the start
-time internally so that \code{\link[=msg_elapsed_time]{msg_elapsed_time()}} can later print the elapsed
+time internally so that \code{\link[=msg_step_elapsed_time]{msg_step_elapsed_time()}} can later print the elapsed
 time for the same step.
 }
 \examples{

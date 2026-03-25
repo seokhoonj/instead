@@ -7,7 +7,8 @@
 msg_rule(
   x,
   line = 2,
-  color = c("cyan", "blue", "red", "green", "yellow", "magenta", "white", "silver")
+  color = c("cyan", "blue", "red", "green", "yellow", "magenta", "white", "silver"),
+  key = "rule"
 )
 }
 \arguments{
@@ -17,10 +18,13 @@ msg_rule(
 
 \item{color}{Character; one of \code{"cyan"}, \code{"blue"}, \code{"red"}, \code{"green"},
 \code{"yellow"}, \code{"magenta"}, \code{"white"}, or \code{"silver"}.}
+
+\item{key}{Character scalar identifying the timer slot. Default \code{"rule"}.}
 }
 \value{
 Invisibly returns \code{x}.
 }
 \description{
-Prints a colored section rule using \code{cli::rule()}.
+Prints a colored section rule using \code{cli::rule()} and records the start
+time so that \code{\link[=msg_rule_elapsed_time]{msg_rule_elapsed_time()}} can later print the elapsed time.
 }
