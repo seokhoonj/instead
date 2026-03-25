@@ -5,18 +5,21 @@
 \title{Print elapsed time as a section rule}
 \usage{
 msg_rule_elapsed_time(
-  key = "rule",
+  x = "Elapsed Time",
   line = 2,
-  color = c("cyan", "blue", "red", "green", "yellow", "magenta", "white", "silver")
+  color = c("cyan", "blue", "red", "green", "yellow", "magenta", "white", "silver"),
+  key = "rule"
 )
 }
 \arguments{
-\item{key}{Character scalar identifying the timer slot. Default \code{"rule"}.}
+\item{x}{Character label for the elapsed time. Default \code{"Elapsed Time"}.}
 
 \item{line}{Integer; rule style passed to \code{cli::rule()}.}
 
 \item{color}{Character; one of \code{"cyan"}, \code{"blue"}, \code{"red"}, \code{"green"},
 \code{"yellow"}, \code{"magenta"}, \code{"white"}, or \code{"silver"}.}
+
+\item{key}{Character scalar identifying the timer slot. Default \code{"rule"}.}
 }
 \value{
 Invisibly returns the formatted elapsed-time string.
@@ -24,4 +27,16 @@ Invisibly returns the formatted elapsed-time string.
 \description{
 Prints the elapsed time since the most recent call to \code{\link[=msg_rule]{msg_rule()}}
 as a styled rule using \code{cli::rule()}.
+}
+\examples{
+\dontrun{
+msg_rule("Start processing")
+Sys.sleep(0.5)
+msg_rule_elapsed_time()
+
+msg_rule("RR calculation")
+Sys.sleep(0.3)
+msg_rule_elapsed_time("RR Total Time")
+}
+
 }

@@ -50,19 +50,32 @@ msg_rule <- function(x,
 #' Prints the elapsed time since the most recent call to [msg_rule()]
 #' as a styled rule using `cli::rule()`.
 #'
-#' @param key Character scalar identifying the timer slot. Default `"rule"`.
+#' @param x Character label for the elapsed time. Default `"Elapsed Time"`.
 #' @param line Integer; rule style passed to `cli::rule()`.
 #' @param color Character; one of `"cyan"`, `"blue"`, `"red"`, `"green"`,
-#' `"yellow"`, `"magenta"`, `"white"`, or `"silver"`.
+#'   `"yellow"`, `"magenta"`, `"white"`, or `"silver"`.
+#' @param key Character scalar identifying the timer slot. Default `"rule"`.
 #'
 #' @return Invisibly returns the formatted elapsed-time string.
 #'
+#' @examples
+#' \dontrun{
+#' msg_rule("Start processing")
+#' Sys.sleep(0.5)
+#' msg_rule_elapsed_time()
+#'
+#' msg_rule("RR calculation")
+#' Sys.sleep(0.3)
+#' msg_rule_elapsed_time("RR Total Time")
+#' }
+#'
 #' @export
 msg_rule_elapsed_time <- function(
-    key = "rule",
+    x = "Elapsed Time",
     line = 2,
     color = c("cyan", "blue", "red", "green",
-              "yellow", "magenta", "white", "silver")
+              "yellow", "magenta", "white", "silver"),
+    key = "rule"
 ) {
   color <- match.arg(color)
 
@@ -77,11 +90,10 @@ msg_rule_elapsed_time <- function(
   }
 
   secs <- as.numeric(Sys.time() - stime, units = "secs")
-
   time_txt <- format_elapsed_time(secs)
 
   txt <- cli::rule(
-    sprintf("Elapsed Time: %s", time_txt),
+    sprintf("%s: %s", x, time_txt),
     line = line
   )
 
