@@ -74,7 +74,7 @@ msg_step <- function(i, n, x, newline = FALSE) {
   if (newline) {
     cli::cli_alert_info("{msg}")
   } else {
-    cat(cli::col_blue(cli::symbol$info), " ", msg)
+    cat(cli::col_blue(cli::symbol$info), " ", msg, " ")
   }
 
   invisible(x)
