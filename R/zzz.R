@@ -22,6 +22,10 @@
   )
   lockBinding(".DATE_FORMAT", .INSTEAD_ENV)
 
+  if (is.null(.INSTEAD_ENV$msg)) {
+    .INSTEAD_ENV$msg <- new.env(parent = emptyenv())
+  }
+
   op <- options()
   op.instead <- list(
     instead.eps = 1e-8,

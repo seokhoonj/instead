@@ -36,7 +36,7 @@
 #' @useDynLib instead, .registration = TRUE
 #' @importFrom cli cat_bullet cat_line cat_rule cli_alert cli_alert_danger
 #' cli_alert_info cli_alert_success cli_alert_warning cli_h2 cli_text col_cyan
-#' col_green col_red col_yellow rule style_bold style_hyperlink
+#' col_green col_red col_yellow rule style_bold style_hyperlink symbol
 #' @importFrom data.table `:=` `.SD` `%chin%` address as.data.table copy
 #' data.table fifelse mday month set setalloccol setattr setDF setDT setindex
 #' setnames setorder setorderv year

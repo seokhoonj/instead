@@ -2,24 +2,36 @@
 % Please edit documentation in R/msg.R
 \name{msg_step}
 \alias{msg_step}
-\title{Print a progress step message}
+\title{Print a step message}
 \usage{
-msg_step(i, n, x)
+msg_step(i, n, x, newline = FALSE)
 }
 \arguments{
-\item{i}{Current index.}
+\item{i}{Current step index.}
 
 \item{n}{Total number of steps.}
 
-\item{x}{Character; message text.}
+\item{x}{Message text.}
+
+\item{newline}{Logical; if \code{FALSE} (default), keep the cursor on the same
+line so that \code{\link[=msg_elapsed_time]{msg_elapsed_time()}} can be appended after the message.
+If \code{TRUE}, print a normal line break.}
 }
 \value{
 Invisibly returns \code{x}.
 }
 \description{
-Prints a step message such as \verb{[01/10] Plan A}.
+Prints a progress message of the form \code{"[i/n] x"} and records the start
+time internally so that \code{\link[=msg_elapsed_time]{msg_elapsed_time()}} can later print the elapsed
+time for the same step.
 }
 \examples{
-msg_step(1, 10, "Plan A")
+\dontrun{
+msg_step(1, 10, "Start", newline = TRUE)
+
+msg_step(2, 10, "Processing")
+Sys.sleep(0.5)
+msg_elapsed_time()
+}
 
 }
