@@ -62,7 +62,7 @@ msg_rule <- function(x, line = 2, color = c("cyan", "blue", "red", "green",
 msg_step <- function(i, n, x, newline = FALSE) {
   width <- nchar(as.character(n))
   msg <- sprintf(
-    "[%0*d/%0*d] %s",
+    "[%0*d/%0*d] %s:",
     width, i,
     width, n,
     x
