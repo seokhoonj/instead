@@ -8,7 +8,7 @@ format_period(
   x,
   type = c("month", "quarter", "half", "year", "day"),
   sep = ".",
-  abb = FALSE
+  abb = TRUE
 )
 }
 \arguments{

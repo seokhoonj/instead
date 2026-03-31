@@ -45,4 +45,4 @@ Suggests:
     sysfonts (>= 0.8.9),
     webshot2 (>= 0.1.2)
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

@@ -567,7 +567,7 @@ get_year_end <- function(x) {
 format_period <- function(x,
                           type = c("month", "quarter", "half", "year", "day"),
                           sep  = ".",
-                          abb  = FALSE) {
+                          abb  = TRUE) {
 
   x <- as.Date(x)
   type <- match.arg(type)
