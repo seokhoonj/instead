@@ -29,7 +29,8 @@ Unlike a simple sum of durations, overlapping ranges are counted only once.
 \details{
 Internally, this function calls a C backend (\code{CountStay}) for efficiency.
 \itemize{
-\item Input is internally sorted by \code{id_var}, \code{group_var}, \code{from_var}, \code{to_var}.
+\item Rows are ordered internally (by \code{id_var}, \code{group_var}, \code{from_var},
+\code{to_var}) via a permutation; the input object itself is not modified.
 \item Dates are treated as \strong{inclusive}; each \code{from_var} and \code{to_var} is counted.
 \item Overlapping or adjacent ranges do not double-count days.
 \item The implementation is optimized for \strong{data.table} usage and its use is

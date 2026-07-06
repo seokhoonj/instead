@@ -16,7 +16,8 @@
 #'   containing the number of **unique days** spanned by the given date ranges.
 #'
 #' @details
-#' - Input is internally sorted by `id_var`, `group_var`, `from_var`, `to_var`.
+#' - Rows are ordered internally (by `id_var`, `group_var`, `from_var`,
+#'   `to_var`) via a permutation; the input object itself is not modified.
 #' - Dates are treated as **inclusive**; each `from_var` and `to_var` is counted.
 #' - Overlapping or adjacent ranges do not double-count days.
 #' - The implementation is optimized for **data.table** usage and its use is
@@ -53,14 +54,23 @@ count_stay <- function(df, id_var, group_var, from_var, to_var) {
   to_var    <- capture_names(df, !!rlang::enquo(to_var))
   id_group_var <- c(id_var, group_var)
 
-  data.table::setorderv(dt, c(id_var, group_var, from_var, to_var))
-  id   <- dt[, .SD, .SDcols = id_group_var]
   from <- dt[[from_var]]
   to   <- dt[[to_var]]
 
   invalid <- !is.na(from) & !is.na(to) & (to < from)
   if (any(invalid))
     stop("Some `from_var` are greater than `to_var`.")
+
+  # Order by (id, group, from, to) via a permutation and gather only the columns
+  # CountStay needs, so the caller's object is never reordered. CountStay needs
+  # contiguous groups with non-decreasing `from` per group; na.last = FALSE
+  # matches data.table::setorderv's NA-first placement.
+  ord  <- do.call(order, c(lapply(c(id_var, group_var, from_var, to_var),
+                                  function(k) dt[[k]]),
+                           list(method = "radix", na.last = FALSE)))
+  id   <- dt[ord, .SD, .SDcols = id_group_var]
+  from <- from[ord]
+  to   <- to[ord]
 
   stay <- .Call(CountStay, id, from, to)
   z <- cbind(unique(id), stay = stay)
